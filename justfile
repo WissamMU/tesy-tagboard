@@ -1,7 +1,7 @@
 export COMPOSE_FILE := "docker-compose.local.yml"
 
 ## Just does not yet manage signals for subprocesses reliably, which can lead to unexpected behavior.
-## Exercise caution before expanding its usage in production environments. 
+## Exercise caution before expanding its usage in production environments.
 ## For more information, see https://github.com/casey/just/issues/2473 .
 
 
@@ -25,14 +25,41 @@ down:
     @docker compose down
 
 # prune: Remove containers and their volumes.
-prune *args:
+docker-prune *args:
     @echo "Killing containers and removing volumes..."
     @docker compose down -v {{args}}
 
 # logs: View container logs
-logs *args:
+docker-logs *args:
     @docker compose logs -f {{args}}
 
 # manage: Executes `manage.py` command.
-manage +args:
+docker-manage +args:
     @docker compose run --rm django python ./manage.py {{args}}
+
+# test: run pytest(s)
+docker-test *args:
+    @docker compose -f docker-compose.local.yml run --rm django pytest {{args}}
+
+alias m := manage
+manage *args:
+    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py {{args}}
+
+alias r := run
+run:
+    @echo "Starting Tesy's Tagboard..."
+    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py tailwind dev
+
+alias ra := run-async
+run-async *args:
+    @echo "Starting Tesy's Tagboard in async mode..."
+    DJANGO_READ_DOT_ENV_FILE=True uv run uvicorn config.asgi:application --host 0.0.0.0 --port 55555 --reload-include "*.html" {{ args }}
+
+startapp +args:
+    @echo "Creating new Django app..."
+    uv run python manage.py startapp {{args}}
+
+alias t := test
+test *args:
+    @echo "Running tests..."
+    DJANGO_READ_DOT_ENV_FILE=True pytest

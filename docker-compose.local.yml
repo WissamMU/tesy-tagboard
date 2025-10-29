@@ -1,7 +1,7 @@
 volumes:
   tesys_tagboard_local_postgres_data: {}
   tesys_tagboard_local_postgres_data_backups: {}
-  
+
 
 services:
   django:
@@ -19,7 +19,7 @@ services:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
-      - '8000:8000'
+      - '55555:8000'
     command: /start
 
   postgres:
@@ -28,6 +28,8 @@ services:
       dockerfile: ./compose/production/postgres/Dockerfile
     image: tesys_tagboard_production_postgres
     container_name: tesys_tagboard_local_postgres
+    ports:
+      - '9876:5432'
     volumes:
       - tesys_tagboard_local_postgres_data:/var/lib/postgresql/data
       - tesys_tagboard_local_postgres_data_backups:/backups

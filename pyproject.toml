@@ -126,6 +126,7 @@ force-single-line = true
 
 [dependency-groups]
 dev = [
+    "cookiecutter>=2.6.0",
     "coverage==7.11.0",
     "django-coverage-plugin==3.2.0",
     "django-debug-toolbar==6.0.0",
@@ -134,6 +135,7 @@ dev = [
     "djangorestframework-stubs==3.16.5",
     "djlint==1.36.4",
     "factory-boy==3.3.2",
+    "honcho>=2.0.0",
     "ipdb==0.13.13",
     "mypy==1.18.2",
     "pre-commit==4.3.0",
@@ -165,11 +167,16 @@ dependencies = [
     "django==5.2.7",
     "django-allauth[mfa]==65.12.1",
     "django-anymail[mailgun]==13.1",
+    "django-browser-reload>=1.21.0",
     "django-cors-headers==4.9.0",
     "django-crispy-forms==2.4",
     "django-environ==0.12.0",
+    "django-htmx>=1.26.0",
     "django-model-utils==5.0.0",
     "django-redis==6.0.0",
+    "django-tailwind>=4.3.0",
+    "django-template-partials>=25.2",
+    "django-watchfiles>=1.4.0",
     "djangorestframework==3.16.1",
     "drf-spectacular==0.28.0",
     "gunicorn==23.0.0",

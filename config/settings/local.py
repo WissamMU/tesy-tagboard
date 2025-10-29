@@ -29,7 +29,8 @@ CACHES = {
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend",
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
 )
 
 # WhiteNoise
@@ -67,5 +68,12 @@ if env("USE_DOCKER") == "yes":
 # https://django-extensions.readthedocs.io/en/latest/installation_instructions.html#configuration
 INSTALLED_APPS += ["django_extensions"]
 
-# Your stuff...
-# ------------------------------------------------------------------------------
+# Tesy's Tagboard dev apps
+INSTALLED_APPS += [
+    "django_watchfiles",
+    "django_browser_reload",
+    "tailwind",
+    "theme",
+]
+
+TAILWIND_APP_NAME = "theme"
