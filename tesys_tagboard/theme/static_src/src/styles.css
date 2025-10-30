@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/aspect-ratio";
+@plugin "@tailwindcss/typography";
+@plugin "daisyui";
+
+@source "../../templates/**/*.{html,js}";
+@source "../../../**/*.{html,py,js}";
+
+h1 {
+  font-size: var(--text-3xl);
+}
