@@ -9,8 +9,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    replaces = [('tesys_tagboard', '0001_0001_initial')]
-
     initial = True
 
     dependencies = [
