@@ -4,6 +4,7 @@ import uuid
 
 from django.core import validators
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from config.settings.base import AUTH_USER_MODEL
@@ -21,7 +22,7 @@ class TagCategory(models.Model):
         RATING = "RT", _("rating")
 
     category = models.CharField(max_length=2, choices=Category.choices)
-    prefix = models.CharField(max_length=24, default="")
+    prefix = models.CharField(max_length=24, unique=True)
 
     class Meta:
         verbose_name_plural = "tag categories"
@@ -43,6 +44,11 @@ class Tag(models.Model):
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "category"], name="unique_tag_name_cat"
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"<Tag - {self.name}, category: {self.category}>"
@@ -56,6 +62,11 @@ class TagAlias(models.Model):
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "tag"], name="unique_tagalias_name_tag"
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"<TagAlias - {self.name}, tag: {self.tag}>"
@@ -79,10 +90,22 @@ class MediaType(models.Model):
     """
 
     name = models.TextField(unique=True)
-    template = models.TextField()
+    template = models.TextField(primary_key=True)
     desc = models.TextField(default="")
 
     # TODO validate templates support only audio, image, and video media
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(template__startswith="image/")
+                    | Q(template__startswith="audio/")
+                    | Q(template__startswith="video/")
+                ),
+                name="media_valid_mime_category",
+            )
+        ]
 
     def __str__(self) -> str:
         return (
@@ -106,7 +129,7 @@ class Media(models.Model):
     including file metadata
     """
 
-    file = models.FileField(upload_to=unique_filename)
+    file = models.FileField(upload_to=unique_filename, unique=True)
     og_name = models.TextField()
     type = models.ForeignKey(MediaType, on_delete=models.CASCADE)
     upload_date = models.DateTimeField(auto_now=True)
@@ -123,7 +146,6 @@ class Media(models.Model):
 
     """Perceptual (DCT) hash"""
     phash = models.CharField(
-        unique=True,
         validators=[
             validators.RegexValidator(r"^[0-9a-z]{16}$"),
         ],
@@ -131,7 +153,6 @@ class Media(models.Model):
 
     """Difference hash"""
     dhash = models.CharField(
-        unique=True,
         validators=[
             validators.RegexValidator(r"^[0-9a-z]{16}$"),
         ],
@@ -149,10 +170,10 @@ class Media(models.Model):
 
 
 class Post(models.Model):
-    """Posts made by users with attached media and meta data"""
+    """Posts made by users with attached media"""
 
+    media = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
     uploader = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    media = models.ForeignKey(Media, on_delete=models.CASCADE)
     post_date = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag)
 
@@ -168,6 +189,13 @@ class Pool(models.Model):
     name = models.CharField(max_length=128)
     desc = models.TextField(max_length=1024)
     posts = models.ManyToManyField(Post)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name"], name="unique_pool_name_user"
+            )
+        ]
 
     def __str__(self) -> str:
         return f"<Pool - name: {self.name}, user: {self.user}, desc: {self.desc}>"
@@ -189,6 +217,11 @@ class Favorite(models.Model):
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "post"], name="unique_favorite"),
+        ]
 
     def __str__(self) -> str:
         return f"<Favorite - post: {self.post}, user: {self.user}>"
