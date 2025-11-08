@@ -3,11 +3,11 @@ from django.http import HttpRequest
 from django.template.response import TemplateResponse
 from django_htmx.middleware import HtmxDetails
 
-from .forms import UploadImage
+from .forms import PostForm
 from .models import Image
 from .models import Media
-from .models import MediaSource
 from .models import MediaType
+from .models import Post
 
 
 class HtmxHttpRequest(HttpRequest):
@@ -34,8 +34,8 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
     return TemplateResponse(request, "pages/tags.html", context)
 
 
-def handle_img_upload(file: UploadedFile | None, src_url: str | None):
-    """Detects media type and creates a new MediaSource"""
+def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media:
+    """Detects media type and creates a new Media derivative"""
     if file is None:
         msg = "A file must be provided to upload"
         raise ValueError(msg)
@@ -56,39 +56,29 @@ def handle_img_upload(file: UploadedFile | None, src_url: str | None):
         msg = "That file extension is not supported"
         raise ValueError(msg) from e
 
-    if src_url:
-        src = MediaSource(url=src_url)
-        src.save()
-    else:
-        src = None
+    media = Media(orig_name=file, type=mediatype, src_url=src_url)
+    media.save()
 
-    meta = Media(
-        orig_name=file,
-        type=mediatype,
-        source=src,
-    )
-    meta.save()
-
-    img = Image(
-        orig_name=meta.orig_name,
-        type=MediaType.objects.get(name__icontains=ext),
-        file=file,
-    )
+    # TODO: match on media type (image, video, audio)...
+    img = Image(file=file, meta=media)
     img.save()
+
+    return media
 
 
 def upload(request: HtmxHttpRequest) -> TemplateResponse:
-    # TODO: match on media type (image, video, audio)...
     form = (
-        UploadImage(request.POST, request.FILES)
+        PostForm(request.POST, request.FILES)
         if request.method == "POST"
-        else UploadImage()
+        else PostForm()
     )
 
     if form.is_valid():
-        handle_img_upload(
+        media = handle_media_upload(
             form.cleaned_data.get("file"), form.cleaned_data.get("src_url")
         )
+        post = Post(uploader=request.user, media=media)
+        post.save()
 
     context = {"form": form}
     return TemplateResponse(request, "pages/upload.html", context)

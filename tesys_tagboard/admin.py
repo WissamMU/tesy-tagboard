@@ -6,7 +6,6 @@ from .models import Comment
 from .models import Favorite
 from .models import Image
 from .models import Media
-from .models import MediaSource
 from .models import MediaType
 from .models import Pool
 from .models import Post
@@ -46,13 +45,9 @@ class ArtistAdmin(admin.ModelAdmin):
 
 @admin.register(Media)
 class MediaAdmin(admin.ModelAdmin):
+    list_display = ["orig_name", "type", "src_url", "upload_date", "edit_date"]
     search_fields = ["orig_name"]
     autocomplete_fields = ["type"]
-
-
-@admin.register(MediaSource)
-class MediaSourceAdmin(admin.ModelAdmin):
-    search_fields = ["url"]
 
 
 @admin.register(MediaType)
@@ -63,20 +58,21 @@ class MediaTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
-    autocomplete_fields = ["type"]
-    search_fields = ["type", "og_name", "source"]
+    list_display = ["file", "meta", "md5", "phash", "dhash"]
+    autocomplete_fields = ["meta"]
+    search_fields = ["meta__type", "og_name", "source"]
 
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
-    autocomplete_fields = ["type"]
-    search_fields = ["type", "og_name", "source"]
+    autocomplete_fields = ["meta"]
+    search_fields = ["meta__type", "og_name", "source"]
 
 
 @admin.register(Audio)
 class AudioAdmin(admin.ModelAdmin):
-    autocomplete_fields = ["type"]
-    search_fields = ["type", "og_name", "source"]
+    autocomplete_fields = ["meta"]
+    search_fields = ["meta__type", "og_name", "source"]
 
 
 @admin.register(Comment)

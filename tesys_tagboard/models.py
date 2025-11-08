@@ -115,10 +115,7 @@ class MediaType(models.Model):
         ]
 
     def __str__(self) -> str:
-        return (
-            f"<MediaType - name: {self.name}, template: {self.template}, "
-            f"desc: {self.desc}>"
-        )
+        return f"<MediaType - name: {self.name}, template: {self.template}"
 
 
 def unique_filename(instance, filename: str) -> str:
@@ -131,13 +128,6 @@ def unique_filename(instance, filename: str) -> str:
     return f"{new_name}"
 
 
-class MediaSource(models.Model):
-    url = models.URLField(max_length=255, unique=True)
-
-    def __str__(self) -> str:
-        return f"<MediaSource - : {self.url}>"
-
-
 class Media(models.Model):
     """Media file metadata"""
 
@@ -145,18 +135,19 @@ class Media(models.Model):
     type = models.ForeignKey(MediaType, on_delete=models.CASCADE)
     upload_date = models.DateTimeField(default=now, editable=False)
     edit_date = models.DateTimeField(auto_now=True)
-    source = models.OneToOneField(MediaSource, null=True, on_delete=models.SET_NULL)
+    src_url = models.URLField(max_length=255, unique=True)
 
     class Meta:
         verbose_name_plural = "media"
 
     def __str__(self) -> str:
-        return f"<Media - orig_file: {self.orig_name}, source: {self.source}>"
+        return f"<Media - orig_file: {self.orig_name}, source: {self.src_url[:30]}...>"
 
 
-class Image(Media):
+class Image(models.Model):
     """Media linked to static image files"""
 
+    meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
     file = models.ImageField(upload_to=unique_filename, unique=True)
 
     """MD5 hash"""
@@ -171,6 +162,9 @@ class Image(Media):
     # TODO: add duplicate detection
     # See https://github.com/JohannesBuchner/imagehash/issues/127 for
 
+    def __str__(self) -> str:
+        return f"<Image - meta: {self.meta}, file: {self.file}>"
+
     def save(self, *args, **kwargs):
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
         self.phash = str(imagehash.phash(PIL_Image.open(self.file)))
@@ -178,26 +172,34 @@ class Image(Media):
         super().save(*args, **kwargs)
 
 
-class Video(Media):
+class Video(models.Model):
     """Media linked to static video files"""
 
+    meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
     file = models.FileField(upload_to=unique_filename, unique=True)
 
     """MD5 hash"""
     md5 = models.CharField(validators=[valid_md5])
+
+    def __str__(self) -> str:
+        return f"<Video - meta: {self.meta}, file: {self.file}>"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.md5 = md5(self.file.file).hexdigest()  # noqa: S324
 
 
-class Audio(Media):
+class Audio(models.Model):
     """Media linked to static audio files"""
 
+    meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
     file = models.FileField(upload_to=unique_filename, unique=True)
 
     """MD5 hash"""
     md5 = models.CharField(validators=[valid_md5])
+
+    def __str__(self) -> str:
+        return f"<Audio - meta: {self.meta}, file: {self.file}>"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

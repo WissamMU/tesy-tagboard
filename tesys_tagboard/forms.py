@@ -30,5 +30,6 @@ class TagSearch(forms.Form):
     pass
 
 
-class MakePost(forms.Form):
-    pass
+class PostForm(forms.Form):
+    src_url = forms.URLField(label=_("Source"), required=False)
+    file = forms.FileField(label="File", required=True)
