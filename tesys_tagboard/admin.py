@@ -58,7 +58,15 @@ class MediaTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
-    list_display = ["file", "meta", "md5", "phash", "dhash"]
+    list_display = [
+        "file",
+        "meta__id",
+        "meta__orig_name",
+        "meta__type",
+        "md5",
+        "phash",
+        "dhash",
+    ]
     autocomplete_fields = ["meta"]
     search_fields = ["meta__type", "og_name", "source"]
 
@@ -84,6 +92,13 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
+    list_display = [
+        "uploader",
+        "post_date",
+        "tags",
+        "media__orig_name",
+        "media__src_url",
+    ]
     search_fields = ["media__orig_name, source__url"]
     autocomplete_fields = ["media"]
 

@@ -9,12 +9,13 @@
          src="{{ post.media.image.file.url }}"
          alt="image" />
   </img />
-  <div class="text-xl">
+  <div class="flex flex-col gap-2 text-xl grow">
     <div>Uploader: {{ post.uploader.username }}</div>
     <div>Post date: {{ post.post_date }}</div>
-    <div>Source: {{ post.media.src_url }}</div>
-    <div class="flex flex-wrap max-w-[70%]">
-      {% for tag in tags %}<div>{{ tag.name }}</div>{% endfor %}
+    {% if post.media.src_url %}<div>Source: {{ post.media.src_url }}</div>{% endif %}
+    <div class="flex flex-wrap gap-2 max-w-[70%]">
+      Tags:
+      {% for tag in post.tags.values %}<div class="py-1 px-2 bg-indigo-700 rounded-md">{{ tag.name }}</div>{% endfor %}
     </div>
   </div>
 </div>

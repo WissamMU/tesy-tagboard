@@ -9,6 +9,8 @@ from .models import Image
 from .models import Media
 from .models import MediaType
 from .models import Post
+from .models import Tag
+from .models import TagCategory
 
 
 class HtmxHttpRequest(HttpRequest):
@@ -38,7 +40,9 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
 
 
 def tags(request: HtmxHttpRequest) -> TemplateResponse:
-    context = {}
+    categories = TagCategory.objects.all()
+    tags_by_cat = {cat: Tag.objects.filter(category=cat) for cat in categories}
+    context = {"tags_by_cat": tags_by_cat}
     return TemplateResponse(request, "pages/tags.html", context)
 
 

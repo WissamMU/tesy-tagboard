@@ -7,6 +7,9 @@
   <a class="text-xl link link-hover" href="{% url 'about' %}">About</a>
 </li>
 <li>
+  <a class="text-xl link link-hover" href="{% url 'tags' %}">Tags</a>
+</li>
+<li>
   <a class="text-xl link link-hover" href="{% url 'posts' %}">Posts</a>
 </li>
 {% if request.user.is_authenticated %}
