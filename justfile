@@ -1,4 +1,5 @@
 export COMPOSE_FILE := "docker-compose.local.yml"
+export COMPOSE_PROFILES := "all"
 
 ## Just does not yet manage signals for subprocesses reliably, which can lead to unexpected behavior.
 ## Exercise caution before expanding its usage in production environments.
@@ -12,12 +13,12 @@ default:
 # build: Build python image.
 build:
     @echo "Building python image..."
-    @docker compose --profile all build
+    @docker compose build
 
 # up: Start up containers.
 up:
     @echo "Starting up containers..."
-    @docker compose --profile all up -d --remove-orphans
+    @docker compose up -d --remove-orphans
 
 up-debug:
     @echo "Starting up containers with debug console for Django app..."
@@ -33,7 +34,7 @@ up-docs:
 # down: Stop containers.
 down:
     @echo "Stopping containers..."
-    @docker compose --profile all down
+    @docker compose down
 
 down-docs:
     @echo "Stopping docs container..."
@@ -42,11 +43,11 @@ down-docs:
 # prune: Remove containers and their volumes.
 docker-prune-volumes *args:
     @echo "Killing containers and removing volumes..."
-    @docker compose --profile all down -v {{args}}
+    @docker compose down -v {{args}}
 
 # logs: View container logs
 docker-logs *args:
-    @docker compose --profile all logs -f {{args}}
+    @docker compose logs -f {{args}}
 
 # test: run pytest(s)
 docker-test *args:
