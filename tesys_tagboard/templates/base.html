@@ -1,8 +1,15 @@
-{% load static i18n tailwind_tags %}
+{% load static i18n tailwind_tags component_tags %}
 
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="{{ LANGUAGE_CODE }}" data-theme="default">
+  <script>
+    // Apply theme picker setting
+    let theme = window.localStorage.getItem("theme");
+    if (theme) {
+      document.querySelector("html").setAttribute("data-theme", theme);
+    };
+  </script>
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
@@ -29,9 +36,9 @@
   </head>
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
     {% block body %}
-      <nav class="shadow-sm sm:text-2xl lg:text-lg navbar bg-base-100 bg-slate-700">
-        <div class="navbar-start">
-          <div class="dropdown">
+      <nav class="flex justify-between px-2 shadow-sm sm:text-2xl lg:text-lg navbar bg-primary text-primary-content">
+        <div class="flex">
+          <div class="text-left dropdown">
             <div tabindex="0" role="button" class="lg:hidden btn btn-ghost">
               <svg xmlns="http://www.w3.org/2000/svg"
                    class="w-5 h-5"
@@ -53,9 +60,9 @@
             {% include "nav/navbar_links.html" %}
           </ul>
         </div>
-        <div class="navbar-end"></div>
+        <div>{% component "theme_picker" %}{% endcomponent %}</div>
       </nav>
-      <div class="flex justify-center p-4 sm:w-full lg:max-w-1600px">
+      <div class="flex justify-center p-4 sm:w-full bg-base-100 lg:max-w-1600px">
         {% if messages %}
           {% for message in messages %}
             <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -78,15 +85,6 @@
     {% block modal %}
     {% endblock modal %}
     {% block inline_javascript %}
-      {% comment %}
-    Script tags with only code, no src (defer by default). To run
-    with a "defer" so that you run inline code:
-    <script>
-      window.addEventListener('DOMContentLoaded', () => {
-        /* Run whatever you want */
-      });
-    </script>
-      {% endcomment %}
     {% endblock inline_javascript %}
   </body>
 </html>

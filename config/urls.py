@@ -24,6 +24,8 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
+    # Django components
+    path("", include("django_components.urls")),
 ]
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development
