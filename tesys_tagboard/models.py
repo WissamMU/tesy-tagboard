@@ -24,9 +24,9 @@ class TagCategory(models.Model):
         """A basic tag with no prefix"""
 
         BASIC = "BA", _("basic")
-        ARTIST = "AT", _("artist")
-        COPYRIGHT = "CP", _("copyright")
-        RATING = "RT", _("rating")
+        ARTIST = "AR", _("artist")
+        COPYRIGHT = "CO", _("copyright")
+        RATING = "RA", _("rating")
 
     category = models.CharField(max_length=2, choices=Category.choices)
     prefix = models.CharField(max_length=24, unique=True)
