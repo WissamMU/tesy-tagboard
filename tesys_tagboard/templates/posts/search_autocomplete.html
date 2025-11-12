@@ -1,0 +1,9 @@
+<ul class="flex flex-col gap-2 list-none bg-secondary text-secondary-content">
+  {% for item in items %}
+    <li class="hover:brightness-125">
+      {% if item.alias %}<span>{{ alias }} &gt;</span>{% endif %}
+      {% if item.category %}item.category.name{% endif %}
+      {{ item.name }}
+    </li>
+  {% endfor %}
+</ul>

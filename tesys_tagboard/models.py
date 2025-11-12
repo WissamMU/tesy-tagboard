@@ -7,45 +7,29 @@ import imagehash
 from django.db import models
 from django.db.models import Q
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
 from PIL import Image as PIL_Image
 
 from config.settings.base import AUTH_USER_MODEL
 
+from .enums import TagCategory
 from .validators import valid_dhash
 from .validators import valid_md5
 from .validators import valid_phash
 
 
-class TagCategory(models.Model):
-    """Categories of Tags"""
-
-    class Category(models.TextChoices):
-        """A basic tag with no prefix"""
-
-        BASIC = "BA", _("basic")
-        ARTIST = "AR", _("artist")
-        COPYRIGHT = "CO", _("copyright")
-        RATING = "RA", _("rating")
-
-    category = models.CharField(max_length=2, choices=Category.choices)
-    prefix = models.CharField(max_length=24, unique=True)
-
-    class Meta:
-        verbose_name_plural = "tag categories"
-
-    def __str__(self) -> str:
-        return f"<TagCategory - {self.category}, prefix: {self.prefix}>"
-
-
 class Tag(models.Model):
     """Tags for Media objects"""
 
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(TagCategory, on_delete=models.PROTECT)
+    category_choices = [(s.value.shortcode, s.value.display_name) for s in TagCategory]
 
-    """Rating levels to filter content
-    This field allows any tag to apply a rating
+    name = models.CharField(max_length=100)
+    category = models.CharField(
+        max_length=2,
+        choices=category_choices,
+        default=TagCategory.BASIC.value.shortcode,
+    )
+
+    """Rating levels to filter content. This field allows any tag to apply a rating
     """
     rating_level = models.PositiveSmallIntegerField(default=0)
 

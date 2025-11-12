@@ -10,28 +10,13 @@ from .models import MediaType
 from .models import Pool
 from .models import Post
 from .models import Tag
-from .models import TagCategory
 from .models import Video
-
-
-@admin.register(TagCategory)
-class TagCategoryAdmin(admin.ModelAdmin):
-    list_display = ["pk", "category", "prefix"]
-    search_fields = ["category", "prefix"]
-    list_filter = ["category"]
-    ordering = ["prefix"]
-
-    def get_form(self, request, obj=None, *args, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if form:
-            form.base_fields[TagCategory.prefix.field.name].required = False
-        return form
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ["pk", "name", "category"]
-    search_fields = ["name", "category__name"]
+    search_fields = ["name", "category"]
     list_filter = ["category"]
 
 

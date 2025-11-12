@@ -8,10 +8,12 @@
     {% for cat, tags in tags_by_cat.items %}
       {% if tags %}
         <div>
-          <h2 class="mb-2 text-3xl font-bold">{{ cat.get_category_display|capfirst }} tags</h2>
+          <h2 class="mb-2 text-3xl font-bold">
+            <span>{{ cat.name|capfirst }}</span> tags
+          </h2>
           <div class="flex gap-2">
             {% for tag in tags %}
-              <div class="py-1 px-2 text-lg rounded-md {% if cat.get_category_display == "basic" %}text-tag bg-tag-basic {% elif cat.get_category_display == "artist" %}text-tag bg-tag-artist {% elif cat.get_category_display == "copyright" %}text-tag bg-tag-copyright {% elif cat.get_category_display == "rating" %}text-tag bg-tag-rating {% else %}text-secondary-content bg-secondary {% endif %} ">
+              <div class="py-1 px-2 text-lg rounded-md {% if cat.name == "BASIC" %}text-tag bg-tag-basic {% elif cat.name == "ARTIST" %}text-tag bg-tag-artist {% elif cat.name == "COPYRIGHT" %}text-tag bg-tag-copyright {% elif cat.name == "RATING" %}text-tag bg-tag-rating {% else %}text-secondary-content bg-secondary {% endif %} ">
                 {{ tag.name }}
               </div>
             {% endfor %}

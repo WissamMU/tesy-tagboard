@@ -1,16 +1,18 @@
 from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpRequest
+from django.http.response import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django_htmx.middleware import HtmxDetails
 
+from .enums import TagCategory
 from .forms import PostForm
 from .models import Image
 from .models import Media
 from .models import MediaType
 from .models import Post
 from .models import Tag
-from .models import TagCategory
+from .search import PostSearch
 
 
 class HtmxHttpRequest(HttpRequest):
@@ -40,10 +42,28 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
 
 
 def tags(request: HtmxHttpRequest) -> TemplateResponse:
-    categories = TagCategory.objects.all()
+    categories = [tc.value.shortcode for tc in TagCategory.__members__.values()]
     tags_by_cat = {cat: Tag.objects.filter(category=cat) for cat in categories}
     context = {"tags_by_cat": tags_by_cat}
     return TemplateResponse(request, "pages/tags.html", context)
+
+
+def post_search_autocomplete(
+    request: HtmxHttpRequest,
+) -> TemplateResponse | HttpResponseNotAllowed:
+    if request.method == "GET":
+        tag_prefixes = [key.lower() for key in TagCategory.__members__]
+        if query := request.GET.get("q"):
+            ps = PostSearch(query, tag_prefixes)
+            partial = request.GET.get("partial", "")
+            items = ps.autocomplete(partial)
+        else:
+            items = []
+
+        context = {"items": items}
+        return TemplateResponse(request, "posts/search_autocomplete.html", context)
+
+    return HttpResponseNotAllowed(["GET"])
 
 
 def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media:
