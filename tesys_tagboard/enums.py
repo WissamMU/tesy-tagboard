@@ -33,4 +33,3 @@ class TagCategory(Enum):
     BASIC = TagCategoryData("BA", {"", "basic"}, "basic")
     ARTIST = TagCategoryData("AR", {"art", "artist"}, "artist")
     COPYRIGHT = TagCategoryData("CO", {"copy", "copyright"}, "copyright")
-    RATING = TagCategoryData("RA", {"rating", "safety"}, "rating")

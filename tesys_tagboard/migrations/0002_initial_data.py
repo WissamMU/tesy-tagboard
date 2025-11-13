@@ -3,29 +3,6 @@
 from django.db import migrations
 from django.db.models import Model
 
-
-def add_tags_and_tag_categories(apps, schema_editor):
-    TagCategory: type[Model] = apps.get_model("tesys_tagboard", "TagCategory")
-    Tag: type[Model] = apps.get_model("tesys_tagboard", "Tag")
-
-    categories = [
-        ("BA", ""),
-        ("AT", "artist"),
-        ("CP", "copyright"),
-        ("RT", "rating"),
-    ]
-
-    TagCategory(category="BA", prefix="").save()
-    TagCategory(category="AT", prefix="artist").save()
-    TagCategory(category="CP", prefix="copyright").save()
-    rating_category = TagCategory(category="RT", prefix="rating")
-    rating_category.save()
-
-    Tag(name="unrated", category=rating_category, rating_level=0).save()
-    Tag(name="safe", category=rating_category, rating_level=10).save()
-    Tag(name="questionable", category=rating_category, rating_level=50).save()
-    Tag(name="explicit", category=rating_category, rating_level=100).save()
-
 def add_media_types(apps, schema_editor):
     MediaType: type[Model] = apps.get_model("tesys_tagboard", "MediaType")
 
@@ -52,6 +29,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_tags_and_tag_categories),
         migrations.RunPython(add_media_types),
     ]

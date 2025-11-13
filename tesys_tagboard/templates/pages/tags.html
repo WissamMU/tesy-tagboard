@@ -11,9 +11,9 @@
           <h2 class="mb-2 text-3xl font-bold">
             <span>{{ cat.name|capfirst }}</span> tags
           </h2>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             {% for tag in tags %}
-              <div class="py-1 px-2 text-lg rounded-md {% if cat.name == "BASIC" %}text-tag bg-tag-basic {% elif cat.name == "ARTIST" %}text-tag bg-tag-artist {% elif cat.name == "COPYRIGHT" %}text-tag bg-tag-copyright {% elif cat.name == "RATING" %}text-tag bg-tag-rating {% else %}text-secondary-content bg-secondary {% endif %} ">
+              <div class="py-1 px-2 text-lg rounded-md {% if cat.name == "BASIC" %}text-tag bg-tag-basic {% elif cat.name == "ARTIST" %}text-tag bg-tag-artist {% elif cat.name == "COPYRIGHT" %}text-tag bg-tag-copyright{% else %}text-secondary-content bg-secondary {% endif %} ">
                 {{ tag.name }}
               </div>
             {% endfor %}

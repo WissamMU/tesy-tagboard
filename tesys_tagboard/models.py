@@ -193,10 +193,27 @@ class Audio(models.Model):
 class Post(models.Model):
     """Posts made by users with attached media"""
 
+    class RatingLevel(models.IntegerChoices):
+        """Rating levels for posts
+        Default: UNRATED
+
+        These levels are ordered such that SAFE < UNRATED < QUESTIONABLE < EXPLICIT
+        This enabled a simple integer comparison to be made on the RatingLevel value
+        to show only the desired posts
+        """
+
+        SAFE = 0
+        UNRATED = 1
+        QUESTIONABLE = 50
+        EXPLICIT = 100
+
     uploader = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     post_date = models.DateTimeField(default=now, editable=False)
     tags = models.ManyToManyField(Tag)
     media = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
+    rating_level = models.PositiveSmallIntegerField(
+        default=RatingLevel.UNRATED, choices=RatingLevel.choices
+    )
 
     class Meta:
         ordering = ["post_date"]

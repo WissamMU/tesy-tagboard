@@ -42,8 +42,11 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
 
 
 def tags(request: HtmxHttpRequest) -> TemplateResponse:
-    categories = [tc.value.shortcode for tc in TagCategory.__members__.values()]
-    tags_by_cat = {cat: Tag.objects.filter(category=cat) for cat in categories}
+    categories = TagCategory.__members__.values()
+    tags_by_cat = {
+        cat: Tag.objects.filter(category=cat.value.shortcode) for cat in categories
+    }
+
     context = {"tags_by_cat": tags_by_cat}
     return TemplateResponse(request, "pages/tags.html", context)
 
