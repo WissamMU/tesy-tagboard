@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpRequest
 from django.http.response import HttpResponseNotAllowed
@@ -105,17 +107,21 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media
 
 
 def upload(request: HtmxHttpRequest) -> TemplateResponse:
-    form = (
-        PostForm(request.POST, request.FILES)
-        if request.method == "POST"
-        else PostForm()
-    )
+    data: dict[str, str | list[Any] | None] = {
+        key: request.POST.get(key) for key in request.POST
+    }
+    data["tagset"] = request.POST.getlist("tagset")
+    form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
 
     if form.is_valid():
         media = handle_media_upload(
             form.cleaned_data.get("file"), form.cleaned_data.get("src_url")
         )
+
+        tagset = form.cleaned_data.get("tagset")
+        tags = Tag.objects.filter(pk__in=tagset)
         post = Post(uploader=request.user, media=media)
+        post.tags.set(tags)
         post.save()
 
     context = {"form": form}

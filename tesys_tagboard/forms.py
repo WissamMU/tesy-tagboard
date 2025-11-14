@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from .models import Image
@@ -30,6 +31,32 @@ class TagSearch(forms.Form):
     pass
 
 
+class TagsetField(forms.Field):
+    """A Field representing a set of Tag IDs"""
+
+    def to_python(self, value) -> set[int]:
+        if value is None:
+            return set()
+        try:
+            return {int(x) for x in value if len(x) > 0}
+        except ValueError as e:
+            msg = "A tagset may only contain integers"
+            raise ValidationError(msg) from e
+
+    def validate(self, value):
+        for tag_id in value:
+            if tag_id <= 0:
+                msg = "A tagset may only contain positive integers"
+                raise ValidationError(msg)
+        return value
+
+
 class PostForm(forms.Form):
+    """Form for media posts
+    src_url = a URL linking to the source of the media
+    file = a file object representing the Media
+    tags: an array of tag IDs"""
+
     src_url = forms.URLField(label=_("Source"), required=False)
     file = forms.FileField(label="File", required=True)
+    tagset = TagsetField(required=False, widget=forms.HiddenInput)

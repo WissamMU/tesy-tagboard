@@ -10,11 +10,11 @@
     <form action="{% url 'upload' %}"
           method="post"
           enctype="multipart/form-data"
-          class="flex gap-4 items-center">
+          class="flex flex-col gap-4 items-center">
       {% csrf_token %}
       {{ form }}
       <input type="submit" value="Post" class="text-xl btn btn-primary" />
+      <div id="all-posts-tagset" class="flex">{% component "add_tagset" / %}</div>
     </form>
   </div>
-  <div class="flex">{% component "tag_search" / %}</div>
 {% endblock content %}
