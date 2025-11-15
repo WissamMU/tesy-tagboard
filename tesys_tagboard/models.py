@@ -5,6 +5,7 @@ from hashlib import md5
 
 import imagehash
 from django.db import models
+from django.utils import timezone
 from django.utils.timezone import now
 from PIL import Image as PIL_Image
 
@@ -76,6 +77,13 @@ class Artist(models.Model):
         return f"<Artist - {self.tag}, bio: {self.bio}>"
 
 
+def media_upload_path(instance, filename: str) -> str:
+    """Generate a unique upload path for a Media file"""
+    filename = str(uuid.uuid4())
+    now = timezone.now()
+    return f"uploads/{now.year}/{now.month}/{now.day}/{filename}"
+
+
 def unique_filename(instance, filename: str) -> str:
     """Generate a unique (UUID) filename"""
     filename_split = filename.split(".")
@@ -110,7 +118,7 @@ class Image(models.Model):
     """Media linked to static image files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
-    file = models.ImageField(upload_to=unique_filename, unique=True)
+    file = models.ImageField(upload_to=media_upload_path, unique=True)
 
     """MD5 hash"""
     md5 = models.CharField(validators=[valid_md5])
@@ -138,7 +146,7 @@ class Video(models.Model):
     """Media linked to static video files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
-    file = models.FileField(upload_to=unique_filename, unique=True)
+    file = models.FileField(upload_to=media_upload_path, unique=True)
 
     """MD5 hash"""
     md5 = models.CharField(validators=[valid_md5])
@@ -155,7 +163,7 @@ class Audio(models.Model):
     """Media linked to static audio files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
-    file = models.FileField(upload_to=unique_filename, unique=True)
+    file = models.FileField(upload_to=media_upload_path, unique=True)
 
     """MD5 hash"""
     md5 = models.CharField(validators=[valid_md5])
