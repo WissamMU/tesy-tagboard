@@ -27,10 +27,6 @@ class MakeTagAlias(forms.ModelForm):
         fields = ["name", "tag"]
 
 
-class TagSearch(forms.Form):
-    pass
-
-
 class TagsetField(forms.Field):
     """A Field representing a set of Tag IDs"""
 
@@ -59,4 +55,11 @@ class PostForm(forms.Form):
 
     src_url = forms.URLField(label=_("Source"), required=False)
     file = forms.FileField(label="File", required=True)
+    tagset = TagsetField(required=False, widget=forms.HiddenInput)
+
+
+class PostSearchForm(forms.Form):
+    """Form for searching Posts
+    tagset: an array of tag IDs"""
+
     tagset = TagsetField(required=False, widget=forms.HiddenInput)

@@ -11,6 +11,7 @@ from django_htmx.middleware import HtmxDetails
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import PostForm
+from .forms import PostSearchForm
 from .models import Image
 from .models import Media
 from .models import Post
@@ -40,7 +41,21 @@ def post(request: HtmxHttpRequest, media_id: int) -> TemplateResponse:
 
 
 def posts(request: HtmxHttpRequest) -> TemplateResponse:
+    data: dict[str, str | list[Any] | None] = {
+        key: request.POST.get(key) for key in request.POST
+    }
+    data["tagset"] = request.POST.getlist("tagset")
+    form = PostSearchForm(data) if request.method == "POST" else PostForm()
+
     posts = Post.objects.all()
+    if form.is_valid():
+        tagset = form.cleaned_data.get("tagset")
+        tags = Tag.objects.filter(pk__in=tagset)
+        for tag in tags:
+            posts = posts.filter(tags__in=[tag])
+    else:
+        posts = Post.objects.all()
+
     pager = Paginator(posts, 12, 5)
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)

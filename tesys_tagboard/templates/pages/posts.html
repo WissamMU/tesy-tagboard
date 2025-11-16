@@ -7,17 +7,27 @@
 {% endblock title %}
 {% block content %}
   <div class="flex flex-col gap-4 items-center">
-    <div>{% component "search_bar" autocomplete_url="post-autocomplete" / %}</div>
-    {% component "pager" with pager=pager page=page / %}
-    <div class="flex flex-wrap gap-4 justify-center">
-      {% for post in page %}
-        <a href="{% url "post" media_id=post.media.id %}">
-          <img class="object-cover rounded-md border-2 w-[400px] h-[400px]"
-               src="{{ post.media.image.file.url }}"
-               alt="image" />
-        </a>
-      {% endfor %}
-    </div>
-    {% component "pager" with pager=pager page=page / %}
+    <form action="{% url 'posts' %}"
+          method="post"
+          enctype="multipart/form-data"
+          class="flex gap-2 items-center">
+      {% csrf_token %}
+      {{ form }}
+      <div id="post-search-tags" class="flex">{% component "add_tagset" / %}</div>
+      <input type="submit" value="Search" class="text-xl btn btn-primary" />
+    </form>
+    <section class="flex flex-col gap-4 items-center">
+      {% component "pager" with pager=pager page=page / %}
+      <div class="flex flex-wrap gap-4 justify-center">
+        {% for post in page %}
+          <a href="{% url "post" media_id=post.media.id %}">
+            <img class="object-cover rounded-md border-2 w-[400px] h-[400px]"
+                 src="{{ post.media.image.file.url }}"
+                 alt="image" />
+          </a>
+        {% endfor %}
+      </div>
+      {% component "pager" with pager=pager page=page / %}
+    </section>
   </div>
 {% endblock content %}
