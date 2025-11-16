@@ -1,0 +1,20 @@
+<div class="rounded-md cursor-pointer select-none dropdown">
+  <div tabindex="0"
+       role="button"
+       class="btn {% if category == "basic" %}text-tag bg-tag-basic {% elif category == "artist" %}text-tag bg-tag-artist {% elif category == "copyright" %}text-tag bg-tag-copyright {% else %}text-secondary-content bg-secondary{% endif %}">
+    {{ tag.name }}
+  </div>
+  {% if actions %}
+    <ul tabindex="-1"
+        class="top-full mt-1 rounded-lg first:rounded-t-lg last:rounded-b-lg tag-actions dropdown-content bg-base-300 text-base-content">
+      {% for action in actions %}
+        <li class="relative p-2 w-52 font-bold group menu z-1 hover:bg-accent hover:text-accent-content">
+          {{ action.name }}
+          <aside class="hidden absolute top-0 left-full p-1 min-h-full text-sm rounded-none group-hover:block min-w-40 h-content bg-info text-info-content">
+            {{ action.desc }}
+          </aside>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

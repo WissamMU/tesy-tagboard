@@ -36,7 +36,7 @@ def about(request: HtmxHttpRequest) -> TemplateResponse:
 
 def post(request: HtmxHttpRequest, media_id: int) -> TemplateResponse:
     post = get_object_or_404(Post.objects.filter(media__id=media_id))
-    context = {"post": post}
+    context = {"post": post, "tags": Tag.objects.filter(post=post)}
     return TemplateResponse(request, "pages/post.html", context)
 
 

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load component_tags %}
+
 {% block title %}
   {{ block.super }} — Posts
 {% endblock title %}
@@ -14,7 +16,9 @@
       {% if post.media.src_url %}<div>Source: {{ post.media.src_url }}</div>{% endif %}
       <div class="flex flex-wrap gap-2 max-w-[70%]">
         Tags:
-        {% for tag in post.tags.values %}<div class="py-1 px-2 bg-indigo-700 rounded-md">{{ tag.name }}</div>{% endfor %}
+        {% for tag in tags %}
+          {% component "tag" tag=tag / %}
+        {% endfor %}
       </div>
       <div>Rating: {{ post.get_rating_level_display }}</div>
     </div>

@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
+{% load component_tags %}
+
 {% block title %}
   {{ block.super }} — Tags
 {% endblock title %}
 {% block content %}
-  <div class="flex flex-col gap-4 p-8 w-full rounded-sm bg-base-300">
+  <div class="flex flex-col gap-4 p-8 w-full rounded-sm bg-base-100">
     {% for cat, tags in tags_by_cat.items %}
       {% if tags %}
         <div>
@@ -13,9 +15,7 @@
           </h2>
           <div class="flex flex-wrap gap-2">
             {% for tag in tags %}
-              <div class="py-1 px-2 text-lg rounded-md {% if cat.name == "BASIC" %}text-tag bg-tag-basic {% elif cat.name == "ARTIST" %}text-tag bg-tag-artist {% elif cat.name == "COPYRIGHT" %}text-tag bg-tag-copyright{% else %}text-secondary-content bg-secondary {% endif %} ">
-                {{ tag.name }}
-              </div>
+              {% component "tag" tag=tag / %}
             {% endfor %}
           </div>
         </div>
