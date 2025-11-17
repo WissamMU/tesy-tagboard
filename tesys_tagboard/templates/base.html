@@ -35,7 +35,8 @@
       <script defer src="{% static 'js/project.js' %}"></script>
     {% endblock javascript %}
   </head>
-  <body class="{% block bodyclass %}{% endblock bodyclass %}">
+  <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
+        class="{% block bodyclass %}{% endblock bodyclass %}">
     {% block body %}
       <nav class="flex justify-between px-2 shadow-sm sm:text-2xl lg:text-lg navbar bg-primary text-primary-content">
         <div class="flex">

@@ -60,6 +60,9 @@ class PostForm(forms.Form):
 
 class PostSearchForm(forms.Form):
     """Form for searching Posts
-    tagset: an array of tag IDs"""
+    tagset: an array of tag IDs
+    funcset: an array of search function IDs
+    """
 
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
+    funcset = TagsetField(required=False, widget=forms.HiddenInput)
