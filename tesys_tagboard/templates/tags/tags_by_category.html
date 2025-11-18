@@ -1,0 +1,20 @@
+{% load component_tags %}
+
+<div id="tags-container"
+     class="flex flex-col gap-4 p-8 w-full rounded-sm bg-base-100">
+  {% for cat, tags in tags_by_cat.items %}
+    {% if tags %}
+      <div>
+        <h2 class="mb-2 text-3xl font-bold">
+          <span>{{ cat.name|capfirst }}</span> tags
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {% for tag in tags %}
+            {% component "tag" tag=tag size="large" / %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="not-last:divider"></div>
+    {% endif %}
+  {% endfor %}
+</div>

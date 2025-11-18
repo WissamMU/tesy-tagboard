@@ -70,11 +70,16 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
 
 def tags(request: HtmxHttpRequest) -> TemplateResponse:
     categories = TagCategory.__members__.values()
+    tag_name = request.GET.get("q", "")
     tags_by_cat = {
-        cat: Tag.objects.filter(category=cat.value.shortcode) for cat in categories
+        cat: Tag.objects.filter(category=cat.value.shortcode, name__icontains=tag_name)
+        for cat in categories
     }
 
-    context = {"tags_by_cat": tags_by_cat}
+    context = {"tags_by_cat": tags_by_cat, "tag_name": tag_name}
+    if request.htmx:
+        return TemplateResponse(request, "tags/tags_by_category.html", context)
+
     return TemplateResponse(request, "pages/tags.html", context)
 
 
