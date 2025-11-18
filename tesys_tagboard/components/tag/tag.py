@@ -18,6 +18,7 @@ class TagComponent(Component):
 
     def get_template_data(self, args, kwargs, slots, context):
         tag = kwargs.get("tag")
+        size = kwargs.get("size")
         category = tag.get_category_display()
         extra_actions = kwargs.get("actions", [])
         actions = [
@@ -26,4 +27,4 @@ class TagComponent(Component):
             Action("blocklist", "Add this tag to your tag blocklist", ""),
             *extra_actions,
         ]
-        return {"tag": tag, "category": category, "actions": actions}
+        return {"tag": tag, "size": size, "category": category, "actions": actions}

@@ -6,9 +6,10 @@
   <div class="dropdown">
     <button tabindex="0"
             role="button"
-            class="px-3 py-1 btn {% if category == "basic" %}text-tag bg-tag-basic {% elif category == "artist" %}text-tag bg-tag-artist {% elif category == "copyright" %}text-tag bg-tag-copyright {% else %}text-secondary-content bg-secondary{% endif %}">
+            class="{% if size == "small" %}btn-sm{% elif size == "large" %}btn-lg{% endif %} px-3 py-1 btn {% if category == "basic" %}text-tag bg-tag-basic {% elif category == "artist" %}text-tag bg-tag-artist {% elif category == "copyright" %}text-tag bg-tag-copyright {% else %}text-secondary-content bg-secondary{% endif %}">
       <div class="flex gap-1 items-center">
-        <i data-feather="tag" class="feather feather-sm"></i>
+        <i data-feather="tag"
+           class="feather {% if size == "small" %}feather-sm{% elif size == "large" %}feather-lg{% endif %}"></i>
         <div>{{ tag.name }}</div>
       </div>
       <div>({{ tag.post_count }})</div>
