@@ -2,7 +2,8 @@
   {% for item in items %}
     <li data-id="{{ item.tag_id }}"
         data-name="{{ item.name }}"
-        class="flex hover:brightness-125 {% if item.tag_category == "BA" %}text-tag bg-tag-basic {% elif item.tag_category == "AR" %}text-tag bg-tag-artist {% elif item.tag_category == "CO" %}text-tag bg-tag-copyright {% else %}text-secondary-content bg-secondary{% endif %}">
+        tabindex="-1"
+        class="flex hover:brightness-125 focus:brightness-125 focus:-border-blue-300 {% if item.tag_category == "BA" %}text-tag bg-tag-basic {% elif item.tag_category == "AR" %}text-tag bg-tag-artist {% elif item.tag_category == "CO" %}text-tag bg-tag-copyright {% else %}text-secondary-content bg-secondary{% endif %}">
       <div class="px-2 w-12 text-center bg-accent text-accent-content">
         {% if item.tag_category %}
           tag

@@ -1,6 +1,6 @@
 {% load component_tags %}
 
-<div class="relative z-50 search-container">
+<div class="relative search-container">
   <label class="input">
     <svg class="opacity-50 h-[1em]"
          xmlns="http://www.w3.org/2000/svg"
@@ -18,5 +18,5 @@
            hx-target=".result-container"
            hx-on::config-request="event.detail.path += this.value" />
   </label>
-  <div class="absolute top-full result-container"></div>
+  <div class="absolute top-full z-50 result-container"></div>
 </div>
