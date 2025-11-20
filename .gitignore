@@ -271,6 +271,7 @@ tesys_tagboard/media/
 .ipython/
 .env
 .envs/*
+!.envs/.local/
 
 # Dev env
 .helix
