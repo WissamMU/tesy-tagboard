@@ -96,6 +96,7 @@ class AutocompleteItem:
     tag_category: TagCategory | None = None
     tag_id: int | None = None
     alias: str = ""
+    extra: str = ""
 
 
 class PostSearch:
@@ -159,7 +160,13 @@ class PostSearch:
         )[: self.max_tags]
         return chain(
             (
-                AutocompleteItem(TokenCategory.tag, tag.name, tag.category, tag.pk)
+                AutocompleteItem(
+                    TokenCategory.tag,
+                    tag.name,
+                    tag.category,
+                    tag.pk,
+                    extra=tag.post_count,
+                )
                 for tag in tags
             ),
             (

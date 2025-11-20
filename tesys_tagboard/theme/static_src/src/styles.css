@@ -27,7 +27,8 @@
   --color-tag-basic: #a8e6cf;
   --color-tag-copyright: #ffd3b6;
   --color-tag-artist: #bae1ff;
-  --color-tag: #383737; /* Tag text */
+  --color-filter-func: #fceb7e;
+  --color-tag-content: #383737; /* Tag text */
 
   /* Keyframes */
   @keyframes fade_in {

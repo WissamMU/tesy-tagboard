@@ -86,7 +86,7 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
 def post_search_autocomplete(
     request: HtmxHttpRequest,
 ) -> TemplateResponse | HttpResponseNotAllowed:
-    if request.method == "GET":
+    if request.method == "GET" and request.htmx:
         tag_prefixes = [key.lower() for key in TagCategory.__members__]
         query = request.GET.get("q", "")
         ps = PostSearch(query, tag_prefixes)

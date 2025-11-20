@@ -6,9 +6,10 @@
   {{ block.super }} — Tags
 {% endblock title %}
 {% block content %}
-  <label class="self-center input">
-    <i class="feather" data-feather="filter"></i>
+  <label class="flex relative items-center self-center w-96">
+    <div class="absolute left-2 z-5">{% include "icons/feather.html" with icon="filter" %}</div>
     <input type="search"
+           class="w-full rounded-none focus:border-none focus:shadow-none focus:outline-none ps-8 input grow f-full"
            placeholder="Filter tags..."
            name="q"
            value="{{ request.GET.q }}"
