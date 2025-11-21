@@ -8,7 +8,7 @@ from .models import TagAlias
 
 
 class UploadImage(forms.ModelForm):
-    src_url = forms.URLField(label=_("Source"), required=False)
+    src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
 
     class Meta:
         model = Image
@@ -53,7 +53,7 @@ class PostForm(forms.Form):
     file = a file object representing the Media
     tags: an array of tag IDs"""
 
-    src_url = forms.URLField(label=_("Source"), required=False)
+    src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
     file = forms.FileField(label="File", required=True)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
 
