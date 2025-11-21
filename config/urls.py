@@ -11,7 +11,6 @@ from tesys_tagboard.api import api
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("about/", views.about, name="about"),
     path("posts/", views.posts, name="posts"),
     path(
         "posts/autocomplete/", views.post_search_autocomplete, name="post-autocomplete"
@@ -19,6 +18,8 @@ urlpatterns = [
     path("posts/<int:media_id>/", views.post, name="post"),
     path("tags/", views.tags, name="tags"),
     path("tags/autocomplete/", views.tag_search_autocomplete, name="tag-autocomplete"),
+    path("collections/", views.collections, name="collections"),
+    path("collections/<int:collection_id>/", views.collection, name="collection"),
     path("upload/", views.upload, name="upload"),
     path("help/", views.search_help, name="help"),
     # Django Admin, use {% url 'admin:index' %}

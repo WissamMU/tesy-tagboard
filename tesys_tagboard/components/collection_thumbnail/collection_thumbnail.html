@@ -1,0 +1,10 @@
+<div class="w-full shadow-sm card min-w-68 bg-base-200">
+  <div class="card-body">
+    <h2 class="card-title">{{ collection.name }}</h2>
+    <p>{{ collection.desc }}</p>
+    <div class="justify-end card-actions">
+      <a class="btn btn-primary"
+         href="{% url 'collection' collection_id=collection.id %}">Open</a>
+    </div>
+  </div>
+</div>

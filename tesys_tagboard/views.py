@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from typing import Any
 
+from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import UploadedFile
 from django.core.paginator import Paginator
 from django.http import HttpRequest
@@ -13,6 +14,7 @@ from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import PostForm
 from .forms import PostSearchForm
+from .models import Collection
 from .models import Image
 from .models import Media
 from .models import Post
@@ -31,11 +33,6 @@ class HtmxHttpRequest(HttpRequest):
 def home(request: HttpRequest) -> TemplateResponse:
     context = {}
     return TemplateResponse(request, "pages/home.html", context)
-
-
-def about(request: HtmxHttpRequest) -> TemplateResponse:
-    context = {}
-    return TemplateResponse(request, "pages/about.html", context)
 
 
 def post(request: HtmxHttpRequest, media_id: int) -> TemplateResponse:
@@ -81,6 +78,37 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
         return TemplateResponse(request, "tags/tags_by_category.html", context)
 
     return TemplateResponse(request, "pages/tags.html", context)
+
+
+@login_required
+def collections(request: HttpRequest) -> TemplateResponse:
+    collections = Collection.objects.filter(public=True)
+    pager = Paginator(collections, 25, 5)
+    page_num = request.GET.get("page", 1)
+    page = pager.get_page(page_num)
+    context = {
+        "user": request.user,
+        "collections": collections,
+        "pager": pager,
+        "page": page,
+    }
+    return TemplateResponse(request, "pages/collections.html", context)
+
+
+@login_required
+def collection(request: HtmxHttpRequest, collection_id: int) -> TemplateResponse:
+    collection = get_object_or_404(Collection.objects.filter(pk=collection_id))
+    posts = Post.objects.filter(pk__in=collection.posts.values_list("pk", flat=True))
+    pager = Paginator(posts, 25, 5)
+    page_num = request.GET.get("page", 1)
+    page = pager.get_page(page_num)
+    context = {
+        "user": request.user,
+        "collection": collection,
+        "pager": pager,
+        "page": page,
+    }
+    return TemplateResponse(request, "pages/collection.html", context)
 
 
 def post_search_autocomplete(

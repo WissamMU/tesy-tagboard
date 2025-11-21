@@ -2,11 +2,11 @@ from django.contrib import admin
 
 from .models import Artist
 from .models import Audio
+from .models import Collection
 from .models import Comment
 from .models import Favorite
 from .models import Image
 from .models import Media
-from .models import Pool
 from .models import Post
 from .models import Tag
 from .models import TagAlias
@@ -103,8 +103,8 @@ class PostAdmin(admin.ModelAdmin):
     list_filter = ["rating_level", "uploader"]
 
 
-@admin.register(Pool)
-class PoolAdmin(admin.ModelAdmin):
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
     autocomplete_fields = ["user", "posts"]
     search_fields = ["user", "name", "desc"]
 

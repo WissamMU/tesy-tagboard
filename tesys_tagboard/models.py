@@ -222,7 +222,7 @@ class Post(models.Model):
         ordering = ["post_date"]
 
     def __str__(self) -> str:
-        return f"<Post - uploader: {self.uploader.name}, posted: {self.post_date}>"
+        return f"<Post - uploader: {self.uploader.username}, posted: {self.post_date}>"
 
     # TODO: also override update() to update post counts
     def save(self, **kwargs):
@@ -230,23 +230,24 @@ class Post(models.Model):
         update_tag_post_counts()
 
 
-class Pool(models.Model):
+class Collection(models.Model):
     """Collections of posts saved by users"""
 
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
     desc = models.TextField(max_length=1024)
     posts = models.ManyToManyField(Post)
+    public = models.BooleanField(default=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "name"], name="unique_pool_name_user"
+                fields=["user", "name"], name="unique_collection_name_user"
             )
         ]
 
     def __str__(self) -> str:
-        return f"<Pool - name: {self.name}, user: {self.user}, desc: {self.desc}>"
+        return f"<Collection - name: {self.name}, user: {self.user}, desc: {self.desc}>"
 
 
 class Comment(models.Model):
@@ -272,4 +273,4 @@ class Favorite(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"<Favorite - post: {self.post}, user: {self.user}>"
+        return f"<Favorite - post: {self.post}, user: {self.user.username}>"

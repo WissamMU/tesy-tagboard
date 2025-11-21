@@ -1,22 +1,42 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.paginator import Paginator
 from django.db.models import QuerySet
+from django.http import HttpRequest
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView
 from django.views.generic import RedirectView
 from django.views.generic import UpdateView
+from django_htmx.middleware import HtmxDetails
 
+from tesys_tagboard.models import Collection
+from tesys_tagboard.models import Favorite
 from tesys_tagboard.users.models import User
 
 
-class UserDetailView(LoginRequiredMixin, DetailView):
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
+class HtmxHttpRequest(HttpRequest):
+    htmx: HtmxDetails
 
 
-user_detail_view = UserDetailView.as_view()
+@login_required
+def user_detail_view(request: HttpRequest, username: str) -> TemplateResponse:
+    user = request.user
+    favorites = Favorite.objects.filter(user=user)
+    collections = Collection.objects.filter(user=user)
+
+    favorites_pager = Paginator(favorites, 20, 5)
+    favorites_page_num = request.GET.get("fav_page", 1)
+    favorites_page = favorites_pager.get_page(favorites_page_num)
+
+    context = {
+        "user": user,
+        "favorites_pager": favorites_pager,
+        "favorites_page": favorites_page,
+        "collections": collections,
+    }
+    return TemplateResponse(request, "users/user_detail.html", context)
 
 
 class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):

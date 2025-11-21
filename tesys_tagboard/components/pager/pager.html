@@ -1,19 +1,21 @@
 <div class="join">
-  {% if page.has_previous %}
-    {% include "nav/pager_button.html" with text="Previous" page_num=page.previous_page_number %}
-  {% else %}
-    {% include "nav/pager_button.html" with text="Previous" disabled=True %}
-  {% endif %}
-  {% for page_num in pager.page_range %}
-    {% if page_num == page.number %}
-      {% include "nav/pager_button.html" with text=page_num page_num=page_num active=True %}
+  {% if pager.num_pages > 1 %}
+    {% if page.has_previous %}
+      {% include "nav/pager_button.html" with text="Previous" page_num=page.previous_page_number %}
     {% else %}
-      {% include "nav/pager_button.html" with text=page_num page_num=page_num active=False %}
+      {% include "nav/pager_button.html" with text="Previous" disabled=True %}
     {% endif %}
-  {% endfor %}
-  {% if page.has_next %}
-    {% include "nav/pager_button.html" with text="Next" page_num=page.next_page_number %}
-  {% else %}
-    {% include "nav/pager_button.html" with text="Next" disabled=True %}
+    {% for page_num in pager.page_range %}
+      {% if page_num == page.number %}
+        {% include "nav/pager_button.html" with text=page_num page_num=page_num active=True %}
+      {% else %}
+        {% include "nav/pager_button.html" with text=page_num page_num=page_num active=False %}
+      {% endif %}
+    {% endfor %}
+    {% if page.has_next %}
+      {% include "nav/pager_button.html" with text="Next" page_num=page.next_page_number %}
+    {% else %}
+      {% include "nav/pager_button.html" with text="Next" disabled=True %}
+    {% endif %}
   {% endif %}
 </div>
