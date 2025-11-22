@@ -5,6 +5,10 @@ from hashlib import md5
 
 import imagehash
 from django.db import models
+from django.db.models import Case
+from django.db.models import QuerySet
+from django.db.models import Value
+from django.db.models import When
 from django.utils import timezone
 from django.utils.timezone import now
 from PIL import Image as PIL_Image
@@ -228,6 +232,21 @@ class Post(models.Model):
     def save(self, **kwargs):
         super().save(**kwargs)
         update_tag_post_counts()
+
+    @staticmethod
+    def annotate_favorites(
+        posts: QuerySet[Post], favorites: QuerySet[Favorite]
+    ) -> QuerySet[Post]:
+        """Adds the `favorited` annotation to a QuerySet of Posts"""
+        return posts.annotate(
+            favorited=Case(
+                When(
+                    pk__in=favorites.values_list("post", flat=True),
+                    then=Value(value=True),
+                ),
+                default=Value(value=False),
+            )
+        )
 
 
 class Collection(models.Model):

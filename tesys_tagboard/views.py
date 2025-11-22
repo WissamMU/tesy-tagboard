@@ -2,19 +2,23 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from django.contrib.auth.decorators import login_required
-from django.core.files.uploadedfile import UploadedFile
 from django.core.paginator import Paginator
 from django.http import HttpRequest
+from django.http import HttpResponse
 from django.http.response import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django_htmx.middleware import HtmxDetails
+from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_POST
 
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import PostForm
 from .forms import PostSearchForm
 from .models import Collection
+from .models import Favorite
 from .models import Image
 from .models import Media
 from .models import Post
@@ -23,7 +27,9 @@ from .search import PostSearch
 from .search import tag_autocomplete
 
 if TYPE_CHECKING:
+    from django.core.files.uploadedfile import UploadedFile
     from django.db.models import QuerySet
+    from django_htmx.middleware import HtmxDetails
 
 
 class HtmxHttpRequest(HttpRequest):
@@ -48,17 +54,23 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
     data["tagset"] = request.POST.getlist("tagset")
     form = PostSearchForm(data) if request.method == "POST" else PostForm()
 
-    posts = Post.objects.all()
+    posts = (
+        Post.objects.all()
+        .select_related("media", "media__image")
+        .prefetch_related("tags")
+        .all()
+    )
     tags: QuerySet[Tag] | None = None
     if form.is_valid():
         tagset = form.cleaned_data.get("tagset")
         tags = Tag.objects.filter(pk__in=tagset)
-        for tag in tags:
-            posts = posts.filter(tags__in=[tag])
-    else:
-        posts = Post.objects.all()
+        posts = posts.filter(tags__in=tags)
 
-    pager = Paginator(posts, 12, 5)
+    # Get Posts favorited status
+    favorites = Favorite.objects.filter(user=request.user)
+    posts = Post.annotate_favorites(posts, favorites)
+
+    pager = Paginator(posts, 20, 5)
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)
     context = {"posts": posts, "pager": pager, "page": page, "tags": tags}
@@ -111,6 +123,43 @@ def collection(request: HtmxHttpRequest, collection_id: int) -> TemplateResponse
     return TemplateResponse(request, "pages/collection.html", context)
 
 
+@login_required
+@require_http_methods(["PUT"])
+def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
+    if request.htmx:
+        try:
+            post = Post.objects.get(pk=post_id)
+            favorite = Favorite.objects.create(post=post, user=request.user)
+            favorite.save()
+            return render(
+                request,
+                "icons/feather.html",
+                context={"icon": "heart", "fill": True},
+                status=200,
+            )
+        except Post.DoesNotExist, Favorite.DoesNotExist:
+            return HttpResponse(404)
+    return HttpResponse("Not allowed", 403)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
+    try:
+        post = Post.objects.get(pk=post_id)
+        Favorite.objects.get(post=post, user=request.user).delete()
+        return render(
+            request,
+            "icons/feather.html",
+            context={"icon": "heart", "fill": False},
+            status=200,
+        )
+    except Post.DoesNotExist, Favorite.DoesNotExist:
+        return HttpResponse(404)
+    return HttpResponse("Not allowed", 403)
+
+
+@require_GET
 def post_search_autocomplete(
     request: HtmxHttpRequest,
 ) -> TemplateResponse | HttpResponseNotAllowed:
@@ -127,6 +176,7 @@ def post_search_autocomplete(
     return HttpResponseNotAllowed(["GET"])
 
 
+@require_GET
 def tag_search_autocomplete(
     request: HtmxHttpRequest,
 ) -> TemplateResponse | HttpResponseNotAllowed:
@@ -163,6 +213,7 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media
     raise ValueError(msg)
 
 
+@require_POST
 def upload(request: HtmxHttpRequest) -> TemplateResponse:
     data: dict[str, str | list[Any] | None] = {
         key: request.POST.get(key) for key in request.POST
@@ -185,6 +236,7 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse:
     return TemplateResponse(request, "pages/upload.html", context)
 
 
+@require_GET
 def search_help(request: HtmxHttpRequest) -> TemplateResponse:
     context = {}
     return TemplateResponse(request, "pages/help.html", context)

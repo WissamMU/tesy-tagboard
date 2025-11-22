@@ -18,6 +18,10 @@ urlpatterns = [
     path("posts/<int:media_id>/", views.post, name="post"),
     path("tags/", views.tags, name="tags"),
     path("tags/autocomplete/", views.tag_search_autocomplete, name="tag-autocomplete"),
+    path("favorites/add/<int:post_id>", views.add_favorite, name="add-favorite"),
+    path(
+        "favorites/remove/<int:post_id>", views.remove_favorite, name="remove-favorite"
+    ),
     path("collections/", views.collections, name="collections"),
     path("collections/<int:collection_id>/", views.collection, name="collection"),
     path("upload/", views.upload, name="upload"),

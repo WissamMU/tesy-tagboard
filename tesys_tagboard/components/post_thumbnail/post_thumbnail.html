@@ -1,6 +1,8 @@
 {% load component_tags %}
 
-<a class="relative skeleton post-thumbnail group/post w-[400px] h-[400px]"
+<a data-post_id="{{ post.pk }}"
+   {% if post.favorited %}data-favorite{% endif %}
+   class="relative skeleton post-thumbnail group/post w-[400px] h-[400px]"
    href="{% url "post" media_id=post.media.id %}">
   <img class="object-cover invisible w-full h-full rounded-md"
        loading="lazy"
@@ -8,9 +10,13 @@
        alt="image" />
   <div class="flex hidden absolute top-0 flex-col justify-between p-2 w-full h-full post-thumbnail-hover group-hover/post:flex">
     <section class="flex gap-1 self-end">
-      <button class="flex align-center btn btn-secondary">
+      <button class="flex favorite-button align-center btn btn-secondary"
+              hx-swap="innerHTML"
+              hx-target="#post-{{ post.pk }}-fav"
+              hx-trigger="click"
+              {% if post.favorited %} hx-delete="{% url 'remove-favorite' post_id=post.pk %}" {% else %} hx-put="{% url 'add-favorite' post_id=post.pk %}" {% endif %}>
         <div>Favorite</div>
-        {% include "icons/feather.html" with icon="heart" %}
+        <div id="post-{{ post.pk }}-fav">{% include "icons/feather.html" with icon="heart" fill=post.favorited %}</div>
       </button>
       <button class="btn btn-secondary">
         <div>Add to collection</div>

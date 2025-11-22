@@ -43,7 +43,7 @@
           {% component "pager" with pager=favorites_pager page=favorites_page / %}
           <div class="flex flex-wrap gap-4 justify-center">
             {% for favorite in favorites_page %}
-              {% component "post_thumbnail" post=favorite.post / %}
+              {% component "post_thumbnail" post=favorite / %}
             {% endfor %}
           </div>
           {% component "pager" with pager=favorites_pager page=favorites_page / %}
