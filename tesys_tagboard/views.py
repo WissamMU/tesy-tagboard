@@ -138,8 +138,8 @@ def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
                 status=200,
             )
         except Post.DoesNotExist, Favorite.DoesNotExist:
-            return HttpResponse(404)
-    return HttpResponse("Not allowed", 403)
+            return HttpResponse(status=404)
+    return HttpResponse("Not allowed", status=403)
 
 
 @login_required
@@ -155,8 +155,52 @@ def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
             status=200,
         )
     except Post.DoesNotExist, Favorite.DoesNotExist:
-        return HttpResponse(404)
-    return HttpResponse("Not allowed", 403)
+        return HttpResponse(status=404)
+    return HttpResponse("Not allowed", status=403)
+
+
+@login_required
+@require_http_methods(["POST"])
+def add_post_to_collection(
+    request: HtmxHttpRequest, collection_id: int
+) -> HttpResponse:
+    if request.htmx:
+        try:
+            collection = Collection.objects.get(user=request.user, pk=collection_id)
+            post = Post.objects.get(pk=request.POST.get("post"))
+            collection.posts.add(post)
+
+            return render(
+                request,
+                "collections/picker_item.html",
+                context={"collection": collection, "post": post, "checked": True},
+                status=200,
+            )
+        except Post.DoesNotExist, Collection.DoesNotExist:
+            return HttpResponse(status=404)
+    return HttpResponse("Not allowed", status=403)
+
+
+@login_required
+@require_http_methods(["POST"])
+def remove_post_from_collection(
+    request: HtmxHttpRequest, collection_id: int
+) -> HttpResponse:
+    if request.htmx:
+        try:
+            collection = Collection.objects.get(user=request.user, pk=collection_id)
+            post = Post.objects.get(pk=request.POST.get("post"))
+            collection.posts.remove(post)
+
+            return render(
+                request,
+                "collections/picker_item.html",
+                context={"collection": collection, "post": post, "checked": False},
+                status=200,
+            )
+        except Post.DoesNotExist, Collection.DoesNotExist:
+            return HttpResponse(status=404)
+    return HttpResponse("Not allowed", status=403)
 
 
 @require_GET

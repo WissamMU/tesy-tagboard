@@ -18,10 +18,7 @@
         <div>Favorite</div>
         <div id="post-{{ post.pk }}-fav">{% include "icons/feather.html" with icon="heart" fill=post.favorited %}</div>
       </button>
-      <button class="btn btn-secondary">
-        <div>Add to collection</div>
-        {% include "icons/feather.html" with icon="list" %}
-      </button>
+      {% component "collection_picker" post=post / %}
     </section>
     <section class="flex flex-wrap gap-1 text-sm">
       {% for tag in tags %}

@@ -24,6 +24,16 @@ urlpatterns = [
     ),
     path("collections/", views.collections, name="collections"),
     path("collections/<int:collection_id>/", views.collection, name="collection"),
+    path(
+        "collections/<int:collection_id>/add/",
+        views.add_post_to_collection,
+        name="collection-add-post",
+    ),
+    path(
+        "collections/<int:collection_id>/remove/",
+        views.remove_post_from_collection,
+        name="collection-remove-post",
+    ),
     path("upload/", views.upload, name="upload"),
     path("help/", views.search_help, name="help"),
     # Django Admin, use {% url 'admin:index' %}
