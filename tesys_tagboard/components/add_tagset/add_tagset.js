@@ -24,28 +24,33 @@
 
     tag_div.appendChild(tag_input);
     tagset.appendChild(tag_div);
+
+    search_input.value = "";
+    search_input.focus();
   }
 
   htmx.on(root.querySelector(".result-container"), "htmx:afterSettle", (e) => {
     let search_results = get_search_results();
     if (search_results) {
       Array.from(search_results.children).forEach(autocomplete_item => {
-        htmx.on(autocomplete_item, "mousedown", add_tag_to_set_handler);
+        htmx.on(autocomplete_item, "click", add_tag_to_set_handler);
         htmx.on(autocomplete_item, "keydown", (e) => {
           switch (e.code) {
             case "Enter":
-              // e.preventDefault();
               add_tag_to_set_handler(e);
               break;
             case "Escape":
               e.preventDefault();
               search_input.focus();
+              break;
             case "ArrowLeft":
               e.preventDefault();
               search_input.focus();
+              break;
             case "ArrowRight":
               e.preventDefault();
               search_input.focus();
+              break;
             default:
               // Do nothing
           }

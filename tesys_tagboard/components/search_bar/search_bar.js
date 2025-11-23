@@ -22,7 +22,11 @@
   let remove_results = () => {
     let search_results_ul = get_search_results();
     if (search_results_ul) {
-      htmx.remove(search_results_ul)
+      try {
+        htmx.remove(search_results_ul)
+      } catch (NotFoundError) {
+        console.error(`Couldn't find search results ul`)
+      }
     }
     reset_active_autocomplete_index()
   }
@@ -52,6 +56,7 @@
         case "Enter":
           // Implemented in encapsulating component (e.g. add_tagset.html)
           e.preventDefault();
+          remove_results();
         default:
       }
     }
