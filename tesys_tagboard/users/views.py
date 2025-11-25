@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet
 from django.db.models import Value
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -27,24 +28,32 @@ class HtmxHttpRequest(HttpRequest):
 
 @login_required
 def user_detail_view(request: HttpRequest, username: str) -> TemplateResponse:
-    user = request.user
-    collections = Collection.objects.filter(user=user)
-    favorited_posts = (
-        Post.objects.select_related("media")
-        .filter(pk__in=user.favorite_set.prefetch_related("post").values_list("post"))
-        .annotate(favorited=Value(value=True))
-    )
+    user = get_object_or_404(User, username=username)
 
-    favorites_pager = Paginator(favorited_posts, 20, 5)
-    favorites_page_num = request.GET.get("fav_page", 1)
-    favorites_page = favorites_pager.get_page(favorites_page_num)
+    context = {"user": user}
+    if request.user == user:
+        # This user's page
+        collections = Collection.objects.filter(user=user)
+        favorited_posts = (
+            Post.objects.select_related("media")
+            .filter(
+                pk__in=user.favorite_set.prefetch_related("post").values_list("post")
+            )
+            .annotate(favorited=Value(value=True))
+        )
 
-    context = {
-        "user": user,
-        "favorites_pager": favorites_pager,
-        "favorites_page": favorites_page,
-        "collections": collections,
-    }
+        favorites_pager = Paginator(favorited_posts, 20, 5)
+        favorites_page_num = request.GET.get("fav_page", 1)
+        favorites_page = favorites_pager.get_page(favorites_page_num)
+        context |= {
+            "favorites_pager": favorites_pager,
+            "favorites_page": favorites_page,
+            "collections": collections,
+        }
+    else:
+        # Other users' pages
+        collections = Collection.objects.filter(public=True)
+
     return TemplateResponse(request, "users/user_detail.html", context)
 
 

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import HttpRequest
 from django.http import HttpResponse
@@ -11,7 +12,6 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.http import require_POST
 
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
@@ -42,8 +42,8 @@ def home(request: HttpRequest) -> TemplateResponse:
 
 
 def post(request: HtmxHttpRequest, media_id: int) -> TemplateResponse:
-    post = get_object_or_404(Post.objects.filter(media__id=media_id))
-    context = {"post": post, "tags": Tag.objects.filter(post=post)}
+    post = get_object_or_404(Post.objects.with_media_id(media_id))
+    context = {"post": post, "tags": Tag.objects.for_post(post)}
     return TemplateResponse(request, "pages/post.html", context)
 
 
@@ -54,21 +54,17 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
     data["tagset"] = request.POST.getlist("tagset")
     form = PostSearchForm(data) if request.method == "POST" else PostForm()
 
+    favorites = Favorite.objects.for_user(request.user)
     posts = (
-        Post.objects.all()
-        .select_related("media", "media__image")
+        Post.objects.select_related("media", "media__image")
         .prefetch_related("tags")
-        .all()
+        .annotate_favorites(favorites)
     )
     tags: QuerySet[Tag] | None = None
     if form.is_valid():
         tagset = form.cleaned_data.get("tagset")
-        tags = Tag.objects.filter(pk__in=tagset)
-        posts = posts.filter(tags__in=tags)
-
-    # Get Posts favorited status
-    favorites = Favorite.objects.filter(user=request.user)
-    posts = Post.annotate_favorites(posts, favorites)
+        tags = Tag.objects.in_tagset(tagset)
+        posts = posts.has_tags(tags)
 
     pager = Paginator(posts, 20, 5)
     page_num = request.GET.get("page", 1)
@@ -94,7 +90,7 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
 
 @login_required
 def collections(request: HttpRequest) -> TemplateResponse:
-    collections = Collection.objects.filter(public=True)
+    collections = Collection.objects.public()
     pager = Paginator(collections, 25, 5)
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)
@@ -108,18 +104,27 @@ def collections(request: HttpRequest) -> TemplateResponse:
 
 
 @login_required
-def collection(request: HtmxHttpRequest, collection_id: int) -> TemplateResponse:
+def collection(
+    request: HtmxHttpRequest, collection_id: int
+) -> TemplateResponse | HttpResponse:
+    user = request.user
     collection = get_object_or_404(Collection.objects.filter(pk=collection_id))
-    posts = Post.objects.filter(pk__in=collection.posts.values_list("pk", flat=True))
-    pager = Paginator(posts, 25, 5)
-    page_num = request.GET.get("page", 1)
-    page = pager.get_page(page_num)
-    context = {
-        "user": request.user,
-        "collection": collection,
-        "pager": pager,
-        "page": page,
-    }
+    if user == collection.user or collection.public is True:
+        posts = Post.objects.filter(
+            pk__in=collection.posts.values_list("pk", flat=True)
+        )
+        pager = Paginator(posts, 25, 5)
+        page_num = request.GET.get("page", 1)
+        page = pager.get_page(page_num)
+        context = {
+            "user": request.user,
+            "collection": collection,
+            "pager": pager,
+            "page": page,
+        }
+    else:
+        raise PermissionDenied
+
     return TemplateResponse(request, "pages/collection.html", context)
 
 
@@ -257,7 +262,8 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media
     raise ValueError(msg)
 
 
-@require_POST
+@login_required
+@require_http_methods(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse:
     data: dict[str, str | list[Any] | None] = {
         key: request.POST.get(key) for key in request.POST
@@ -271,7 +277,7 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse:
         )
 
         tagset = form.cleaned_data.get("tagset")
-        tags = Tag.objects.filter(pk__in=tagset)
+        tags = Tag.objects.in_tagset(tagset)
         post = Post(uploader=request.user, media=media)
         post.tags.set(tags)
         post.save()

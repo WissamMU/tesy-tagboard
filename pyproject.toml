@@ -30,6 +30,9 @@ plugins = [
 module = "*.migrations.*"
 ignore_errors = true
 
+[[tool.pyright]]
+reportAttributeAccessIssue = "warning"
+
 [tool.django-stubs]
 django_settings_module = "config.settings.test"
 

@@ -22,6 +22,14 @@ from .validators import valid_md5
 from .validators import valid_phash
 
 
+class TagQuerySet(models.QuerySet):
+    def for_post(self, post: Post):
+        return self.filter(post=post)
+
+    def in_tagset(self, tagset: list[int]):
+        return self.filter(pk__in=tagset)
+
+
 class Tag(models.Model):
     """Tags for Media objects"""
 
@@ -39,6 +47,8 @@ class Tag(models.Model):
     """Rating levels to filter content. This field allows any tag to apply a rating
     """
     rating_level = models.PositiveSmallIntegerField(default=0)
+
+    objects = TagQuerySet.as_manager()
 
     class Meta:
         ordering = ["name"]
@@ -197,6 +207,36 @@ def update_tag_post_counts():
     Tag.objects.bulk_update(tcount_tags, fields=["post_count"])
 
 
+class PostQuerySet(models.QuerySet):
+    def annotate_favorites(self, favorites: QuerySet[Favorite]) -> QuerySet[Post]:
+        """Adds the `favorited` annotation to a QuerySet of Posts"""
+        return self.annotate(
+            favorited=Case(
+                When(
+                    pk__in=favorites.values_list("post", flat=True),
+                    then=Value(value=True),
+                ),
+                default=Value(value=False),
+            )
+        )
+
+    def uploaded_by(self, user):
+        """Return Posts uploaded by `user`"""
+        return self.filter(user=user)
+
+    def with_media_id(self, media_id: int):
+        """Return Posts matching the given `media_id`"""
+        return self.filter(media__id=media_id)
+
+    def has_tags(self, tags: QuerySet[Tag]):
+        """Return Posts tagged with _all_ of the provided `tags`"""
+        filter_expr = self
+        for tag in tags:
+            filter_expr = filter_expr & self.filter(tags__in=[tag.pk])
+
+        return filter_expr
+
+
 class Post(models.Model):
     """Posts made by users with attached media"""
 
@@ -222,6 +262,8 @@ class Post(models.Model):
         default=RatingLevel.UNRATED, choices=RatingLevel.choices
     )
 
+    objects = PostQuerySet.as_manager()
+
     class Meta:
         ordering = ["post_date"]
 
@@ -233,20 +275,15 @@ class Post(models.Model):
         super().save(**kwargs)
         update_tag_post_counts()
 
-    @staticmethod
-    def annotate_favorites(
-        posts: QuerySet[Post], favorites: QuerySet[Favorite]
-    ) -> QuerySet[Post]:
-        """Adds the `favorited` annotation to a QuerySet of Posts"""
-        return posts.annotate(
-            favorited=Case(
-                When(
-                    pk__in=favorites.values_list("post", flat=True),
-                    then=Value(value=True),
-                ),
-                default=Value(value=False),
-            )
-        )
+
+class CollectionQuerySet(models.QuerySet):
+    def public(self):
+        """Returns only `public` Collections"""
+        return self.filter(public=True)
+
+    def for_user(self, user):
+        """Return Collections of a `user`"""
+        return self.filter(user=user)
 
 
 class Collection(models.Model):
@@ -257,6 +294,8 @@ class Collection(models.Model):
     desc = models.TextField(max_length=1024)
     posts = models.ManyToManyField(Post)
     public = models.BooleanField(default=True)
+
+    objects = CollectionQuerySet.as_manager()
 
     class Meta:
         constraints = [
@@ -280,11 +319,17 @@ class Comment(models.Model):
         return f'<Comment: user: {self.user}, text: "{self.text}">'
 
 
+class FavoriteQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user)
+
+
 class Favorite(models.Model):
     """Favorited posts by users"""
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
+    objects = FavoriteQuerySet.as_manager()
 
     class Meta:
         constraints = [
