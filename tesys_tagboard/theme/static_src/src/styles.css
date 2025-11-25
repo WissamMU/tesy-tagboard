@@ -42,6 +42,8 @@
   --color-tag-artist: #bae1ff;
   --color-filter-func: #fceb7e;
   --color-tag-content: #383737; /* Tag text */
+  --color-user: #121212;
+  --color-user-content: #ddd;
 
   /* Keyframes */
   @keyframes fade_in {

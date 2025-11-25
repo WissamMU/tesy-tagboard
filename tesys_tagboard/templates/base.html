@@ -64,7 +64,7 @@
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
         class="{% block bodyclass %}{% endblock bodyclass %}">
     {% block body %}
-      <div class="flex justify-center p-4 sm:w-full bg-base-100 lg:max-w-1600px">
+      <div class="flex justify-center p-2 sm:w-full lg:p-4 bg-base-100 lg:max-w-1600px">
         {% if messages %}
           {% for message in messages %}
             <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">

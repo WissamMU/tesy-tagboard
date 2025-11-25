@@ -7,14 +7,14 @@
   {{ object.username }}
 {% endblock title %}
 {% block content %}
-  <div class="w-full lg:w-256">
-    <div class="tabs tabs-lift">
+  <div class="w-full xl:w-350">
+    <div class="tabs">
       <label class="flex gap-2 items-center text-lg tab">
         <input type="radio" name="profile_tabs" checked="checked" />
         {% include "icons/feather.html" with icon="user" %}
         Account
       </label>
-      <div class="p-6 tab-content bg-base-100 border-base-300">
+      <div class="p-6 tab-content bg-base-200">
         <div>
           <div>
             <h2>{{ user.username }}</h2>
@@ -39,7 +39,7 @@
           {% include "icons/feather.html" with icon="heart" %}
           Favorites
         </label>
-        <div class="p-6 tab-content bg-base-100 border-base-300">
+        <div class="p-6 tab-content bg-base-200">
           <div class="flex flex-col gap-4 items-center">
             {% component "pager" with pager=favorites_pager page=favorites_page / %}
             <div class="flex flex-wrap gap-4 justify-center">
@@ -56,8 +56,8 @@
         {% include "icons/feather.html" with icon="list" %}
         <div>Collections</div>
       </label>
-      <div class="p-6 tab-content bg-base-100 border-base-300">
-        <div class="flex flex-col flex-wrap justify-center">
+      <div class="p-6 tab-content bg-base-200">
+        <div class="grid grid-cols-1 gap-4 w-full lg:grid-cols-2 xl:grid-cols-3">
           {% for collection in collections %}
             {% component "collection_thumbnail" collection=collection / %}
           {% endfor %}
