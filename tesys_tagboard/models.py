@@ -312,9 +312,26 @@ class Collection(models.Model):
 class Comment(models.Model):
     """User comments"""
 
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
-    text = models.TextField(editable=True, max_length=500)
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        db_comment="The foreign key to the Post this comment comments on",
+    )
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        db_comment="The foreign key to the User who posted the comment",
+    )
+    text = models.TextField(
+        editable=True, max_length=500, db_comment="The body text of the comment"
+    )
+    post_date = models.DateTimeField(
+        auto_now_add=True, db_comment="Date and time when the comment was posted"
+    )
+    edit_date = models.DateTimeField(
+        auto_now=True, db_comment="Date and time when the comment was last edited"
+    )
 
     def __str__(self) -> str:
         return f'<Comment: user: {self.user}, text: "{self.text}">'

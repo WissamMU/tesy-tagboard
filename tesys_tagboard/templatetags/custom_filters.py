@@ -12,3 +12,8 @@ def concat(value, arg) -> str:
 @register.filter(name="get_item")
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+@register.filter(name="to_int")
+def to_int(s: str):
+    return int(s)

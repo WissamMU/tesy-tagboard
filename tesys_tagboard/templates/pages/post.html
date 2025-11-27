@@ -34,9 +34,9 @@
       {% if comments %}
         <div class="mt-4 mb-8">
           <h2>Comments</h2>
-          <div class="flex flex-col gap-1 w-full lg:w-100">
+          <div class="flex flex-col gap-2 items-stretch w-full">
             {% for comment in comments %}
-              <div class="p-1 border-2 border border-info bg-base-300">{{ comment.text }}</div>
+              {% component "comment" comment=comment / %}
             {% endfor %}
           </div>
         </div>

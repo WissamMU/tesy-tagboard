@@ -1,0 +1,17 @@
+{% load humanize custom_filters %}
+
+<div data-comment="{{ comment.pk }}"
+     class="p-2 border-2 border border-info bg-base-200">
+  <div class="flex justify-between">
+    <div class="flex">{% include "nav/user_link.html" with user=comment.user %}</div>
+    <div class="flex gap-2 items-center text-sm italic opacity-60">
+      {% with edit_timestamp=comment.edit_date.timestamp|to_int post_timestamp=comment.post_date.timestamp|to_int %}
+        {% if edit_timestamp != post_timestamp %}
+          <div class="font-bold opacity-80">(edited {{ comment.edit_date|naturaltime }})</div>
+        {% endif %}
+      {% endwith %}
+      <div>{{ comment.post_date|naturaltime }}</div>
+    </div>
+  </div>
+  <div class="ps-1">{{ comment.text }}</div>
+</div>
