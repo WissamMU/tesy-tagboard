@@ -46,8 +46,8 @@ def home(request: HttpRequest) -> TemplateResponse:
 
 
 @require(["GET", "POST"], login=False)
-def post(request: HtmxHttpRequest, media_id: int) -> TemplateResponse:
-    post = get_object_or_404(Post.objects.with_media_id(media_id))
+def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse:
+    post = get_object_or_404(Post.objects.filter(pk=post_id))
     comments = post.comment_set.order_by("-post_date")
     tags = Tag.objects.for_post(post)
     context = {"post": post, "tags": tags, "comments": comments}
@@ -215,9 +215,9 @@ def remove_post_from_collection(
 
 @require(["POST"])
 def add_comment(
-    request: HtmxHttpRequest, media_id: int
+    request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
-    post = get_object_or_404(Post.objects.with_media_id(media_id))
+    post = get_object_or_404(Post.objects.filter(pk=post_id))
 
     data = AddCommentForm(request.POST)
     if data.is_valid():

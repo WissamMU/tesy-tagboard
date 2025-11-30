@@ -15,9 +15,9 @@ urlpatterns = [
     path(
         "posts/autocomplete/", views.post_search_autocomplete, name="post-autocomplete"
     ),
-    path("posts/<int:media_id>/", views.post, name="post"),
+    path("posts/<int:post_id>/", views.post, name="post"),
     path(
-        "posts/<int:media_id>/add-comment/", views.add_comment, name="post-add-comment"
+        "posts/<int:post_id>/add-comment/", views.add_comment, name="post-add-comment"
     ),
     path("posts/comments/edit/", views.edit_comment, name="post-edit-comment"),
     path("posts/comments/delete/", views.delete_comment, name="post-delete-comment"),
