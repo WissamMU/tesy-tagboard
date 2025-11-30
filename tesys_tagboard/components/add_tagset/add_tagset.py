@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django_components import Component
 from django_components import register
 
@@ -8,5 +9,16 @@ class AddTagsetComponent(Component):
     js_file = "add_tagset.js"
 
     def get_template_data(self, args, kwargs, slots, context):
-        autocomplete_url = kwargs.get("autocomplete_url")
-        return {"autocomplete_url": autocomplete_url}
+        size = kwargs.get("size")
+        add_tag_enabled = kwargs.get("add_tag_enabled")
+
+        data = {
+            "size": size,
+            "add_tag_enabled": bool(add_tag_enabled),
+            "tags": kwargs.get("tags"),
+        }
+
+        post = kwargs.get("post")
+        if post:
+            data |= {"post_url": reverse("post-edit", args=[post.pk])}
+        return data

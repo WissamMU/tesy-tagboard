@@ -12,9 +12,7 @@ from tesys_tagboard.api import api
 urlpatterns = [
     path("", views.home, name="home"),
     path("posts/", views.posts, name="posts"),
-    path(
-        "posts/autocomplete/", views.post_search_autocomplete, name="post-autocomplete"
-    ),
+    path("posts/autocomplete/", views.post_search_autocomplete, name="autocomplete"),
     path("posts/<int:post_id>/", views.post, name="post"),
     path(
         "posts/<int:post_id>/add-comment/", views.add_comment, name="post-add-comment"

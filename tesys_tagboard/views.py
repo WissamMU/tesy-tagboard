@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
+from .components.add_tagset.add_tagset import AddTagsetComponent
 from .components.comment.comment import CommentComponent
 from .decorators import require
 from .enums import SupportedMediaTypes
@@ -66,19 +67,34 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse:
 def edit_post(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
-    post = get_object_or_404(Post.objects.filter(pk=post_id, uploader=request.user))
+    post = get_object_or_404(Post.objects.filter(pk=post_id))
+    data: dict[str, str | list[Any] | None] = {
+        key: request.POST.get(key) for key in request.POST
+    }
+    data["tagset"] = request.POST.getlist("tagset")
 
-    data = EditPostForm(request.POST)
-    if data.is_valid():
-        if title := data.cleaned_data.get("title"):
+    form = EditPostForm(data)
+    if form.is_valid():
+        if title := form.cleaned_data.get("title"):
             post.title = title
             post.save()
             return HttpResponse(post.title, status=200)
 
-        if src_url := data.cleaned_data.get("src_url"):
+        if src_url := form.cleaned_data.get("src_url"):
             post.media.src_url = src_url
             post.media.save()
             return HttpResponse(post.media.src_url, status=200)
+
+        if tagset := form.cleaned_data.get("tagset"):
+            tags = Tag.objects.in_tagset(tagset)
+            post.tags.set(tags)
+            post.save()
+            kwargs = {
+                "size": "small",
+                "tags": tags,
+            }
+
+            return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)
 
         return HttpResponse(status=200)
     return HttpResponse(status=422)

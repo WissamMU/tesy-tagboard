@@ -39,9 +39,7 @@
         {% endif %}
       </div>
       <div class="flex flex-wrap gap-1 mt-4 post-tags shrink">
-        {% for tag in tags %}
-          {% component "tag" tag=tag size="small" / %}
-        {% endfor %}
+        {% component "add_tagset" post=post tags=tags size="small" add_tag_enabled=True / %}
       </div>
       <div class="mt-4 mb-8">
         <h2>Comments</h2>

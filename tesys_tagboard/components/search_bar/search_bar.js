@@ -54,7 +54,6 @@
           focus_autocomplete_item(active_autocomplete_index - 1);
           break;
         case "Enter":
-          // Implemented in encapsulating component (e.g. add_tagset.html)
           e.preventDefault();
           remove_results();
         default:
@@ -64,7 +63,6 @@
 
 
   htmx.on(search_input, "blur", (e) => {
-    // TODO: refactor to handle result selection with arrow keys or TAB
     if (!result_container.contains(e.relatedTarget)) {
       remove_results();
     }
@@ -78,7 +76,6 @@
     result_container.querySelectorAll("li").forEach(li => {
       htmx.on(li, "focus", (e) => {
         // Focus correct autocomplete item
-
       });
 
       htmx.on(li, "blur", (e) => {

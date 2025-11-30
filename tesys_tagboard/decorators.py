@@ -33,6 +33,7 @@ def require(methods=("GET", "POST"), *, login=True):
     """View decorator to require a set of HTTP methods and login
     `login` is required by default"""
 
+    # TODO: handle HTMX requests, they shouldn't redirect to login
     def wrapper(func):
         wrapped = func
         if methods is not None:
