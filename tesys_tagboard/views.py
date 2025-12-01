@@ -101,13 +101,7 @@ def edit_post(
 
 
 @require(["GET", "POST"], login=False)
-def posts(request: HtmxHttpRequest) -> TemplateResponse:
-    data: dict[str, str | list[Any] | None] = {
-        key: request.POST.get(key) for key in request.POST
-    }
-    data["tagset"] = request.POST.getlist("tagset")
-    form = PostSearchForm(data) if request.method == "POST" else PostForm()
-
+def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     posts = Post.objects.select_related("media", "media__image").prefetch_related(
         "tags"
     )
@@ -115,10 +109,22 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse:
         favorites = Favorite.objects.for_user(request.user)
         posts = posts.annotate_favorites(favorites)
     tags: QuerySet[Tag] | None = None
-    if form.is_valid():
-        tagset = form.cleaned_data.get("tagset")
-        tags = Tag.objects.in_tagset(tagset)
-        posts = posts.has_tags(tags)
+
+    if request.GET:
+        if tag := request.GET.get("tag"):
+            tags = Tag.objects.in_tagset([tag])
+            posts = posts.has_tags(tags)
+
+    elif request.POST:
+        data: dict[str, str | list[Any] | None] = {
+            key: request.POST.get(key) for key in request.POST
+        }
+        data["tagset"] = request.POST.getlist("tagset")
+        form = PostSearchForm(data) if request.method == "POST" else PostForm()
+        if form.is_valid():
+            tagset = form.cleaned_data.get("tagset")
+            tags = Tag.objects.in_tagset(tagset)
+            posts = posts.has_tags(tags)
 
     pager = Paginator(posts, 20, 5)
     page_num = request.GET.get("page", 1)

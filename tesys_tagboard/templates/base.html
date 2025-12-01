@@ -63,6 +63,11 @@
   </nav>
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
         class="{% block bodyclass %}{% endblock bodyclass %}">
+    <!-- Form for global search from tag widget popup -->
+    <input id="tagSearchForm"
+           type="hidden"
+           action="{% url "posts" %}"
+           method="post" />
     {% block body %}
       {% if messages %}
         {% for message in messages %}

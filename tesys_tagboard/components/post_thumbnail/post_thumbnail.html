@@ -1,9 +1,10 @@
 {% load component_tags %}
 
-<a data-post_id="{{ post.pk }}"
-   {% if post.favorited %}data-favorite{% endif %}
-   class="relative skeleton post-thumbnail group/post w-[calc(100svw - 14px)] max-h-svh lg:w-100 lg:h-100 lg:max-w-100 lg:max-h-100"
-   href="{% url "post" post_id=post.pk %}">
+<div data-post_id="{{ post.pk }}"
+     {% if post.favorited %}data-favorite{% endif %}
+     class="relative skeleton post-thumbnail group/post w-[calc(100svw - 14px)] max-h-svh lg:w-100 lg:h-100 lg:max-w-100 lg:max-h-100">
+  <a class="absolute w-full h-full z-1"
+     href="{% url "post" post_id=post.pk %}"></a>
   <img class="object-cover invisible w-full h-full rounded-md"
        loading="lazy"
        src="{{ post.media.image.file.url }}"
@@ -11,7 +12,7 @@
        height="{{ post.media.image.height }}"
        alt="image" />
   <div class="flex hidden absolute top-0 flex-col justify-between p-2 w-full h-full rounded-md post-thumbnail-hover group-hover/post:flex">
-    <section class="flex gap-1 self-end">
+    <section class="flex gap-1 self-end z-5">
       {% if request.user.is_authenticated %}
         <button class="flex favorite-button align-center btn btn-secondary"
                 hx-swap="innerHTML"
@@ -24,10 +25,10 @@
         {% component "collection_picker" post=post / %}
       {% endif %}
     </section>
-    <section class="flex flex-wrap gap-1 text-sm">
+    <section class="flex flex-wrap gap-1 text-sm z-5">
       {% for tag in tags %}
         {% component "tag" tag=tag size="small" / %}
       {% endfor %}
     </section>
   </div>
-</a>
+</div>

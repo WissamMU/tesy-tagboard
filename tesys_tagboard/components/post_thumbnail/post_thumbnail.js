@@ -6,21 +6,19 @@
     container.classList.remove("skeleton")
   }
 
-  document.querySelectorAll(`.post-thumbnail`).forEach((thumbnail) => {
-    const img = thumbnail.querySelector(`img`);
+  document.querySelectorAll(".post-thumbnail").forEach((thumbnail) => {
+    const img = thumbnail.querySelector("img");
 
-    thumbnail.querySelectorAll(".dropdown").forEach(ele => {
-      ele.addEventListener("click", (e) => {
-        e.preventDefault();
-      })
-    });
-
-    if (img.complete) {
-      show_thumbnail(thumbnail, img);
-    } else {
-      img.onload = function() {
+    try {
+      if (img.complete) {
         show_thumbnail(thumbnail, img);
+      } else {
+        img.onload = function() {
+          show_thumbnail(thumbnail, img);
+        }
       }
+    } catch (TypeError) {
+      console.error("Unable to find Post thumbnail image element")
     }
   });
 })();
