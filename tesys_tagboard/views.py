@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from .components.add_tagset.add_tagset import AddTagsetComponent
 from .components.comment.comment import CommentComponent
+from .components.favorite_toggle.favorite_toggle import FavoriteToggleComponent
 from .decorators import require
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
@@ -196,19 +197,18 @@ def collection(
 
 @require(["PUT"])
 def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
-    if request.htmx:
-        try:
-            post = Post.objects.get(pk=post_id)
-            favorite = Favorite.objects.create(post=post, user=request.user)
-            favorite.save()
-            return render(
-                request,
-                "icons/feather.html",
-                context={"icon": "heart", "fill": True},
-                status=200,
-            )
-        except Post.DoesNotExist, Favorite.DoesNotExist:
-            return HttpResponse(status=404)
+    try:
+        post = Post.objects.get(pk=post_id)
+        favorite = Favorite.objects.create(post=post, user=request.user)
+        favorite.save()
+
+        post.favorited = True
+        kwargs = {"post": post}
+        return FavoriteToggleComponent.render_to_response(
+            request=request, kwargs=kwargs
+        )
+    except Post.DoesNotExist, Favorite.DoesNotExist:
+        return HttpResponse(status=404)
     return HttpResponse("Not allowed", status=403)
 
 
@@ -217,11 +217,10 @@ def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
     try:
         post = Post.objects.get(pk=post_id)
         Favorite.objects.get(post=post, user=request.user).delete()
-        return render(
-            request,
-            "icons/feather.html",
-            context={"icon": "heart", "fill": False},
-            status=200,
+
+        kwargs = {"post": post}
+        return FavoriteToggleComponent.render_to_response(
+            request=request, kwargs=kwargs
         )
     except Post.DoesNotExist, Favorite.DoesNotExist:
         return HttpResponse(status=404)
