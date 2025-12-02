@@ -96,6 +96,7 @@ def edit_post(
             kwargs = {
                 "size": "small",
                 "tags": tags,
+                "add_tag_enabled": True,
             }
 
             return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)

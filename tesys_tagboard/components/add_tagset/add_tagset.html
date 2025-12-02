@@ -24,9 +24,10 @@
         </button>
         <button class="hidden confirm-tag-btn {% if size == "small" %}btn-sm{% elif size == "large" %}btn-lg{% endif %} px-3 py-1 btn btn-success"
                 {% if post_url %}hx-post="{{ post_url }}"{% endif %}
-                hx-target="previous .tagset"
+                hx-target="closest .add-tagset-container"
                 hx-include="closest .add-tagset-container"
-                hx-swap="innerHTML">
+                hx-on="click"
+                hx-swap="outerHTML">
           <div class="flex gap-1 items-center">
             {% include "icons/feather.html" with icon="check-square" %}
             <div>Confirm</div>

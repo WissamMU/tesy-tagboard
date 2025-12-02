@@ -51,7 +51,6 @@
     });
 
     confirm_tag_btn.addEventListener("click", e => {
-      e.preventDefault()
       hide_tag_search();
     });
 
@@ -126,17 +125,14 @@
     tagset_containers = document.querySelectorAll(".add-tagset-container");
     tagset_containers.forEach(container => {
       setup_tagset(container);
+      container.addEventListener("htmx:afterSettle", e => {
+        setup_tagset(container);
+      });
     });
   }
 
   setup();
-
-  document.addEventListener("htmx:afterRequest", e => {
-    // Re-setup comment event listeners when an edit is made
-    // TODO: target only edited comment instead of running setup over all comments
-    if (e.detail.successful) {
-      // setup();
-    }
+  document.addEventListener("htmx:afterSwap", e => {
+    setup();
   });
-
 })();
