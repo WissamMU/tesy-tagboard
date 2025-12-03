@@ -66,25 +66,26 @@ class ImageAdmin(admin.ModelAdmin):
         "dhash",
     ]
     autocomplete_fields = ["meta"]
-    search_fields = ["meta__type", "og_name", "source"]
+    search_fields = ["meta__type", "meta__orig_name", "meta__src_url"]
 
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
     autocomplete_fields = ["meta"]
-    search_fields = ["meta__type", "og_name", "source"]
+    search_fields = ["meta__type", "meta__orig_name", "meta__src_url"]
 
 
 @admin.register(Audio)
 class AudioAdmin(admin.ModelAdmin):
     autocomplete_fields = ["meta"]
-    search_fields = ["meta__type", "og_name", "source"]
+    search_fields = ["meta__type", "meta__orig_name", "meta__src_url"]
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ["user", "text", "post", "post_date", "edit_date"]
     list_filter = ["user"]
+    search_fields = ["text", "user__username", "post__title", "post_date", "edit_date"]
     autocomplete_fields = ["user"]
 
 
@@ -98,7 +99,7 @@ class PostAdmin(admin.ModelAdmin):
         "media__orig_name",
         "media__src_url",
     ]
-    search_fields = ["media__orig_name, source__url"]
+    search_fields = ["media__orig_name", "media__src_url"]
     autocomplete_fields = ["media"]
     list_filter = ["rating_level", "uploader"]
 
