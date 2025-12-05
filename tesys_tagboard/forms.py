@@ -21,7 +21,7 @@ class CreateTagForm(forms.ModelForm):
         fields = ["name", "category"]
 
 
-class CreateTagAlias(forms.ModelForm):
+class CreateTagAliasForm(forms.ModelForm):
     class Meta:
         model = TagAlias
         fields = ["name", "tag"]

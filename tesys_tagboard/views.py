@@ -20,6 +20,7 @@ from .decorators import require
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import AddCommentForm
+from .forms import CreateTagAliasForm
 from .forms import CreateTagForm
 from .forms import EditCommentForm
 from .forms import EditPostForm
@@ -161,6 +162,7 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
     aliases = TagAlias.objects.filter(name__icontains=tag_query)
 
     context = {
+        "tags": Tag.objects.order_by("name"),
         "tags_by_cat": tags_by_cat,
         "tag_name": tag_query,
         "aliases": aliases,
@@ -178,6 +180,15 @@ def create_tag(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     create_tag_form = CreateTagForm(request.POST)
     if create_tag_form.is_valid():
         create_tag_form.save()
+
+    return redirect(reverse("tags"))
+
+
+@require(["POST"])
+def create_tag_alias(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
+    form = CreateTagAliasForm(request.POST)
+    if form.is_valid():
+        form.save()
 
     return redirect(reverse("tags"))
 

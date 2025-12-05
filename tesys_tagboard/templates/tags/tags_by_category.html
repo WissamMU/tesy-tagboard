@@ -19,7 +19,7 @@
   {% if aliases %}
     <section class="mt-16">
       <h2 class="text-5xl tracking-wider divider divider-primary">ALIASES</h2>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2 mt-8">
         {% for alias in aliases %}
           {% component "tag" alias=alias size="large" / %}
         {% endfor %}
