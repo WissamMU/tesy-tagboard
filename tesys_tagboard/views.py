@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.http.response import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -19,6 +20,7 @@ from .decorators import require
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import AddCommentForm
+from .forms import CreateTagForm
 from .forms import EditCommentForm
 from .forms import EditPostForm
 from .forms import PostForm
@@ -158,11 +160,26 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
 
     aliases = TagAlias.objects.filter(name__icontains=tag_query)
 
-    context = {"tags_by_cat": tags_by_cat, "tag_name": tag_query, "aliases": aliases}
+    context = {
+        "tags_by_cat": tags_by_cat,
+        "tag_name": tag_query,
+        "aliases": aliases,
+        "categories": categories,
+    }
+
     if request.htmx:
         return TemplateResponse(request, "tags/tags_by_category.html", context)
 
     return TemplateResponse(request, "pages/tags.html", context)
+
+
+@require(["POST"])
+def create_tag(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
+    create_tag_form = CreateTagForm(request.POST)
+    if create_tag_form.is_valid():
+        create_tag_form.save()
+
+    return redirect(reverse("tags"))
 
 
 @require(["GET"], login=False)

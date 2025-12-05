@@ -6,7 +6,7 @@
   {{ block.super }} — Tags
 {% endblock title %}
 {% block content %}
-  <main>
+  <main class="pb-24">
     <label class="flex relative items-center self-center mb-4 w-full lg:min-w-100">
       <div class="absolute left-3 z-5">{% include "icons/feather.html" with icon="filter" %}</div>
       <input type="search"
@@ -21,6 +21,9 @@
              hx-boost="true"
              hx-preserve="true" />
     </label>
+    {% if request.user.is_authenticated %}
+      <div class="flex flex-col gap-16 items-center lg:flex-row">{% component "create_tag" categories=categories / %}</div>
+    {% endif %}
     {% include "tags/tags_by_category.html" %}
   </main>
 {% endblock content %}

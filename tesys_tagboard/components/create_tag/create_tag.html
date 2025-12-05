@@ -1,0 +1,31 @@
+<div class="p-4 rounded-md bg-base-300 md:w-125">
+  <h2>Create a tag</h2>
+  <form class="flex flex-wrap gap-2 w-full"
+        id="create-tag"
+        action="{% url "create-tag" %}"
+        method="post">
+    {% csrf_token %}
+    <fieldset class="w-full fieldset">
+      <legend class="fieldset-legend">Tag name</legend>
+      <input type="text" class="w-full input" name="name" placeholder="Tag name" />
+    </fieldset>
+    <fieldset class="w-full fieldset">
+      <legend class="fieldset-legend">Category</legend>
+      <select class="w-full select" name="category">
+        <option disabled selected>Pick a category</option>
+        {% for cat in categories %}
+          <option value="{{ cat.value.shortcode }}">{{ cat.value.display_name|capfirst }}</option>
+        {% endfor %}
+      </select>
+    </fieldset>
+    <input type="submit"
+           value="Post"
+           class="my-2 w-full text-xl btn btn-primary" />
+    {% if form.errors %}
+      <div role="alert" class="alert alert-error">
+        {% include "icons/feather.html" with icon="alert-circle" %}
+        {{ form.errors }}
+      </div>
+    {% endif %}
+  </form>
+</div>

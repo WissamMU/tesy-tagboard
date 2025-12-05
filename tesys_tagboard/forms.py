@@ -15,13 +15,13 @@ class UploadImage(forms.ModelForm):
         fields = ["file"]
 
 
-class MakeTag(forms.Form):
+class CreateTagForm(forms.ModelForm):
     class Meta:
         model = Tag
         fields = ["name", "category"]
 
 
-class MakeTagAlias(forms.ModelForm):
+class CreateTagAlias(forms.ModelForm):
     class Meta:
         model = TagAlias
         fields = ["name", "tag"]
