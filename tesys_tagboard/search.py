@@ -1,8 +1,8 @@
 import re
-from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from itertools import chain
+from typing import TYPE_CHECKING
 
 from django.core import validators
 from django.core.exceptions import ValidationError
@@ -14,6 +14,10 @@ from django.utils.translation import gettext_lazy as _
 from .enums import TagCategory
 from .models import Post
 from .models import Tag
+from .models import TagAlias
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def tag_autocomplete(
@@ -26,6 +30,18 @@ def tag_autocomplete(
         tags = tags.exclude(Q(name__in=exclude_tag_names))
 
     return tags
+
+
+def tag_alias_autocomplete(
+    partial: str,
+    exclude_alias_names: list[str] | None = None,
+    exlude_aliases: QuerySet[Tag] | None = None,
+) -> QuerySet[TagAlias]:
+    aliases = TagAlias.objects.filter(Q(name__icontains=partial))
+    if exclude_alias_names is not None:
+        aliases = aliases.exclude(Q(name__in=exclude_alias_names))
+
+    return aliases
 
 
 @dataclass
@@ -53,6 +69,7 @@ class TokenCategory(Enum):
     """
 
     tag = TokenType([""], tag_name_validator)  # default tag (no prefix)
+    tag_alias = TokenType(["tag_alias"], tag_name_validator)
     comment_count = TokenType(["comment_count", "cc"], validators.integer_validator)
     fav = TokenType(["favorite", "fav"], username_validator)  # favorited by given user
     fav_count = TokenType(["favorite_count", "fav_count"], username_validator)
@@ -110,8 +127,8 @@ class PostSearch:
         self.query = query
         tokens = re.split(r"\s+;\s+", self.query)
         self.max_tags = max_tags
-        self.include_tag_names: list[str] = []
-        self.exclude_tag_names: list[str] = []
+        self.include_names: list[str] = []
+        self.exclude_names: list[str] = []
         self.include_tags: QuerySet[Tag] | None = None
         self.exclude_tags: QuerySet[Tag] | None = None
         for token in tokens:
@@ -138,26 +155,31 @@ class PostSearch:
 
                 if named_token.category is TokenCategory.tag:
                     if negate:
-                        self.exclude_tag_names.append(named_token.value)
+                        self.exclude_names.append(named_token.value)
                         # TODO: also search TagAliases
                         self.exclude_tags = Tag.objects.filter(
-                            name__in=self.exclude_tag_names,
+                            name__in=self.exclude_names,
                             category=TagCategory.select(named_token.prefix),
                         )
                     else:
-                        self.include_tag_names.append(named_token.value)
+                        self.include_names.append(named_token.value)
                         # TODO: also search TagAliases
                         self.include_tags = Tag.objects.filter(
-                            name__in=self.include_tag_names,
+                            name__in=self.include_names,
                             category=TagCategory.select(named_token.prefix),
                         )
 
     def autocomplete(self, partial: str = "") -> Iterable[AutocompleteItem]:
         """Return autocomplete matches base on existing search query and
         the provided `partial`"""
-        tags = tag_autocomplete(
-            partial, self.exclude_tag_names + self.include_tag_names
+        tags = tag_autocomplete(partial, self.exclude_names + self.include_names)[
+            : self.max_tags
+        ]
+
+        tag_aliases = tag_alias_autocomplete(
+            partial, self.exclude_names + self.include_names
         )[: self.max_tags]
+
         return chain(
             (
                 AutocompleteItem(
@@ -170,6 +192,18 @@ class PostSearch:
                 for tag in tags
             ),
             (
+                AutocompleteItem(
+                    TokenCategory.tag_alias,
+                    alias.tag.name,
+                    alias.tag.category,
+                    alias.tag.pk,
+                    alias=alias.name,
+                    extra=alias.tag.post_count,
+                )
+                for alias in tag_aliases
+            ),
+            (
+                # TODO handle advanced search criteria
                 AutocompleteItem(category, name)
                 for name, category in TokenCategory.__members__.items()
                 if partial in name
@@ -178,5 +212,5 @@ class PostSearch:
 
     def get_posts(self):
         return Post.objects.filter(
-            Q(tags__in=self.include_tag_names) & ~Q(tags__in=self.exclude_tag_names)
+            Q(tags__in=self.include_names) & ~Q(tags__in=self.exclude_names)
         )

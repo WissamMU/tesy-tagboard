@@ -368,7 +368,7 @@ def post_search_autocomplete(
     request: HtmxHttpRequest,
 ) -> TemplateResponse | HttpResponse:
     if request.method == "GET" and request.htmx:
-        tag_prefixes = [key.lower() for key in TagCategory.__members__]
+        tag_prefixes = [cat.name.lower() for cat in TagCategory]
         query = request.GET.get("q", "")
         ps = PostSearch(query, tag_prefixes)
         partial = request.GET.get("partial", "")
