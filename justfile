@@ -129,4 +129,4 @@ load-demo:
 
 save-demo:
     @echo "Saving demo fixture..."
-    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py dumpdata --exclude admin --exclude contenttypes --exclude sessions --indent 2 -o tesys_tagboard/fixtures/demo.json
+    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py dumpdata --exclude admin --exclude sessions --indent 2 -o tesys_tagboard/fixtures/demo.json
