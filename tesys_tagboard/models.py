@@ -152,7 +152,6 @@ class Image(models.Model):
     height = models.PositiveIntegerField(default=0)
     thumbnail = models.ImageField(
         upload_to=media_thumbnail_upload_path,
-        unique=True,
         width_field="width",
         height_field="height",
         null=True,
