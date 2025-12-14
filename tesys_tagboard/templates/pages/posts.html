@@ -11,16 +11,20 @@
           method="post"
           enctype="multipart/form-data"
           class="flex flex-col gap-2 w-full align-stretch lg:max-w-250">
+      {% csrf_token %}
+      {% component "add_tagset" tags=tags add_tag_enabled=True / %}
       <input type="submit"
              value="Search"
              class="w-full text-xl btn btn-lg btn-primary" />
-      {% csrf_token %}
-      {% component "add_tagset" tags=tags add_tag_enabled=True / %}
     </form>
-    <section class="flex flex-col gap-4 items-center w-full">
-      {% component "pager" with pager=pager page=page / %}
-      {% include "posts/gallery.html" with posts=page %}
-      {% component "pager" with pager=pager page=page / %}
-    </section>
+    {% if page|length > 0 %}
+      <section class="flex flex-col gap-4 items-center w-full">
+        {% component "pager" with pager=pager page=page / %}
+        {% include "posts/gallery.html" with posts=page %}
+        {% component "pager" with pager=pager page=page / %}
+      </section>
+    {% else %}
+      <div class="text-2xl italic">No posts yet!</div>
+    {% endif %}
   </div>
 {% endblock content %}

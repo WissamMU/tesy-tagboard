@@ -43,10 +43,10 @@
           <div class="flex flex-col gap-4">
             {% if favorites_pager.num_pages > 1 %}
               {% component "pager" with pager=favorites_pager page=favorites_page / %}
-            {% endif %}
-            <div class="flex flex-wrap gap-4 justify-center">{% include "posts/gallery.html" with posts=favorites_page %}</div>
-            {% if favorites_pager.num_pages > 1 %}
+              <div class="flex flex-wrap gap-4 justify-center">{% include "posts/gallery.html" with posts=favorites_page %}</div>
               {% component "pager" with pager=favorites_pager page=favorites_page / %}
+            {% else %}
+              <div class="text-lg italic">No collections yet!</div>
             {% endif %}
           </div>
         </div>
@@ -58,9 +58,13 @@
       </label>
       <div class="lg:p-6 tab-content bg-base-200">
         <div class="grid grid-cols-1 gap-4 w-full lg:grid-cols-2 xl:grid-cols-3">
-          {% for collection in collections %}
-            {% component "collection_thumbnail" collection=collection / %}
-          {% endfor %}
+          {% if collections|length == 0 %}
+            <div class="text-lg italic">No collections yet!</div>
+          {% else %}
+            {% for collection in collections %}
+              {% component "collection_thumbnail" collection=collection / %}
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </div>
