@@ -451,12 +451,13 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
         )
 
         tagset = form.cleaned_data.get("tagset")
+        rating_level = form.cleaned_data.get("rating_level")
         tags = Tag.objects.in_tagset(tagset)
-        post = Post(uploader=request.user, media=media)
+        post = Post(uploader=request.user, media=media, rating_level=rating_level)
         post.tags.set(tags)
         post.save()
 
-    context = {"form": form}
+    context = {"form": form, "rating_levels": Post.RatingLevel.choices}
     return TemplateResponse(request, "pages/upload.html", context)
 
 

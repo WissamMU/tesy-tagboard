@@ -22,7 +22,9 @@
       {% csrf_token %}
       {{ form.non_field_errors }}
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">Pick a file</legend>
+        <legend class="fieldset-legend">
+          Pick a file<span class="text-warning">*</span>
+        </legend>
         <input type="file" name="file" class="w-full file-input file-input-lg" />
         <label class="label">Supported file types: PNG, JPEG, BMP, GIF, WebP</label>
       </fieldset>
@@ -32,13 +34,21 @@
           {% include "icons/feather.html" with icon="link" %}
           <input name="src_url"
                  type="url"
-                 required
                  placeholder="https://"
-                 value="https://"
+                 value=""
                  pattern="^(https?://)?([a-zA-Z0-9]([a-zA-Z0-9\-].*[a-zA-Z0-9])?\.)+[a-zA-Z].*$"
                  title="Must be valid URL" />
         </label>
         <p class="hidden validator-hint">Must be valid URL</p>
+      </fieldset>
+      <fieldset class="w-full fieldset">
+        <legend class="fieldset-legend">Rating</legend>
+        <select class="w-full select" name="rating_level">
+          <option disabled selected value="1">Pick a rating level</option>
+          {% for rating_level in rating_levels %}
+            <option value="{{ rating_level.0 }}">{{ rating_level.1 }} ({{ rating_level.0 }})</option>
+          {% endfor %}
+        </select>
       </fieldset>
       <div id="all-posts-tagset" class="flex">
         {% component "add_tagset" autocomplete_url="tag-autocomplete" add_tag_enabled=True post_url="upload" / %}

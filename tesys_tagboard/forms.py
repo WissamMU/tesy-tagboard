@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from .models import Image
+from .models import Post
 from .models import Tag
 from .models import TagAlias
 
@@ -65,6 +66,7 @@ class PostForm(forms.Form):
 
     src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
     file = forms.FileField(label="File", required=True)
+    rating_level = forms.ChoiceField(choices=Post.RatingLevel.choices, required=False)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
 
 
