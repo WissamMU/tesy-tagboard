@@ -287,6 +287,7 @@ def add_post_to_collection(
             collection = Collection.objects.get(user=request.user, pk=collection_id)
             post = Post.objects.get(pk=request.POST.get("post"))
             collection.posts.add(post)
+            collection.save()
 
             return render(
                 request,
@@ -308,6 +309,7 @@ def remove_post_from_collection(
             collection = Collection.objects.get(user=request.user, pk=collection_id)
             post = Post.objects.get(pk=request.POST.get("post"))
             collection.posts.remove(post)
+            collection.save()
 
             return render(
                 request,

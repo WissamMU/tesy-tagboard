@@ -17,9 +17,9 @@
              hx-swap="innerHTML"
              hx-include="#post-{{ post.pk }}-collection-{{ collection.pk }} input"
              hx-target="#post-{{ post.pk }}-collection-{{ collection.pk }}"
-             {% if post.pk in post_ids_by_collection|get_item:collection.pk %} hx-post="{% url 'collection-remove-post' collection_id=collection.pk %}" {% else %} hx-post="{% url 'collection-add-post' collection_id=collection.pk %}" {% endif %}>
+             {% if post in collection.posts.all %} hx-post="{% url 'collection-remove-post' collection_id=collection.pk %}" {% else %} hx-post="{% url 'collection-add-post' collection_id=collection.pk %}" {% endif %}>
           <input name="collection-edit" type="hidden" />
-          {% if post.pk in post_ids_by_collection|get_item:collection.pk %}
+          {% if post in collection.posts.all %}
             {% include "collections/picker_item.html" with collection=collection post=post checked=True %}
           {% else %}
             {% include "collections/picker_item.html" with collection=collection post=post %}
