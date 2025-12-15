@@ -42,13 +42,14 @@ class Tag(models.Model):
         max_length=2,
         choices=category_choices,
         default=TagCategory.BASIC.value.shortcode,
+        blank=True,
     )
     description = models.TextField(max_length=255, blank=True, default="")
     post_count = models.PositiveIntegerField(default=0)
 
     """Rating levels to filter content. This field allows any tag to apply a rating
     """
-    rating_level = models.PositiveSmallIntegerField(default=0)
+    rating_level = models.PositiveSmallIntegerField(default=0, blank=True)
 
     objects = TagQuerySet.as_manager()
 

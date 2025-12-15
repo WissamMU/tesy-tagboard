@@ -15,7 +15,7 @@ from .models import Video
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ["pk", "name", "category"]
+    list_display = ["pk", "name", "category", "rating_level"]
     search_fields = ["name", "category"]
     list_filter = ["category"]
 

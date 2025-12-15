@@ -1,4 +1,4 @@
-<div class="p-4 rounded-md bg-base-300 md:w-125">
+<div class="p-4 w-full rounded-md bg-base-300 lg:w-125">
   <h2>Create a tag alias</h2>
   <form class="flex flex-wrap gap-2 w-full"
         id="create-tag-alias"
@@ -6,11 +6,15 @@
         method="post">
     {% csrf_token %}
     <fieldset class="w-full fieldset">
-      <legend class="fieldset-legend">Alias name</legend>
+      <legend class="fieldset-legend">
+        Alias name<span class="text-warning">*</span>
+      </legend>
       <input type="text" class="w-full input" name="name" placeholder="Tag alias" />
     </fieldset>
     <fieldset class="w-full fieldset">
-      <legend class="fieldset-legend">Tag</legend>
+      <legend class="fieldset-legend">
+        Tag<span class="text-warning">*</span>
+      </legend>
       <select class="w-full select" name="tag">
         <option disabled selected>Pick a tag</option>
         {% if tags %}

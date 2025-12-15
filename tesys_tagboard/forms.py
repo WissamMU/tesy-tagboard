@@ -17,9 +17,16 @@ class UploadImage(forms.ModelForm):
 
 
 class CreateTagForm(forms.ModelForm):
+    rating_level = forms.IntegerField(initial=0, required=False)
+
     class Meta:
         model = Tag
-        fields = ["name", "category"]
+        fields = ["name", "category", "rating_level"]
+
+    def clean_rating_level(self):
+        if not self.cleaned_data.get("rating_level"):
+            return self.fields["rating_level"].initial
+        return self.cleaned_data["rating_level"]
 
 
 class CreateTagAliasForm(forms.ModelForm):

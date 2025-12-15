@@ -22,7 +22,7 @@
              hx-preserve="true" />
     </label>
     {% if request.user.is_authenticated %}
-      <div class="flex flex-col gap-8 items-center lg:flex-row">
+      <div class="flex flex-col gap-8 items-center lg:flex-row lg:items-start">
         {% component "create_tag" categories=categories / %}
         {% component "create_tag_alias" / %}
       </div>

@@ -1,4 +1,4 @@
-<div class="p-4 rounded-md bg-base-300 md:w-125">
+<div class="p-4 w-full rounded-md bg-base-300 lg:w-125">
   <h2>Create a tag</h2>
   <form class="flex flex-wrap gap-2 w-full"
         id="create-tag"
@@ -6,7 +6,9 @@
         method="post">
     {% csrf_token %}
     <fieldset class="w-full fieldset">
-      <legend class="fieldset-legend">Tag name</legend>
+      <legend class="fieldset-legend">
+        Tag name<span class="text-warning">*</span>
+      </legend>
       <input type="text" class="w-full input" name="name" placeholder="Tag name" />
     </fieldset>
     <fieldset class="w-full fieldset">
@@ -17,6 +19,15 @@
           <option value="{{ cat.value.shortcode }}">{{ cat.value.display_name|capfirst }}</option>
         {% endfor %}
       </select>
+    </fieldset>
+    <fieldset class="w-full fieldset">
+      <legend class="fieldset-legend">Rating level (0-255)</legend>
+      <input type="number"
+             min="0"
+             max="255"
+             class="w-full input"
+             name="rating_level"
+             placeholder="0" />
     </fieldset>
     <input type="submit"
            value="Post"
