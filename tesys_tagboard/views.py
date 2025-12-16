@@ -100,6 +100,11 @@ def edit_post(
             post.media.save()
             return HttpResponse(post.media.src_url, status=200)
 
+        if rating_level := form.cleaned_data.get("rating_level"):
+            post.rating_level = rating_level
+            post.save()
+            return HttpResponse(post.rating_level, status=200)
+
         if tagset := form.cleaned_data.get("tagset"):
             tags = Tag.objects.in_tagset(tagset)
             post.tags.set(tags)

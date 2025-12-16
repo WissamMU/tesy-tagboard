@@ -4,7 +4,6 @@
     const field_text_input = form.querySelector("input[type='text']");
     const edit_btn = form.querySelector("label.edit-btn");
     const field_submit_btn = form.querySelector("button[type='submit']");
-    const field_edit_toggle_btn = form.querySelector("label[role='button']");
 
     // Set cursor to last position
     field_text_input.setSelectionRange(field_text_input.textContent.length-1, field_text_input.textContent.length-1);

@@ -86,6 +86,7 @@ class EditPostForm(forms.Form):
 
     title = forms.CharField(max_length=200, label=_("Title"), required=False)
     src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
+    rating_level = forms.ChoiceField(choices=Post.RatingLevel.choices, required=False)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
 
 

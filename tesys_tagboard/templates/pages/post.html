@@ -31,7 +31,19 @@
         <span class="font-bold">Posted on</span> {{ post.post_date }}
       </div>
       <div>
-        <span class="font-bold">Rating</span>: {{ post.get_rating_level_display }}
+        <span class="font-bold">Rating:</span>
+        <select name="rating_level"
+                class="font-bold select select-sm text-md w-fit"
+                hx-post="{{ post_edit_url }}"
+                hx-on="change"
+                hx-swap="none">
+          {% for rating_level in post.RatingLevel %}
+            <option value="{{ rating_level.value }}"
+                    {% if rating_level.value == post.rating_level %}selected{% endif %}>
+              {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
+            </option>
+          {% endfor %}
+        </select>
       </div>
       <div class="flex gap-2 items-center">
         <span class="self-start font-bold">Source:</span>
