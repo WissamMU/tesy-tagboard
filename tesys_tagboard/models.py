@@ -54,7 +54,7 @@ class Tag(models.Model):
     objects = TagQuerySet.as_manager()
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["category", "-post_count"]
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "category"], name="unique_tag_name_cat"

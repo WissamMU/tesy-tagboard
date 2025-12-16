@@ -16,10 +16,12 @@
         {% component "collection_picker" post=post collections=collections / %}
       {% endif %}
     </section>
-    <section class="flex overflow-y-auto flex-wrap gap-1 text-sm z-5 max-h-1/4">
-      {% for tag in post.tags.all %}
-        {% component "tag" tag=tag size="small" / %}
-      {% endfor %}
-    </section>
+    <div class="flex flex-wrap gap-1 text-sm z-5 max-h-1/4 w-100">
+      <div class="flex overflow-y-auto flex-wrap gap-1 pb-2 max-h-46">
+        {% for tag in post.tags.all %}
+          {% component "tag" tag=tag size="small" / %}
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>
