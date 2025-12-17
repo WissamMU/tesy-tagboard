@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import Paginator
-from django.db.models import QuerySet
-from django.db.models import Value
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -15,10 +13,10 @@ from django.views.generic import UpdateView
 
 from tesys_tagboard.decorators import require
 from tesys_tagboard.models import Collection
-from tesys_tagboard.models import Post
 from tesys_tagboard.users.models import User
 
 if TYPE_CHECKING:
+    from django.db.models import QuerySet
     from django_htmx.middleware import HtmxDetails
 
 
@@ -33,14 +31,10 @@ def user_detail_view(request: HttpRequest, username: str) -> TemplateResponse:
     context = {"user": user, "tab": request.GET.get("tab")}
     if request.user == user:
         # This user's page
-        collections = Collection.objects.filter(user=user)
-        favorited_posts = (
-            Post.objects.with_gallery_data()
-            .filter(
-                pk__in=user.favorite_set.prefetch_related("post").values_list("post")
-            )
-            .annotate(favorited=Value(value=True))
-        )
+        collections = user.collection_set.with_gallery_data()
+        favorited_posts = [f.post for f in user.favorite_set.with_gallery_data()]
+        for post in favorited_posts:
+            post.favorited = True
 
         favorites_pager = Paginator(favorited_posts, 20, 5)
         favorites_page_num = request.GET.get("fav_page", 1)

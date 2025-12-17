@@ -337,12 +337,12 @@ class CollectionQuerySet(models.QuerySet):
 
     def for_user(self, user):
         """Return Collections of a `user`"""
-        return self.filter(user=user)
+        return self.filter(user=user).select_related("user")
 
-    def with_gallery_data(self, user):
+    def with_gallery_data(self):
         """Return optimized CollectionQuerySet including gallery data
         such as related posts for the given user"""
-        return self.for_user(user).prefetch_related("posts")
+        return self.prefetch_related("posts")
 
 
 class Collection(models.Model):
@@ -406,6 +406,11 @@ class Comment(models.Model):
 class FavoriteQuerySet(models.QuerySet):
     def for_user(self, user):
         return self.filter(user=user)
+
+    def with_gallery_data(self):
+        return self.select_related(
+            "post", "post__media", "post__media__image"
+        ).prefetch_related("post__tags")
 
 
 class Favorite(models.Model):

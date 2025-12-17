@@ -15,8 +15,10 @@ class PostGalleryComponent(Component):
         posts: PostQuerySet = kwargs.get("posts")
         collections: CollectionQuerySet = kwargs.get("collections")
         if collections:
-            collections = collections.with_gallery_data(self.request.user)
+            collections = collections.for_user(self.request.user).with_gallery_data()
         else:
-            collections = Collection.objects.with_gallery_data(self.request.user)
+            collections = Collection.objects.for_user(
+                self.request.user
+            ).with_gallery_data()
 
         return {"collections": collections, "posts": posts}

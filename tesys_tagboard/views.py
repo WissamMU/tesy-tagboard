@@ -181,7 +181,7 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse:
         for cat in categories
     }
 
-    aliases = TagAlias.objects.filter(name__icontains=tag_query)
+    aliases = TagAlias.objects.filter(name__icontains=tag_query).select_related("tag")
 
     context = {
         "tags": Tag.objects.order_by("name"),
