@@ -1,6 +1,10 @@
+from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
+import markdown
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import HttpRequest
@@ -12,6 +16,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.safestring import SafeString
 
 from .components.add_tagset.add_tagset import AddTagsetComponent
 from .components.comment.comment import CommentComponent
@@ -49,9 +54,29 @@ class HtmxHttpRequest(HttpRequest):
     htmx: HtmxDetails
 
 
+@dataclass
+class Link:
+    text: str
+    href: str
+
+
 @require(["GET"], login=False)
 def home(request: HttpRequest) -> TemplateResponse:
-    context = {}
+    links = [Link(link[0], link[1]) for link in settings.HOMEPAGE_LINKS]
+
+    try:
+        markdown_path = Path("tesys_tagboard/home.md")
+        with Path.open(markdown_path, encoding="utf-8") as fp:
+            markdown_content = fp.read()
+    except OSError:
+        markdown_content = "The `home.md` file could not be found!"
+
+    md = markdown.Markdown(extensions=["sane_lists"])
+    context = {
+        "links": links,
+        "markdown_html": SafeString(md.convert(markdown_content)),
+        "post_count": Post.objects.count(),
+    }
     return TemplateResponse(request, "pages/home.html", context)
 
 

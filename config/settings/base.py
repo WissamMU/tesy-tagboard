@@ -344,3 +344,13 @@ THEMES = [
     "abyss",
     "autumn",
 ]
+
+HOMEPAGE_LINKS = env.list(
+    "TT_HOMEPAGE_LINKS",
+    default=[
+        ("Home", "/"),
+        ("Posts", "/posts"),
+        ("Tags", "/tags"),
+        ("Collections", "/collections"),
+    ],
+)

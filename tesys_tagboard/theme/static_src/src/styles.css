@@ -17,15 +17,39 @@
 
 @layer base {
   h1 {
-    @apply text-3xl font-bold tracking-tight;
+    @apply text-4xl font-bold tracking-tight mt-3 mb-1;
   }
 
   h2 {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-3xl font-bold tracking-tight mt-3 mb-1;
   }
 
   h3 {
-    @apply text-xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight mt-3 mb-1;
+  }
+
+  ul {
+    @apply list-disc list-outside ms-5;
+  }
+
+  li {
+    @apply leading-7;
+  }
+
+  a:not(.link) {
+    @apply border-b-2 border-b-accent;
+  }
+
+  a:not(.link):hover {
+    @apply bg-accent text-accent-content transition duration-100 ease-in-out;
+  }
+
+  p {
+    @apply leading-6;
+  }
+
+  code {
+    @apply bg-neutral text-neutral-content pt-1;
   }
 }
 
