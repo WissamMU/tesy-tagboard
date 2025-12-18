@@ -72,13 +72,23 @@
               <div class="text-lg italic">No collections yet!</div>
             {% else %}
               {% for collection in collections %}
-                {% component "collection_thumbnail" collection=collection / %}
-              {% endfor %}
-            {% endif %}
-          </div>
-        {% endpartialdef %}
+                {% component "collection_thumbnail" collection=collection %}
+                {% fill "delete_button" %}
+                <button type="submit"
+                        class="w-20 btn btn-error"
+                        hx-delete="{% url "delete-collection" collection_id=collection.pk %}"
+                        hx-on="click"
+                        hx-swap="outerHTML"
+                        hx-target="#user-collection-gallery"
+                        hx-confirm="Are you sure you want to delete this collection?">Delete</button>
+              {% endfill %}
+            {% endcomponent %}
+          {% endfor %}
+        {% endif %}
       </div>
-    </div>
+    {% endpartialdef %}
   </div>
+</div>
+</div>
 </div>
 {% endblock content %}
