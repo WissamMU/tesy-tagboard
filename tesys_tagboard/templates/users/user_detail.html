@@ -7,11 +7,13 @@
   {{ object.username }}
 {% endblock title %}
 {% block content %}
-  <div class="w-screen xl:max-w-screen xl:w-350">
+  <h1 class="mt-8 text-5xl tracking-wider divider divider-primary">PROFILE</h1>
+  <div class="w-full xl:max-w-screen xl:w-350">
     <div class="tabs">
       <label id="account-tab" class="flex gap-2 items-center text-lg tab">
         <input type="radio"
                name="profile_tabs"
+               value="account"
                {% if not tab or tab == "account" %}checked{% endif %} />
         {% include "icons/feather.html" with icon="user" %}
         Account
@@ -39,6 +41,7 @@
         <label id="favorites-tab" class="flex gap-2 items-center text-lg tab">
           <input type="radio"
                  name="profile_tabs"
+                 value="favorites"
                  {% if tab == "favorites" %}checked{% endif %} />
           {% include "icons/feather.html" with icon="heart" %}
           Favorites
@@ -58,6 +61,7 @@
       <label id="collection-tab" class="flex gap-2 items-center text-lg tab">
         <input type="radio"
                name="profile_tabs"
+               value="collections"
                {% if tab == "collections" %}checked{% endif %} />
         {% include "icons/feather.html" with icon="list" %}
         Collections
@@ -91,4 +95,12 @@
 </div>
 </div>
 </div>
+<script>
+  let tab_buttons = document.querySelectorAll(".tabs input[name='profile_tabs']");
+  tab_buttons.forEach(btn => {
+    btn.addEventListener("click", e => {
+      window.history.replaceState(null, "", `{{ request.path }}?tab=${btn.value}`)
+    });
+  });
+</script>
 {% endblock content %}
