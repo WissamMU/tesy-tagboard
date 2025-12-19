@@ -5,7 +5,7 @@
     <h2 class="mt-8 text-5xl tracking-wider divider divider-primary">TAGS</h2>
     {% for cat, tags in tags_by_cat.items %}
       {% if tags %}
-        <h3 class="text-3xl font-bold tracking-normal not-last:divider not-last:divider-start">{{ cat.name|capfirst }}</h3>
+        <h3 class="text-3xl font-bold not-last:divider not-last:divider-start">{{ cat.name|capfirst }}</h3>
         <div>
           <div class="flex flex-wrap gap-2">
             {% for tag in tags %}
