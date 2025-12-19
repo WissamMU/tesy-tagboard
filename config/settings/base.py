@@ -337,12 +337,25 @@ CORS_URLS_REGEX = r"^/api/.*$"
 THEMES = [
     "light",  # don't delete this
     "dark",  # don't delete this (default)
-    "retro",
-    "bumblebee",
-    "dracula",
-    "dim",
     "abyss",
+    "acid",
+    "aqua",
     "autumn",
+    "bumblebee",
+    "cupcake",
+    "coffee",
+    "corporate",
+    "dim",
+    "dracula",
+    "lemonade",
+    "lofi",
+    "nord",
+    "retro",
+    "silk",
+    "synthwave",
+    "valentine",
+    "winter",
+    "wireframe",
 ]
 
 HOMEPAGE_LINKS = env.list(
