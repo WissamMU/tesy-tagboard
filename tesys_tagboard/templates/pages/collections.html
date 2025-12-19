@@ -6,6 +6,7 @@
   {{ block.super }} — Collections
 {% endblock title %}
 {% block content %}
+  <h1 class="mt-8 text-5xl tracking-wider divider divider-primary">COLLECTIONS</h1>
   <div class="flex gap-4 justify-center py-4">
     {% component "pager" with pager=pager page=page / %}
     <div class="grid grid-cols-1 gap-4 w-full lg:grid-cols-2 xl:grid-cols-3">
@@ -15,4 +16,7 @@
     </div>
     {% component "pager" with pager=pager page=page / %}
   </div>
+  {% if page|length == 0 %}
+    <div class="py-8 w-full text-4xl italic text-center opacity-75">No collections yet!</div>
+  {% endif %}
 {% endblock content %}

@@ -28,5 +28,8 @@
       </div>
     {% endif %}
     {% include "tags/tags_by_category.html" %}
+    {% if tags|length == 0 %}
+      <div class="py-8 w-full text-4xl italic text-center opacity-75">No tags yet!</div>
+    {% endif %}
   </main>
 {% endblock content %}
