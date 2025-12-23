@@ -70,18 +70,22 @@
            method="post" />
     {% block body %}
       {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
-          </div>
-        {% endfor %}
+        <div class="flex z-10 flex-col gap-2 px-4 pt-4 w-full">
+          {% for message in messages %}
+            <div class="django-message flex justify-between items-center text-wrap text-xl alert alert-info alert-soft {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+              <div>{{ message }}</div>
+              <div class="flex gap-2 items-center">
+                <button type="button"
+                        class="btn-close btn btn-sm btn-error"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">{% include "icons/feather.html" with size="large" icon="x" %}</button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
       {% endif %}
       {% block main %}
-        <div class="p-3 m-auto lg:p-10 max-w-[1700px]">
+        <div class="p-3 m-auto lg:p-8 max-w-[1700px]">
           {% block content %}
           {% endblock content %}
         </div>
