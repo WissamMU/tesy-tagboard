@@ -6,20 +6,21 @@ export COMPOSE_PROFILES := "all"
 ## For more information, see https://github.com/casey/just/issues/2473 .
 
 
-# Default command to list all available commands.
+# Default command to list all available commands
 default:
     @just --list
 
-# build: Build python image.
+# Build container images
 build *args:
-    @echo "Building python image..."
+    @echo "Building container images..."
     @docker compose build {{args}}
 
-# up: Start up containers.
+# Start up containers
 up *args:
     @echo "Starting up containers..."
     @docker compose up -d --remove-orphans {{args}}
 
+# Start up containers and attach python debugger
 up-debug:
     @echo "Starting up containers with debug console for Django app..."
     @docker compose --profile debug up -d --remove-orphans
@@ -27,78 +28,78 @@ up-debug:
     # Note when exiting (Ctrl-C) the debugger, the other docker services
     # will remain up until brought down with `just down`
 
+# Start up docs container
 up-docs *args:
     @echo "Starting up docs container..."
     COMPOSE_FILE=docker-compose.docs.yml docker compose up -d {{args}}
 
-# down: Stop containers.
+# Stop containers
 down *args:
     @echo "Stopping containers..."
     @docker compose down {{args}}
 
+# Stop docker "debug" profile containers
 down-debug:
     @echo "Stopping containers required for Django app debug..."
     @docker compose --profile debug down
 
+# Stop docs container
 down-docs:
     @echo "Stopping docs container..."
     COMPOSE_FILE=docker-compose.docs.yml docker compose down
 
-# prune: Remove containers and their volumes.
-docker-prune-volumes *args:
+# Remove containers and their volumes
+prune-volumes *args:
     @echo "Killing containers and removing volumes..."
     @docker compose down -v {{args}}
 
-# logs: View container logs
-docker-logs *args:
+# View container logs
+logs *args:
     @docker compose logs -f {{args}}
 
-# test: run pytest(s)
-docker-test *args:
-    @docker compose -f docker-compose.local.yml run --rm django pytest {{args}}
+alias t := test
+# Run pytest(s)
+test *args:
+    @docker compose run --rm django pytest {{args}}
 
-# coverage: run pytest(s) with coverage report
-docker-coverage *args:
-    @docker compose -f docker-compose.local.yml run --rm django coverage run -m pytest
-    @docker compose -f docker-compose.local.yml run --rm django coverage report {{args}}
+# Run pytest(s) with coverage report
+coverage *args:
+    @docker compose run --rm django coverage run -m pytest
+    @docker compose run --rm django coverage report {{args}}
 
-# db backup: creates db backup in /backups dir of postgres container
-docker-db-backup *args:
-    @docker compose -f docker-compose.local.yml exec postgres backup
+# Creates db backup in the /backups dir of postgres container
+db-backup *args:
+    @docker compose exec postgres backup
 
-# db clean backups: remove all postgres backups in /backups
-docker-db-rm-backups *args:
-    @docker compose -f docker-compose.local.yml exec -t postgres sh -c 'rm -f /backups/*'
+# Remove all postgres backups in /backups
+db-rm-backups *args:
+    @docker compose exec -t postgres sh -c 'rm -f /backups/*'
 
 alias m := manage
+# Django management CLI
 manage *args:
-    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py {{args}}
+    @docker compose exec -t django uv run python manage.py {{args}}
 
 alias r := run
+# Start the Django app on the host system
 run:
     @echo "Starting Tesy's Tagboard..."
     DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py tailwind dev
 
 alias ra := run-async
+# Start the Django app on the host system via uvicorn (asgi)
 run-async *args:
     @echo "Starting Tesy's Tagboard in async mode..."
     DJANGO_READ_DOT_ENV_FILE=True uv run uvicorn config.asgi:application --host 0.0.0.0 --port 55555 --reload-include "*.html" {{ args }}
 
-startapp +args:
-    @echo "Creating new Django app..."
-    uv run python manage.py startapp {{args}}
-
-alias t := test
-test *args:
-    @echo "Running tests..."
-    DJANGO_READ_DOT_ENV_FILE=True uv run pytest {{args}}
-
+# Reset the database and prompt for a new admin password
 db-reset:
     just manage reset_db
     just manage migrate
     just manage createsuperuser --username admin --email tesy-tagboard@example.com
 
 alias mkc := make-component
+# Create a new django-component with a given name
 make-component name:
     #!/usr/bin/env bash
     set -euxo pipefail
@@ -121,12 +122,14 @@ make-component name:
     echo '    template_file = "{{name}}.html"' >> "$py_file"
     echo '    js_file = "{{name}}.js"' >> "$py_file"
 
+# Load the fixture data from demo.json into the database
 load-demo:
     @echo "Loading demo data..."
     DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py loaddata demo.json
     cp -r tesys_tagboard/fixtures/uploads/ tesys_tagboard/media/
     cp -r tesys_tagboard/fixtures/thumbnails/ tesys_tagboard/media/
 
+# Save the current database into the demo.json fixture
 save-demo:
     @echo "Saving demo fixture..."
-    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py dumpdata --exclude admin --exclude sessions --indent 2 -o tesys_tagboard/fixtures/demo.json
+    just manage dumpdata --exclude admin --exclude sessions --indent 2 -o tesys_tagboard/fixtures/demo.json
