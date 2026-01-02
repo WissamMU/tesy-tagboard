@@ -67,12 +67,17 @@ coverage *args:
     @docker compose run --rm django coverage run -m pytest
     @docker compose run --rm django coverage report {{args}}
 
+alias pc := pre-commit
+# Pre-commit linting and formatting
+pre-commit *args:
+    uv run pre-commit {{args}}
+
 # Creates db backup in the /backups dir of postgres container
-db-backup *args:
+db-backup:
     @docker compose exec postgres backup
 
 # Remove all postgres backups in /backups
-db-rm-backups *args:
+db-rm-backups:
     @docker compose exec -t postgres sh -c 'rm -f /backups/*'
 
 alias m := manage
@@ -133,3 +138,4 @@ load-demo:
 save-demo:
     @echo "Saving demo fixture..."
     just manage dumpdata --exclude admin --exclude sessions --indent 2 -o tesys_tagboard/fixtures/demo.json
+
