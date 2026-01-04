@@ -19,6 +19,11 @@ urlpatterns = [
     ),
     path("posts/<int:post_id>/delete/", views.delete_post, name="post-delete"),
     path("posts/<int:post_id>/edit/", views.edit_post, name="post-edit"),
+    path(
+        "posts/<int:post_id>/comments/toggle_lock/",
+        views.toggle_comment_lock,
+        name="post-toggle-comment-lock",
+    ),
     path("posts/comments/edit/", views.edit_comment, name="post-edit-comment"),
     path("posts/comments/delete/", views.delete_comment, name="post-delete-comment"),
     path("tags/", views.tags, name="tags"),

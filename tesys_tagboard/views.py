@@ -5,10 +5,12 @@ from typing import Any
 
 import markdown
 from django.conf import settings
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import HttpRequest
 from django.http import HttpResponse
+from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.http.response import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404
@@ -119,44 +121,48 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse:
 def edit_post(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
-    post = get_object_or_404(Post.objects.filter(pk=post_id))
-    data: dict[str, str | list[Any] | None] = {
-        key: request.POST.get(key) for key in request.POST
-    }
-    data["tagset"] = request.POST.getlist("tagset")
+    if request.user.has_perm("change", Post):
+        post = get_object_or_404(Post.objects.filter(pk=post_id))
+        data: dict[str, str | list[Any] | None] = {
+            key: request.POST.get(key) for key in request.POST
+        }
+        data["tagset"] = request.POST.getlist("tagset")
 
-    form = EditPostForm(data)
-    if form.is_valid():
-        if title := form.cleaned_data.get("title"):
-            post.title = title
-            post.save()
-            return HttpResponse(post.title, status=200)
+        form = EditPostForm(data)
+        if form.is_valid():
+            if title := form.cleaned_data.get("title"):
+                post.title = title
+                post.save()
+                return HttpResponse(post.title, status=200)
 
-        if src_url := form.cleaned_data.get("src_url"):
-            post.media.src_url = src_url
-            post.media.save()
-            return HttpResponse(post.media.src_url, status=200)
+            if src_url := form.cleaned_data.get("src_url"):
+                post.media.src_url = src_url
+                post.media.save()
+                return HttpResponse(post.media.src_url, status=200)
 
-        if rating_level := form.cleaned_data.get("rating_level"):
-            post.rating_level = rating_level
-            post.save()
-            return HttpResponse(post.rating_level, status=200)
+            if rating_level := form.cleaned_data.get("rating_level"):
+                post.rating_level = rating_level
+                post.save()
+                return HttpResponse(post.rating_level, status=200)
 
-        if tagset := form.cleaned_data.get("tagset"):
-            tags = Tag.objects.in_tagset(tagset)
-            post.tags.set(tags)
-            post.save()
-            kwargs = {
-                "size": "small",
-                "tags": tags,
-                "add_tag_enabled": True,
-                "post": post,
-            }
+            if tagset := form.cleaned_data.get("tagset"):
+                tags = Tag.objects.in_tagset(tagset)
+                post.tags.set(tags)
+                post.save()
+                kwargs = {
+                    "size": "small",
+                    "tags": tags,
+                    "add_tag_enabled": True,
+                    "post": post,
+                }
 
-            return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)
+                return AddTagsetComponent.render_to_response(
+                    request=request, kwargs=kwargs
+                )
 
-        return HttpResponse(status=200)
-    return HttpResponse(status=422)
+            return HttpResponse(status=200)
+        return HttpResponse(status=422)
+    return HttpResponseForbidden()
 
 
 @require(["DELETE"])
@@ -167,6 +173,23 @@ def delete_post(
         post = Post.objects.get(pk=post_id, uploader=request.user)
         post.delete()
         return redirect(reverse("posts"))
+
+    except Post.DoesNotExist:
+        return HttpResponseNotFound("That post doesn't exist")
+
+
+@require(["POST"])
+@permission_required("edit_post")
+def toggle_comment_lock(
+    request: HtmxHttpRequest, post_id: int
+) -> TemplateResponse | HttpResponse:
+    try:
+        post = Post.objects.get(pk=post_id, uploader=request.user)
+        post.locked_comments = not post.locked_comments
+        post.save()
+        return TemplateResponse(
+            request, "pages/post.html#add-comments", context={"post": post}
+        )
 
     except Post.DoesNotExist:
         return HttpResponseNotFound("That post doesn't exist")
@@ -403,6 +426,8 @@ def add_comment(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
     post = get_object_or_404(Post.objects.filter(pk=post_id))
+    if post.locked_comments:
+        return HttpResponseForbidden("The comments for this post are locked")
 
     data = AddCommentForm(request.POST)
     if data.is_valid():

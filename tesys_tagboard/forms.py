@@ -101,6 +101,7 @@ class EditPostForm(forms.Form):
     src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
     rating_level = forms.ChoiceField(choices=Post.RatingLevel.choices, required=False)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
+    lock_comments = forms.BooleanField(required=False)
 
 
 class AddCommentForm(forms.Form):

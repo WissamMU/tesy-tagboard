@@ -315,10 +315,12 @@ class Post(models.Model):
     rating_level = models.PositiveSmallIntegerField(
         default=RatingLevel.UNRATED, choices=RatingLevel.choices
     )
+    locked_comments = models.BooleanField(default=False, blank=True)
 
     objects = PostQuerySet.as_manager()
 
     class Meta:
+        permissions = [("lock_comments", "Can lock and unlock the comments of a post")]
         ordering = ["post_date"]
 
     def __str__(self) -> str:
