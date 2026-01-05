@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
-<html lang="{{ LANGUAGE_CODE }}" data-theme="default">
+<html lang="{{ LANGUAGE_CODE }}" data-theme="default" class="overflow-x-clip xl:oveflow-x-auto">
   <script>
     // Apply theme picker setting
     let theme = window.localStorage.getItem("theme");
@@ -62,7 +62,7 @@
     <div>{% component "theme_picker" %}{% endcomponent %}</div>
   </nav>
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
-        class="max-w-screen {% block bodyclass %}{% endblock bodyclass %}">
+        class="max-w-screen overflow-x-clip xl:overflow-x-auto min-h-screen {% block bodyclass %}{% endblock bodyclass %}">
     <!-- Form for global search from tag widget popup -->
     <input id="tagSearchForm"
            type="hidden"

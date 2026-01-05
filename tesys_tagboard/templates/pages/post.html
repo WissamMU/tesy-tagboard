@@ -11,138 +11,143 @@
 {% block content %}
   <main class="flex flex-col-reverse gap-6 lg:flex-row lg:items-start">
     <div class="w-full leading-8 post-meta-data lg:max-w-142">
-      <div class="flex gap-2 items-center">
-        <span class="font-bold">Title:</span>
-        {% if request.user.is_authenticated %}
-          {% if post.title %}
-            {% component "text_field_edit_toggle" input_name="title" edit_url=post_edit_url text=post.title / %}
-          {% else %}
-            {% component "text_field_edit_toggle" input_name="title" edit_url=post_edit_url empty_text="No title" / %}
-          {% endif %}
-        {% else %}
-          <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.title|default:"No title" }}</div>
-        {% endif %}
-      </div>
-      <div class="flex gap-1 items-center min-w-72">
-        <span class="font-bold">Uploaded by</span>
-        {% include "nav/user_link.html" with user=post.uploader %}
-      </div>
-      <div>
-        <span class="font-bold">Posted on</span> {{ post.post_date }}
-      </div>
-      <div>
-        <span class="font-bold">Rating:</span>
-        <select name="rating_level"
-                class="font-bold select select-sm text-md w-fit"
-                hx-post="{{ post_edit_url }}"
-                hx-on="change"
-                hx-swap="none">
-          {% for rating_level in post.RatingLevel %}
-            <option value="{{ rating_level.value }}"
-                    {% if rating_level.value == post.rating_level %}selected{% endif %}>
-              {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="flex gap-2 items-center">
-        <span class="self-start font-bold">Source:</span>
-        {% if request.user.is_authenticated %}
-          {% if post.media.src_url %}
-            {% component "text_field_edit_toggle" is_link=True input_name="src_url" edit_url=post_edit_url text=post.media.src_url / %}
-          {% else %}
-            {% component "text_field_edit_toggle" input_name="src_url" edit_url=post_edit_url empty_text="Unknown" / %}
-          {% endif %}
-        {% else %}
-          <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.media.src_url|default:"Unknown" }}</div>
-        {% endif %}
-      </div>
-      <div class="flex flex-wrap gap-1 mt-4 post-tags shrink">
-        {% component "add_tagset" post=post tags=tags size="small" add_tag_enabled=True / %}
-      </div>
-      {% partialdef comments inline %}
-      <div id="comments" class="mt-4 mb-8">
-        {% partialdef add-comments inline %}
-        <div id="add-comments" class="flex flex-col gap-4">
-          <div class="flex justify-between">
-            <h2>Comments</h2>
-            {% if perms.tesys_tagboard.edit_post and perms.tesys_tagboard.lock_comments %}
-              <div class="place-self-end p-1 btn btn-ghost tooltip"
-                   data-tip="{% if post.locked_comments %}Unlock{% else %}Lock{% endif %} the comments for this post"
-                   hx-post="{% url "post-toggle-comment-lock" post_id=post.pk %}"
-                   hx-swap="innerHTML"
-                   hx-target="#add-comments">
-                {% partialdef post-comment-lock inline %}
-                {% if post.locked_comments %}
-                  {% include "icons/feather.html" with icon="lock" size="large" %}
-                {% else %}
-                  {% include "icons/feather.html" with icon="unlock" size="large" %}
-                {% endif %}
-              {% endpartialdef post-comment-lock %}
-            </div>
-          {% endif %}
+      <div class="hidden lg:block">
+        {% partialdef next-prev-nav inline %}
+        <div class="flex gap-4 pb-3 w-full">
+          <a {% if previous_post %}href="{% url "post" post_id=previous_post.pk %}"{% endif %}
+             {% if not previous_post %}disabled{% endif %}
+             class="flex items-center w-1/2 font-mono btn btn-info shrink">
+            {% include "icons/feather.html" with icon="chevron-left" size="large" %}
+          </a>
+          <a {% if next_post %}href="{% url "post" post_id=next_post.pk %}"{% endif %}
+             {% if not next_post %}disabled{% endif %}
+             class="flex items-center w-1/2 font-mono btn btn-info shrink">
+            {% include "icons/feather.html" with icon="chevron-right" size="large" %}
+          </a>
         </div>
-        <div class="flex">
-          {% if request.user.is_authenticated %}
-            {% if post.locked_comments %}
-              <div class="p-0 m-0 w-full tooltip"
-                   data-tip="The comments for this post are locked">
-              {% endif %}
-              <form class="flex flex-col w-full"
-                    method="post"
-                    id="post-add-comment-form"
-                    action="{% url "post-add-comment" post_id=post.pk %}">
-                {% csrf_token %}
-                <fieldset {% if post.locked_comments %}disabled{% endif %}
-                          class="text-lg fieldset">
-                  <textarea maxlength="1000"
-                            name="text"
-                            class="w-full h-24 text-base input textarea max-h-100 focus:input-secondary focus:outline-secondary focus:outline-2"
-                            placeholder="Add a comment..."></textarea>
-                </fieldset>
-                <input {% if post.locked_comments %}disabled{% endif %}
-                       class="my-1 w-full lg:w-36 btn btn-secondary btn-lg"
-                       type="submit"
-                       value="Post"
-                       hx-post="{% url "post-add-comment" post_id=post.pk %}"
-                       hx-target="#post-comments"
-                       hx-swap="innerHTML"
-                       hx-confirm="Are you sure you want to post this comment?"
-                       hx-on::after-request="document.querySelector('#post-add-comment-form textarea').value = ''" />
-              </form>
-              {% if post.locked_comments %}</div>{% endif %}
-          {% endif %}
-        </div>
-      {% endpartialdef add-comments %}
+      {% endpartialdef next-prev-nav %}
     </div>
-    <div class="flex flex-col gap-4 items-stretch my-2 w-full">
-      <div id="post-comments">
-        <section class="flex flex-col gap-4 items-center w-full">
-          {% include "posts/comments.html" with comments=comments_page %}
-        </section>
-        {% if comments_pager.num_pages <= 1 and comments_pager.object_list|length == 0 %}
-          <div class="m-auto w-full text-xl italic">No comments yet!</div>
+    <div class="flex gap-2 items-center">
+      <span class="font-bold">Title:</span>
+      {% if request.user.is_authenticated %}
+        {% if post.title %}
+          {% component "text_field_edit_toggle" input_name="title" edit_url=post_edit_url text=post.title / %}
+        {% else %}
+          {% component "text_field_edit_toggle" input_name="title" edit_url=post_edit_url empty_text="No title" / %}
+        {% endif %}
+      {% else %}
+        <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.title|default:"No title" }}</div>
+      {% endif %}
+    </div>
+    <div class="flex gap-1 items-center min-w-72">
+      <span class="font-bold">Uploaded by</span>
+      {% include "nav/user_link.html" with user=post.uploader %}
+    </div>
+    <div>
+      <span class="font-bold">Posted on</span> {{ post.post_date }}
+    </div>
+    <div>
+      <span class="font-bold">Rating:</span>
+      <select name="rating_level"
+              class="font-bold select select-sm text-md w-fit"
+              hx-post="{{ post_edit_url }}"
+              hx-on="change"
+              hx-swap="none">
+        {% for rating_level in post.RatingLevel %}
+          <option value="{{ rating_level.value }}"
+                  {% if rating_level.value == post.rating_level %}selected{% endif %}>
+            {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex gap-2 items-center">
+      <span class="self-start font-bold">Source:</span>
+      {% if request.user.is_authenticated %}
+        {% if post.media.src_url %}
+          {% component "text_field_edit_toggle" is_link=True input_name="src_url" edit_url=post_edit_url text=post.media.src_url / %}
+        {% else %}
+          {% component "text_field_edit_toggle" input_name="src_url" edit_url=post_edit_url empty_text="Unknown" / %}
+        {% endif %}
+      {% else %}
+        <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.media.src_url|default:"Unknown" }}</div>
+      {% endif %}
+    </div>
+    <div class="flex flex-wrap gap-1 mt-4 post-tags shrink">
+      {% component "add_tagset" post=post tags=tags size="small" add_tag_enabled=True / %}
+    </div>
+    {% partialdef comments inline %}
+    <div id="comments" class="mt-4 mb-8">
+      {% partialdef add-comments inline %}
+      <div id="add-comments" class="flex flex-col gap-4">
+        <div class="flex justify-between">
+          <h2>Comments</h2>
+          {% if perms.tesys_tagboard.edit_post and perms.tesys_tagboard.lock_comments %}
+            <div class="place-self-end p-1 btn btn-ghost tooltip"
+                 data-tip="{% if post.locked_comments %}Unlock{% else %}Lock{% endif %} the comments for this post"
+                 hx-post="{% url "post-toggle-comment-lock" post_id=post.pk %}"
+                 hx-swap="innerHTML"
+                 hx-target="#add-comments">
+              {% partialdef post-comment-lock inline %}
+              {% if post.locked_comments %}
+                {% include "icons/feather.html" with icon="lock" size="large" %}
+              {% else %}
+                {% include "icons/feather.html" with icon="unlock" size="large" %}
+              {% endif %}
+            {% endpartialdef post-comment-lock %}
+          </div>
         {% endif %}
       </div>
+      <div class="flex">
+        {% if request.user.is_authenticated %}
+          {% if post.locked_comments %}
+            <div class="p-0 m-0 w-full tooltip"
+                 data-tip="The comments for this post are locked">
+            {% endif %}
+            <form class="flex flex-col w-full"
+                  method="post"
+                  id="post-add-comment-form"
+                  action="{% url "post-add-comment" post_id=post.pk %}">
+              {% csrf_token %}
+              <fieldset {% if post.locked_comments %}disabled{% endif %}
+                        class="text-lg fieldset">
+                <textarea maxlength="1000"
+                          name="text"
+                          class="w-full h-24 text-base input textarea max-h-100 focus:input-secondary focus:outline-secondary focus:outline-2"
+                          placeholder="Add a comment..."></textarea>
+              </fieldset>
+              <input {% if post.locked_comments %}disabled{% endif %}
+                     class="my-1 w-full lg:w-36 btn btn-secondary btn-lg"
+                     type="submit"
+                     value="Post"
+                     hx-post="{% url "post-add-comment" post_id=post.pk %}"
+                     hx-target="#post-comments"
+                     hx-swap="innerHTML"
+                     hx-confirm="Are you sure you want to post this comment?"
+                     hx-on::after-request="document.querySelector('#post-add-comment-form textarea').value = ''" />
+            </form>
+            {% if post.locked_comments %}</div>{% endif %}
+        {% endif %}
+      </div>
+    {% endpartialdef add-comments %}
+  </div>
+  <div class="flex flex-col gap-4 items-stretch my-2 w-full">
+    <div id="post-comments">
+      <section class="flex flex-col gap-4 items-center w-full">
+        {% include "posts/comments.html" with comments=comments_page %}
+      </section>
+      {% if comments_pager.num_pages <= 1 and comments_pager.object_list|length == 0 %}
+        <div class="m-auto w-full text-xl italic">No comments yet!</div>
+      {% endif %}
     </div>
   </div>
+</div>
 {% endpartialdef comments %}
 </div>
 <section class="flex flex-col gap-2">
-  <div class="flex gap-4 pb-3 w-full">
-    <a {% if previous_post %}href="{% url "post" post_id=previous_post.pk %}"{% endif %}
-       {% if not previous_post %}disabled{% endif %}
-       class="flex items-center w-1/2 font-mono btn btn-info shrink">
-      {% include "icons/feather.html" with icon="chevron-left" size="large" %}
-    </a>
-    <a {% if next_post %}href="{% url "post" post_id=next_post.pk %}"{% endif %}
-       {% if not next_post %}disabled{% endif %}
-       class="flex items-center w-1/2 font-mono btn btn-info shrink">
-      {% include "icons/feather.html" with icon="chevron-right" size="large" %}
-    </a>
-  </div>
-  <figure class="rounded-md">
-    <img class="rounded-t-md {% if not post.title %}rounded-b-md{% endif %} max-h-[80svh]"
+  <div class="lg:hidden">{% partial next-prev-nav %}</div>
+  <figure class="rounded-md bg-base-300">
+    <img class="m-auto rounded-t-md {% if not post.title %}rounded-b-md{% endif %} max-h-[80svh]"
          src="{{ post.media.image.file.url }}"
          alt="{{ post.title }}" />
     {% if post.title %}<figcaption class="p-2 italic rounded-lg opacity-70">{{ post.title }}</figcaption>{% endif %}
