@@ -2,14 +2,14 @@
 
 <div data-post_id="{{ post.pk }}"
      {% if post.favorited %}data-favorite{% endif %}
-     class="relative skeleton post-thumbnail group/post w-[calc(100svw - 14px)] max-h-svh md:w-75 md:h-75 md:max-w-75 md:max-h-75">
-  <a class="absolute w-full h-full link z-1"
+     class="{% if post.blur_level or post.blur_tag %}overflow-clip  hover:overflow-visible{% endif %} relative rounded-box skeleton post-thumbnail group/post w-[calc(100svw - 14px)] max-h-svh md:w-75 md:h-75 md:max-w-75 md:max-h-75">
+  <a class="absolute w-full h-full link z-2"
      href="{% url "post" post_id=post.pk %}"></a>
-  <img class="object-cover invisible w-full h-full rounded-md"
+  <img class="{% if post.blur_level or post.blur_tag %}blur-md group-hover/post:blur-none{% endif %} object-cover w-full h-full rounded-box invisible"
        loading="lazy"
        {% if post.media.image.thumbnail %} src="{{ post.media.image.thumbnail.url }}" width="{{ post.media.image.thumbnail.width }}" height="{{ post.media.image.thumbnail.height }}" {% else %} src="{% static "images/default_thumbnail.png" %}" width="400px" height="400px" {% endif %}
        alt="image" />
-  <div class="hidden absolute top-0 flex-col justify-between p-2 w-full h-full rounded-md post-thumbnail-hover group-hover/post:flex">
+  <div class="hidden absolute top-0 flex-col justify-between p-2 w-full h-full rounded-box post-thumbnail-hover group-hover/post:flex">
     <section class="flex z-10 gap-1 self-end">
       {% if request.user.is_authenticated %}
         {% component "favorite_toggle" post=post / %}

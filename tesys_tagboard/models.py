@@ -8,8 +8,12 @@ from typing import TYPE_CHECKING
 import imagehash
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
+from django.db.models import BooleanField
 from django.db.models import Case
+from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import QuerySet
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
 from django.utils import timezone
@@ -26,6 +30,8 @@ from .validators import valid_phash
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from users.models import User
 
 
 class TagQuerySet(models.QuerySet):
@@ -320,9 +326,21 @@ class PostQuerySet(models.QuerySet):
         """Return Posts matching the given `media_id`"""
         return self.filter(media__id=media_id)
 
-    def with_gallery_data(self):
+    def with_gallery_data(self, user: User):
         """Return PostQuerySet including prefetched data such as meida, and tags"""
-        return self.select_related("media", "media__image").prefetch_related("tags")
+        post_blur_tag_overlap = Tag.objects.filter(post=OuterRef("pk")).intersection(
+            user.blur_tags.all()
+        )
+        return (
+            self.select_related("media", "media__image")
+            .prefetch_related("tags")
+            .annotate(
+                blur_level=Q(rating_level__gte=user.blur_rating_level),
+                blur_tag=Subquery(
+                    post_blur_tag_overlap.values("pk"), output_field=BooleanField()
+                ),
+            )
+        )
 
     def has_tags(self, tags: QuerySet[Tag]):
         """Return Posts tagged with _all_ of the provided `tags`"""

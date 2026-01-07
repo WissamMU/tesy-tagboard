@@ -221,7 +221,7 @@ def toggle_comment_lock(
 
 @require(["GET", "POST"], login=False)
 def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    posts = Post.objects.with_gallery_data()
+    posts = Post.objects.with_gallery_data(request.user)
     if request.user.is_authenticated:
         favorites = Favorite.objects.for_user(request.user)
         posts = posts.annotate_favorites(favorites)
@@ -320,7 +320,7 @@ def collection(
     user = request.user
     collection = get_object_or_404(Collection.objects.filter(pk=collection_id))
     if user == collection.user or collection.public is True:
-        posts = Post.objects.with_gallery_data().filter(
+        posts = Post.objects.with_gallery_data(request.user).filter(
             pk__in=collection.posts.values_list("pk", flat=True)
         )
         pager = Paginator(posts, 25, 5)
