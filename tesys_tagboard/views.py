@@ -7,7 +7,9 @@ from typing import Any
 import markdown
 import regex as re
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import HttpRequest
@@ -56,6 +58,9 @@ if TYPE_CHECKING:
 
 class HtmxHttpRequest(HttpRequest):
     htmx: HtmxDetails
+
+
+User = get_user_model()
 
 
 @dataclass
@@ -221,10 +226,8 @@ def toggle_comment_lock(
 
 @require(["GET", "POST"], login=False)
 def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    posts = Post.objects.with_gallery_data(request.user)
-    if request.user.is_authenticated:
-        favorites = Favorite.objects.for_user(request.user)
-        posts = posts.annotate_favorites(favorites)
+    user: User | AnonymousUser = request.user
+    posts = Post.objects.with_gallery_data(user)
     tags: QuerySet[Tag] | None = None
 
     if request.GET:
@@ -242,6 +245,12 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             tagset = form.cleaned_data.get("tagset")
             tags = Tag.objects.in_tagset(tagset)
             posts = posts.has_tags(tags)
+
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.for_user(request.user)
+        posts = posts.exclude(tags__in=user.filter_tags.all()).annotate_favorites(
+            favorites
+        )
 
     pager = Paginator(posts, 32, 4)
     page_num = request.GET.get("page", 1)

@@ -41,7 +41,7 @@
             <h2 class="py-4 upper">Settings</h2>
             <div class="grid grid-cols-2 gap-4">
               <div class="p-4 bg-base-300 rounded-box tooltip"
-                   data-tip="Posts with the following tags will not appear in searches by default. To show posts with these tags, the tags must be explicitly given as one of the target tags in the search query.">
+                   data-tip="Posts with the following tags will not appear in searches. Note that posts with these tags will still appear in collections or in your own favorites and collection galleries. This setting only affect post searches.">
                 <label>
                   <div class="text-lg italic opacity-60">Filter Tags</div>
                   {% component "add_tagset" tags=user.filter_tags.all tagset_name="filter_tags" add_tag_enabled=True post_url="users:edit-settings" post_args=user.username / %}

@@ -328,19 +328,20 @@ class PostQuerySet(models.QuerySet):
 
     def with_gallery_data(self, user: User):
         """Return PostQuerySet including prefetched data such as meida, and tags"""
-        post_blur_tag_overlap = Tag.objects.filter(post=OuterRef("pk")).intersection(
-            user.blur_tags.all()
-        )
-        return (
-            self.select_related("media", "media__image")
-            .prefetch_related("tags")
-            .annotate(
+        posts = self.select_related("media", "media__image").prefetch_related("tags")
+
+        if user.is_authenticated:
+            post_blur_tag_overlap = Tag.objects.filter(post=OuterRef("pk")).intersection(
+                user.blur_tags.all()
+            )
+            posts.annotate(
                 blur_level=Q(rating_level__gte=user.blur_rating_level),
                 blur_tag=Subquery(
                     post_blur_tag_overlap.values("pk"), output_field=BooleanField()
                 ),
             )
-        )
+
+        return posts
 
     def has_tags(self, tags: QuerySet[Tag]):
         """Return Posts tagged with _all_ of the provided `tags`"""

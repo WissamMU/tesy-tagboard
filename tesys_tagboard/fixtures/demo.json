@@ -4602,7 +4602,7 @@
   "pk": 1,
   "fields": {
     "password": "argon2$argon2id$v=19$m=102400,t=2,p=8$aXd1OHI0dFloYkpXRHhBbktNdk8wUw$9E/WSrhvenhy0qaD/nT2RTQjnzMNszjvxiANDeoQ4s8",
-    "last_login": "2026-01-06T20:29:34.650Z",
+    "last_login": "2026-01-07T23:16:16.258Z",
     "is_superuser": true,
     "username": "admin",
     "email": "tesy-tagboard@example.com",
@@ -4610,8 +4610,11 @@
     "is_active": true,
     "date_joined": "2025-11-14T19:38:38.835Z",
     "name": "",
+    "blur_rating_level": 100,
     "groups": [],
-    "user_permissions": []
+    "user_permissions": [],
+    "filter_tags": [],
+    "blur_tags": []
   }
 },
 {
@@ -4627,8 +4630,11 @@
     "is_active": true,
     "date_joined": "2025-11-23T21:01:38.838Z",
     "name": "",
+    "blur_rating_level": 100,
     "groups": [],
-    "user_permissions": []
+    "user_permissions": [],
+    "filter_tags": [],
+    "blur_tags": []
   }
 },
 {
@@ -4644,8 +4650,11 @@
     "is_active": true,
     "date_joined": "2025-11-24T01:35:37.184Z",
     "name": "",
+    "blur_rating_level": 100,
     "groups": [],
-    "user_permissions": []
+    "user_permissions": [],
+    "filter_tags": [],
+    "blur_tags": []
   }
 },
 {
@@ -4661,10 +4670,13 @@
     "is_active": true,
     "date_joined": "2025-11-25T14:18:59Z",
     "name": "",
+    "blur_rating_level": 100,
     "groups": [
       1
     ],
-    "user_permissions": []
+    "user_permissions": [],
+    "filter_tags": [],
+    "blur_tags": []
   }
 }
 ]
