@@ -7,9 +7,10 @@
 {% endblock title %}
 {% block javascript %}
   {{ block.super }}
+  <script defer src="{% static 'js/post.js' %}"></script>
 {% endblock javascript %}
 {% block content %}
-  <main class="flex flex-col-reverse gap-6 lg:flex-row lg:items-start">
+  <main class="touch-manipulation! flex flex-col-reverse gap-6 lg:flex-row lg:items-start">
     <div class="w-full leading-8 post-meta-data lg:max-w-142">
       <div class="hidden lg:block">
         {% partialdef next-prev-nav inline %}
@@ -229,11 +230,12 @@
 </section>
 </main>
 <dialog id="post_full_screen"
-        class="w-screen h-screen modal bg-neutral/75 sm:modal-middle">
-  <img class="overflow-auto max-w-svw max-h-svh"
+        closedby="any"
+        class="overflow-auto p-2 sm:p-4 lg:p-6 w-dvw h-dvh modal bg-neutral/75 modal-middle">
+  <img class="max-h-full object-fit"
        src="{{ post.media.image.file.url }}"
        alt="{{ post.title }}" />
-  <div class="absolute right-2 bottom-2 lg:right-4 lg:bottom-4 modal-action">
+  <div class="fixed right-2 bottom-2 lg:right-4 lg:bottom-4 modal-action">
     <form method="dialog">
       <button class="btn btn-primary lg:btn-lg">Close</button>
     </form>
