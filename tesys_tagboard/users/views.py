@@ -33,7 +33,7 @@ class HtmxHttpRequest(HttpRequest):
     htmx: HtmxDetails
 
 
-@require(["GET", "POST"], login=False)
+@require(["GET", "POST"], login=True)
 def user_detail_view(
     request: HtmxHttpRequest, username: str
 ) -> TemplateResponse | HttpResponse:

@@ -637,26 +637,28 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
 
             return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)
 
-    data: dict[str, str | list[Any] | None] = {
-        key: request.POST.get(key) for key in request.POST
-    }
-    data["tagset"] = request.POST.getlist("tagset")
-    form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
+    if request.method == "POST":
+        data: dict[str, str | list[Any] | None] = {
+            key: request.POST.get(key) for key in request.POST
+        }
+        data["tagset"] = request.POST.getlist("tagset")
+        form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
 
-    if form.is_valid():
-        media = handle_media_upload(
-            form.cleaned_data.get("file"), form.cleaned_data.get("src_url")
-        )
+        if form.is_valid():
+            media = handle_media_upload(
+                form.cleaned_data.get("file"), form.cleaned_data.get("src_url")
+            )
 
-        tagset = form.cleaned_data.get("tagset")
-        rating_level = form.cleaned_data.get("rating_level")
-        tags = Tag.objects.in_tagset(tagset)
-        post = Post(uploader=request.user, media=media, rating_level=rating_level)
-        post.save_with_history(post.uploader, tags)
-        post.save()
+            tagset = form.cleaned_data.get("tagset")
+            rating_level = form.cleaned_data.get("rating_level")
+            tags = Tag.objects.in_tagset(tagset)
+            post = Post(uploader=request.user, media=media, rating_level=rating_level)
+            post.save_with_history(post.uploader, tags)
+            post.save()
 
-    context = {"form": form, "rating_levels": Post.RatingLevel.choices}
-    return TemplateResponse(request, "pages/upload.html", context)
+        context = {"form": form, "rating_levels": Post.RatingLevel.choices}
+        return TemplateResponse(request, "pages/upload.html", context)
+    return TemplateResponse(request, "pages/upload.html")
 
 
 @require(["GET"], login=False)

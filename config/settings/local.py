@@ -13,7 +13,7 @@ SECRET_KEY = env(
     default="FMR6xbXvhIvyW4GnKJRAFNrhkFUqgVea0dQBT9cfXOdAngG13eB6ZiGMQok5eGPt",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
+ALLOWED_HOSTS = ["*"]
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -89,4 +89,4 @@ INSTALLED_APPS += ["django_watchfiles"]
 # Tesy's Tagboard dev apps
 INSTALLED_APPS += []
 
-TAILWIND_APP_NAME = "theme"
+TAILWIND_APP_NAME = "tesys_tagboard.theme"
