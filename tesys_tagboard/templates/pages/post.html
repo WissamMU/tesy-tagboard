@@ -41,7 +41,7 @@
             {% component "text_field_edit_toggle" input_name="title" empty_text="No title" / %}
           {% endif %}
         {% else %}
-          <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.title|default:"No title" }}</div>
+          <div class="{% if not post.title %}text-placeholder{% endif %}">{{ post.title|default:"No title" }}</div>
         {% endif %}
       </div>
       <div class="flex gap-1 items-center min-w-72">
@@ -145,7 +145,7 @@
         {% include "posts/comments.html" with comments=comments_page %}
       </section>
       {% if comments_pager.num_pages <= 1 and comments_pager.object_list|length == 0 %}
-        <div class="m-auto w-full text-xl italic">No comments yet!</div>
+        <div class="m-auto w-full text-xl text-placeholder">No comments yet!</div>
       {% endif %}
     </div>
   </div>

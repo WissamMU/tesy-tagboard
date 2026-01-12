@@ -1,7 +1,7 @@
 <div class="inline gap-2 items-center text-field-edit-form">
   <span class="align-middle field-display">
     {% if empty_text %}
-      <span class="italic opacity-50">{{ empty_text }}</span>
+      <span class="text-placeholder">{{ empty_text }}</span>
     {% elif is_link %}
       <a class="link" target="_blank" href="{{ text }}">{{ text }}</a>
     {% else %}

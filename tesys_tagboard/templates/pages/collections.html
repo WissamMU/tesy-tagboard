@@ -17,6 +17,6 @@
     {% component "pager" with pager=pager page=page / %}
   </div>
   {% if page|length == 0 %}
-    <div class="py-8 w-full text-4xl italic text-center opacity-75">No collections yet!</div>
+    <div class="py-8 w-full text-4xl text-center text-placeholder">No collections yet!</div>
   {% endif %}
 {% endblock content %}

@@ -32,6 +32,10 @@
     url("/static/fonts/pak_kumis/Pak Kumis.otf") format("opentype");
 }
 
+@utility text-placeholder {
+  @apply opacity-70 italic
+}
+
 @utility input {
   @apply focus:outline-none focus:border-2;
 }

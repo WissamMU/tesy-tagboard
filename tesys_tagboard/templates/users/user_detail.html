@@ -45,33 +45,31 @@
               <div class="grid grid-cols-2 gap-4">
                 <div class="p-4 bg-base-300 rounded-box tooltip"
                      data-tip="Posts with the following tags will not appear in searches. Note that posts with these tags will still appear in collections or in your own favorites and collection galleries. This setting only affect post searches.">
-                  <div>
-                    <label class="text-lg italic opacity-60">Filter Tags</label>
+                  <label>
+                    <span class="label">Filter tags</span>
                     {% component "add_tagset" tags=filter_tags tagset_name="filter_tags" add_tag_enabled=True / %}
-                  </div>
+                  </label>
                 </div>
                 <div class="p-4 bg-base-300 rounded-box tooltip"
                      data-tip="Posts with the following tags will be blurred by default. Blurred posts can be seen by hovering over their thumbnail with the mouse or navigating to the related post's page.">
-                  <div>
-                    <label class="text-lg italic opacity-60">Blur Tags</label>
+                  <label>
+                    <span class="label">Blur Tags</span>
                     {% component "add_tagset" tags=blur_tags tagset_name="blur_tags" add_tag_enabled=True / %}
-                  </div>
+                  </label>
                 </div>
                 <div class="p-4 bg-base-300 rounded-box tooltip"
                      data-tip="Posts with the selected rating (or higher) will be blurred by default. Blurred posts can be seen by hovering over their thumbnail with the mouse or navigating to the related post's page.">
-                  <label>
-                    <div class="flex gap-4">
-                      <div class="text-lg italic opacity-60">Blur Rating</div>
-                      <select name="blur_rating_level"
-                              class="font-bold select select-sm text-md w-fit">
-                        {% for rating_level in blur_rating_levels %}
-                          <option value="{{ rating_level.value }}"
-                                  {% if rating_level.value == user.blur_rating_level %}selected{% endif %}>
-                            {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
-                          </option>
-                        {% endfor %}
-                      </select>
-                    </div>
+                  <label class="flex gap-4">
+                    <span class="label">Blur Rating</span>
+                    <select name="blur_rating_level"
+                            class="font-bold select select-md text-md w-fit">
+                      {% for rating_level in blur_rating_levels %}
+                        <option value="{{ rating_level.value }}"
+                                {% if rating_level.value == user.blur_rating_level %}selected{% endif %}>
+                          {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
+                        </option>
+                      {% endfor %}
+                    </select>
                   </label>
                 </div>
               </div>
@@ -99,7 +97,7 @@
             <div class="flex flex-wrap gap-4 justify-center">{% component "post_gallery" posts=favorites_page / %}</div>
             {% component "pager" with pager=favorites_pager page=favorites_page / %}
           {% else %}
-            <div class="text-lg italic">No favorites yet!</div>
+            <div class="text-lg text-placeholder">No favorites yet!</div>
           {% endif %}
         </div>
       </div>
@@ -121,7 +119,7 @@
         <div id="user-collection-gallery"
              class="grid grid-cols-1 gap-4 w-full xl:grid-cols-2">
           {% if collections.count == 0 %}
-            <div class="text-3xl italic opacity-75">No collections yet!</div>
+            <div class="text-3xl text-placeholder">No collections yet!</div>
           {% else %}
             {% for collection in collections %}
               {% component "collection_thumbnail" collection=collection %}

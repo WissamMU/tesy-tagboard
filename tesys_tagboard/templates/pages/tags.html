@@ -28,10 +28,18 @@
              hx-boost="true"
              hx-preserve="true" />
     </label>
-    <div class="mt-4 lg:mt-8">
-      {% partialdef tag-categories inline %}
-      {% include "tags/tags_by_category.html" %}
-    {% endpartialdef tag-categories %}
+    {% if tags %}
+      <div class="mt-4 lg:mt-8">
+        {% partialdef tag-categories inline %}
+        {% include "tags/tags_by_category.html" %}
+        {% endpartialdef tag-categories %}
+      </div>
+    {% else %}
+      <div class="text-xl text-placeholder mt-2">
+        No tags
+        {% if request.GET.aliases %}matching that query{% endif %}
+      </div>
+    {% endif %}
     <section class="mt-16">
       <h2 class="mb-10 text-5xl tracking-wider divider divider-primary">ALIASES</h2>
       <label class="flex relative items-center self-center mt-4 mb-2 w-full lg:min-w-100">
@@ -55,17 +63,14 @@
             {% component "tag" alias=alias / %}
           {% endfor %}
         {% else %}
-          <div class="text-xl italic opacity-60">
+          <div class="text-xl text-placeholder">
             No tag aliases
-            {% if request.GET.aliases %}matching that query{% endif %}
+            {% if request.GET.q %}matching that query{% endif %}
           </div>
         {% endif %}
       </div>
     {% endpartialdef aliases %}
   </section>
-  {% if tags|length == 0 %}
-    <div class="py-8 w-full text-4xl italic text-center opacity-75">No tags yet!</div>
-  {% endif %}
 </div>
 </main>
 {% endblock content %}
