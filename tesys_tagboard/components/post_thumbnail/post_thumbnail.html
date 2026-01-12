@@ -16,7 +16,7 @@
         {% component "collection_picker" post=post collections=collections / %}
       {% endif %}
     </section>
-    <div class="absolute {% if tags|length > 5 %}top-[65%]{% else %}top-[75%]{% endif %} rounded-b-box p-2 w-full flex flex-wrap gap-1 max-h-24 z-5 overflow-clip hover:overflow-visible hover:bg-neutral/30 hover:max-h-fit">
+    <div class="absolute {% if tags|length > 4 %}top-2/3 max-h-1/3 hover:max-h-fit{% else %}top-3/4 hover:h-1/4 hover:max-h-1/4{% endif %} rounded-b-box p-2 w-full z-5 overflow-clip hover:overflow-visible hover:bg-neutral/30">
       <div class="flex flex-wrap gap-1">
         {% for tag in tags %}
           {% component "tag" tag=tag size="xs" / %}
