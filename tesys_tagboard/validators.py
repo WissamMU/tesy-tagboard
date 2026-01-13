@@ -2,6 +2,8 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from .enums import SupportedMediaTypes
+
 validate_md5 = validators.RegexValidator(r"^[0-9A-Z]{32}$")
 validate_phash = validators.RegexValidator(r"^[0-9a-z]{16}$")
 validate_dhash = validators.RegexValidator(r"^[0-9a-z]{16}$")
@@ -18,3 +20,14 @@ def validate_tagset(tag_ids: list):
 
     except (ValueError, TypeError) as e:
         raise ValidationError(msg) from e
+
+
+def validate_media_file_is_supported(file):
+    if not SupportedMediaTypes.find(file.content_type):
+        msg = f"File with a content type of {file.content_type} is not supported"
+        raise ValidationError(msg)
+
+
+def validate_media_file_type_matches_ext(file):
+    # TODO
+    return

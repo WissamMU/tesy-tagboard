@@ -19,7 +19,7 @@
     <form action="{% url 'upload' %}"
           method="post"
           enctype="multipart/form-data"
-          class="flex flex-col gap-4 p-8 w-full rounded-box lg:w-1/2 bg-base-300 sm:min-w-[450px] lg:max-w-[800px]">
+          class="flex flex-col gap-4 p-8 w-full lg:w-1/2 rounded-box bg-base-300 sm:min-w-[450px] lg:max-w-[800px]">
       {% csrf_token %}
       {{ form.non_field_errors }}
       <fieldset class="fieldset">
@@ -31,13 +31,13 @@
       </fieldset>
       <fieldset class="fieldset">
         <legend class="fieldset-legend">Source</legend>
-        <label class="w-full input validator">
+        <label class="w-full input validator pe-0">
           {% include "icons/feather.html" with icon="link" %}
           <input name="src_url"
                  type="url"
+                 pattern="(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9\-].*[a-zA-Z0-9])?\.)+[a-zA-Z].*"
                  placeholder="https://"
                  value=""
-                 pattern="^(https?://)?([a-zA-Z0-9]([a-zA-Z0-9\-].*[a-zA-Z0-9])?\.)+[a-zA-Z].*$"
                  title="Must be valid URL" />
         </label>
         <p class="hidden validator-hint">Must be valid URL</p>
@@ -47,12 +47,12 @@
         <select class="w-full select" name="rating_level">
           <option disabled selected value="1">Pick a rating level</option>
           {% for rating_level in rating_levels %}
-            <option value="{{ rating_level.0 }}">{{ rating_level.1 }} ({{ rating_level.0 }})</option>
+            <option value="{{ rating_level.value }}">{{ rating_level.label }} ({{ rating_level.value }})</option>
           {% endfor %}
         </select>
       </fieldset>
       <div id="all-posts-tagset" class="flex">
-        {% component "add_tagset" autocomplete_url="tag-autocomplete" add_tag_enabled=True post_url="upload" / %}
+        {% component "add_tagset" autocomplete_url="tag-autocomplete" add_tag_enabled=True / %}
       </div>
       <input type="submit" value="Post" class="text-xl btn btn-primary" />
       {% if form.errors %}

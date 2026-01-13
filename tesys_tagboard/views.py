@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 import markdown
-import regex as re
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import permission_required
@@ -29,6 +28,7 @@ from .components.add_tagset.add_tagset import AddTagsetComponent
 from .components.comment.comment import CommentComponent
 from .components.favorite_toggle.favorite_toggle import FavoriteToggleComponent
 from .decorators import require
+from .enums import MediaCategory
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import AddCommentForm
@@ -40,6 +40,7 @@ from .forms import PostForm
 from .forms import PostSearchForm
 from .forms import TagsetForm
 from .forms import tagset_to_array
+from .models import Audio
 from .models import Collection
 from .models import Comment
 from .models import Favorite
@@ -48,8 +49,12 @@ from .models import Media
 from .models import Post
 from .models import Tag
 from .models import TagAlias
+from .models import Video
+from .models import csv_to_tag_ids
 from .search import PostSearch
 from .search import tag_autocomplete
+from .validators import validate_media_file_is_supported
+from .validators import validate_media_file_type_matches_ext
 from .validators import validate_tagset
 
 if TYPE_CHECKING:
@@ -115,9 +120,10 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
     comments_page = comments_pager.get_page(comments_page_num)
     tags = Tag.objects.for_post(post)
 
+    post_tag_snapshots = post.posttaghistory_set.order_by("mod_time")
     post_tag_history_tag_ids = [
-        re.split(r"\s*,\s*", tags_snapshot.tags)
-        for tags_snapshot in post.posttaghistory_set.order_by("mod_time")
+        csv_to_tag_ids(tags_snapshot.tags) if tags_snapshot.tags.strip() != "" else []
+        for tags_snapshot in post_tag_snapshots
     ]
     tag_history_unique_ids = set(chain(*post_tag_history_tag_ids))
 
@@ -135,7 +141,7 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
     for tag_snapshot in tag_history:
         tag_snapshot.tag_objects = [
             history_tags_by_id[int(tag_id)]
-            for tag_id in re.split(r"\s*,\s*", tag_snapshot.tags)
+            for tag_id in csv_to_tag_ids(tag_snapshot.tags)
         ]
 
     media_src_history = post.media.mediasourcehistory_set.order_by("-mod_time")
@@ -585,30 +591,43 @@ def tag_search_autocomplete(
 
 def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media:
     """Detects media type and creates a new Media derivative"""
+
     if file is None:
-        msg = "A file must be provided to upload"
-        raise ValueError(msg)
+        msg = "The uploaded file cannot be empty"
+        raise ValidationError(msg)
+
+    validators = [
+        validate_media_file_is_supported,
+        validate_media_file_type_matches_ext,
+    ]
+    for validator in validators:
+        validator(file)
 
     if file.content_type:
         if smt := SupportedMediaTypes.find(file.content_type):
             media = Media(orig_name=file.name, type=smt.name, src_url=src_url)
             media.save()
-
-            # TODO: match on media type (image, video, audio)...
-            img = Image(file=file, meta=media)
-            img.save()
-
+            match smt.value.category:
+                case MediaCategory.AUDIO:
+                    audio = Audio(file=file, meta=media)
+                    audio.save()
+                case MediaCategory.IMAGE:
+                    img = Image(file=file, meta=media)
+                    img.save()
+                case MediaCategory.VIDEO:
+                    video = Video(file=file, meta=media)
+                    video.save()
             return media
 
-        msg = "That file extension is not supported"
-        raise ValueError(msg)
-
-    msg = "Provided file doesn't have a content type"
-    raise ValueError(msg)
+    else:
+        msg = "File missing content type"
+        raise ValidationError(msg)
+    return None
 
 
 @require(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
+    context = {"rating_levels": Post.RatingLevel}
     if request.htmx:
         # Confirming tagset
         data: dict[str, str | list[Any] | None] = {
@@ -635,11 +654,15 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
         }
         data["tagset"] = request.POST.getlist("tagset")
         form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
-
+        context |= {"form": form}
         if form.is_valid():
-            media = handle_media_upload(
-                form.cleaned_data.get("file"), form.cleaned_data.get("src_url")
-            )
+            try:
+                media = handle_media_upload(
+                    form.files.get("file"), form.cleaned_data.get("src_url")
+                )
+            except ValidationError:
+                context |= {"errors": "Failed to validate uploaded media file"}
+                return TemplateResponse(request, "pages/upload.html", context=context)
 
             tagset = form.cleaned_data.get("tagset")
             rating_level = form.cleaned_data.get("rating_level")
@@ -648,9 +671,7 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             post.save_with_tag_history(post.uploader, tags)
             post.save()
 
-        context = {"form": form, "rating_levels": Post.RatingLevel.choices}
-        return TemplateResponse(request, "pages/upload.html", context)
-    return TemplateResponse(request, "pages/upload.html")
+    return TemplateResponse(request, "pages/upload.html", context=context)
 
 
 @require(["GET"], login=False)

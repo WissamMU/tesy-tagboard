@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 import imagehash
+import regex as re
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
 from django.db.models import BooleanField
@@ -30,6 +31,7 @@ from .validators import validate_phash
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from collections.abc import Sequence
 
     from users.models import User
 
@@ -39,8 +41,6 @@ class TagQuerySet(models.QuerySet):
         return self.filter(post=post)
 
     def in_tagset(self, tagset: list[int] | None):
-        if not tagset:
-            return []
         return self.filter(pk__in=tagset)
 
 
@@ -296,6 +296,19 @@ def update_tag_post_counts():
 
 def tags_to_csv(tags: Iterable[Tag]) -> str:
     return ",".join([str(tag.pk) for tag in tags])
+
+
+def csv_to_tag_ids(tags_csv: str) -> Sequence[int]:
+    tags_csv = tags_csv.strip()
+    try:
+        tag_ids = list(
+            map(int, re.split(r"\s*,\s*", tags_csv) if tags_csv != "" else [])
+        )
+    except ValueError as e:
+        msg = f'The csv string "{tags_csv}" does not contain entirely valid Tag IDs'
+        raise ValueError(msg) from e
+    else:
+        return tag_ids
 
 
 def add_tag_history(tags: TagQuerySet, post: Post, user):

@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from tesys_tagboard.users.models import User
 
 from .models import Collection
-from .models import Image
 from .models import Post
 from .models import Tag
 from .models import TagAlias
@@ -13,12 +12,8 @@ from .validators import validate_tagset
 from .validators import validate_tagset_name
 
 
-class UploadImage(forms.ModelForm):
+class UploadMedia(forms.Form):
     src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
-
-    class Meta:
-        model = Image
-        fields = ["file"]
 
 
 class CreateTagForm(forms.ModelForm):
