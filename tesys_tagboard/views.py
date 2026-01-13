@@ -6,6 +6,7 @@ from typing import Any
 
 import markdown
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
@@ -23,6 +24,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.safestring import SafeString
+from django.utils.safestring import mark_safe
 
 from .components.add_tagset.add_tagset import AddTagsetComponent
 from .components.comment.comment import CommentComponent
@@ -46,6 +48,7 @@ from .models import Comment
 from .models import Favorite
 from .models import Image
 from .models import Media
+from .models import MediaFileModel
 from .models import Post
 from .models import Tag
 from .models import TagAlias
@@ -589,7 +592,27 @@ def tag_search_autocomplete(
     return HttpResponseNotAllowed(["GET"])
 
 
-def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media:
+def find_duplicate_media_file(
+    media_file: MediaFileModel,
+) -> MediaFileModel | None:
+    media_file_model: type[MediaFileModel] | None = None
+    match media_file.category():
+        case MediaCategory.AUDIO:
+            media_file_model = Audio
+        case MediaCategory.IMAGE:
+            media_file_model = Image
+        case MediaCategory.VIDEO:
+            media_file_model = Video
+
+    if media_file_model:
+        if found_file := media_file_model.objects.filter(md5=media_file.md5).first():
+            return found_file
+    return None
+
+
+def handle_media_upload(
+    file: UploadedFile | None, src_url: str | None
+) -> tuple[MediaFileModel | None, MediaFileModel]:
     """Detects media type and creates a new Media derivative"""
 
     if file is None:
@@ -603,26 +626,27 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> Media
     for validator in validators:
         validator(file)
 
-    if file.content_type:
-        if smt := SupportedMediaTypes.find(file.content_type):
-            media = Media(orig_name=file.name, type=smt.name, src_url=src_url)
-            media.save()
-            match smt.value.category:
-                case MediaCategory.AUDIO:
-                    audio = Audio(file=file, meta=media)
-                    audio.save()
-                case MediaCategory.IMAGE:
-                    img = Image(file=file, meta=media)
-                    img.save()
-                case MediaCategory.VIDEO:
-                    video = Video(file=file, meta=media)
-                    video.save()
-            return media
-
-    else:
+    if file.content_type is None:
         msg = "File missing content type"
         raise ValidationError(msg)
-    return None
+    if smt := SupportedMediaTypes.find(file.content_type):
+        media = Media(orig_name=file.name, type=smt.name, src_url=src_url)
+        media.save()
+
+        media_file: MediaFileModel
+        match smt.value.category:
+            case MediaCategory.AUDIO:
+                media_file = Audio(file=file, meta=media)
+            case MediaCategory.IMAGE:
+                media_file = Image(file=file, meta=media)
+            case MediaCategory.VIDEO:
+                media_file = Video(file=file, meta=media)
+
+        duplicate_file = find_duplicate_media_file(media_file)
+        return (duplicate_file, media_file)
+
+    msg = "The uploaded file could not be validated"
+    raise ValidationError(msg)
 
 
 @require(["GET", "POST"])
@@ -657,19 +681,39 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
         context |= {"form": form}
         if form.is_valid():
             try:
-                media = handle_media_upload(
+                duplicate, media_file = handle_media_upload(
                     form.files.get("file"), form.cleaned_data.get("src_url")
                 )
             except ValidationError:
-                context |= {"errors": "Failed to validate uploaded media file"}
+                msg = "Failed to validate uploaded media file"
+                messages.add_message(request, messages.INFO, msg)
                 return TemplateResponse(request, "pages/upload.html", context=context)
+            else:
+                if duplicate is None:
+                    media_file.save()
+                else:
+                    post_url = reverse("post", args=[duplicate.meta.post.pk])
+                    msg = mark_safe(  # noqa: S308
+                        f"The uploaded file was a duplicate of an existing post which can be found <a href='{post_url}'>here</a>"
+                    )
+                    media_file.delete()
+                    messages.add_message(request, messages.WARNING, msg)
+                    return TemplateResponse(
+                        request, "pages/upload.html", context=context
+                    )
 
             tagset = form.cleaned_data.get("tagset")
             rating_level = form.cleaned_data.get("rating_level")
             tags = Tag.objects.in_tagset(tagset)
-            post = Post(uploader=request.user, media=media, rating_level=rating_level)
+            post = Post(
+                uploader=request.user, media=media_file.meta, rating_level=rating_level
+            )
             post.save_with_tag_history(post.uploader, tags)
             post.save()
+            msg = mark_safe(
+                f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"
+            )
+            messages.add_message(request, messages.INFO, msg)
 
     return TemplateResponse(request, "pages/upload.html", context=context)
 

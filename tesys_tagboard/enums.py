@@ -102,7 +102,7 @@ class SupportedMediaTypes(Enum):
         """A function to search the supported media types by
         template string.
         Returns the first matched instance of SupportedMediaTypes"""
-        for smt in cls.__members__.values():
+        for smt in cls:
             if template == smt.value.get_template():
                 return smt
 

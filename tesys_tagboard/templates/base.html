@@ -76,7 +76,7 @@
         <div class="flex z-10 flex-col gap-2 px-4 pt-4 w-full">
           {% for message in messages %}
             <div class="django-message flex justify-between items-center text-wrap text-xl alert alert-info alert-soft {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-              <div>{{ message }}</div>
+              <div>{{ message.message }}</div>
               <div class="flex gap-2 items-center">
                 <button type="button"
                         class="btn-close btn btn-sm btn-error"

@@ -4,6 +4,7 @@ import uuid
 from hashlib import md5
 from io import BytesIO
 from typing import TYPE_CHECKING
+from typing import Protocol
 
 import imagehash
 import regex as re
@@ -23,6 +24,7 @@ from PIL import Image as PIL_Image
 
 from config.settings.base import AUTH_USER_MODEL
 
+from .enums import MediaCategory
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .validators import validate_dhash
@@ -32,8 +34,18 @@ from .validators import validate_phash
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Sequence
+    from typing import Any
 
     from users.models import User
+
+django_model_type: Any = type(models.Model)
+protocol_type: Any = type(Protocol)
+
+
+class ModelProtocolMeta(django_model_type, protocol_type):
+    """
+    This technique allows us to use Protocol with Django models without metaclass conflict
+    """
 
 
 class TagQuerySet(models.QuerySet):
@@ -131,6 +143,19 @@ def unique_filename(instance, filename: str) -> str:
     return f"{new_name}"
 
 
+class MediaFile(Protocol):
+    """A Protocol for describing requirements of all MediaFile models such as
+    Audio, Image, and Video"""
+
+    # meta: type[models.OneToOneField]
+    # file: type[models.FileField]
+    # md5: type[models.CharField]
+    def category(self) -> MediaCategory: ...
+
+
+class MediaFileModel(MediaFile, metaclass=ModelProtocolMeta): ...
+
+
 class Media(models.Model):
     """Media file metadata"""
 
@@ -149,6 +174,24 @@ class Media(models.Model):
 
     def __str__(self) -> str:
         return f"<Media - orig_file: {self.orig_name}, source: {self.src_url[:30]}...>"
+
+    def category(self) -> MediaCategory | None:
+        if hasattr(self, "audio"):
+            return MediaCategory.AUDIO
+        if hasattr(self, "image"):
+            return MediaCategory.IMAGE
+        if hasattr(self, "video"):
+            return MediaCategory.VIDEO
+        return None
+
+    def file(self) -> MediaFileModel:
+        match self.category():
+            case MediaCategory.AUDIO:
+                return self.audio
+            case MediaCategory.IMAGE:
+                return self.image
+            case MediaCategory.VIDEO:
+                return self.video
 
     def save_with_src_history(self, user, src_url: str):
         """Saves the Media with additional handling for source history"""
@@ -177,7 +220,7 @@ class MediaSourceHistory(models.Model):
         return f"<MediaSourceHistory - medias: {self.media.pk}, mod_time: {self.mod_time}, source: {self.src_url}>"
 
 
-class Image(models.Model):
+class Image(models.Model, MediaFileModel):
     """Media linked to static image files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
@@ -210,15 +253,16 @@ class Image(models.Model):
     # TODO: add duplicate detection
     # See https://github.com/JohannesBuchner/imagehash/issues/127 for
 
-    def __str__(self) -> str:
-        return f"<Image - meta: {self.meta}, file: {self.file}>"
-
-    def save(self, *args, **kwargs):
-        # Update hashes
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
         self.phash = str(imagehash.phash(PIL_Image.open(self.file)))
         self.dhash = str(imagehash.dhash(PIL_Image.open(self.file)))
 
+    def __str__(self) -> str:
+        return f"<Image - meta: {self.meta}, file: {self.file}>"
+
+    def save(self, *args, **kwargs):
         image = PIL_Image.open(self.file)
 
         if image.mode not in ("L", "RGB"):
@@ -243,8 +287,15 @@ class Image(models.Model):
 
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        self.meta.delete()
+        return super().delete(*args, **kwargs)
 
-class Video(models.Model):
+    def category(self):
+        return MediaCategory.IMAGE
+
+
+class Video(models.Model, MediaFileModel):
     """Media linked to static video files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
@@ -253,15 +304,22 @@ class Video(models.Model):
     """MD5 hash"""
     md5 = models.CharField(validators=[validate_md5])
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
+
     def __str__(self) -> str:
         return f"<Video - meta: {self.meta}, file: {self.file}>"
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.md5 = md5(self.file.file).hexdigest()  # noqa: S324
+    def delete(self, *args, **kwargs):
+        self.meta.delete()
+        return super().delete(*args, **kwargs)
+
+    def category(self):
+        return MediaCategory.VIDEO
 
 
-class Audio(models.Model):
+class Audio(models.Model, MediaFileModel):
     """Media linked to static audio files"""
 
     meta = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
@@ -270,12 +328,19 @@ class Audio(models.Model):
     """MD5 hash"""
     md5 = models.CharField(validators=[validate_md5])
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
+
     def __str__(self) -> str:
         return f"<Audio - meta: {self.meta}, file: {self.file}>"
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.md5 = md5(self.file.file).hexdigest()  # noqa: S324
+    def delete(self, *args, **kwargs):
+        self.meta.delete()
+        return super().delete(*args, **kwargs)
+
+    def category(self):
+        return MediaCategory.AUDIO
 
 
 def update_tag_post_counts():
@@ -410,6 +475,10 @@ class Post(models.Model):
     def save(self, **kwargs):
         super().save(**kwargs)
         update_tag_post_counts()
+
+    def delete(self, *args, **kwargs):
+        self.media.delete()
+        return super().delete(*args, **kwargs)
 
     def save_with_tag_history(self, user, tags: TagQuerySet):
         """Saves the post with additional handling for tag history"""
