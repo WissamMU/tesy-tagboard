@@ -67,6 +67,12 @@ coverage *args:
     @docker compose run --rm django coverage run -m pytest
     @docker compose run --rm django coverage report {{args}}
 
+
+alias tc := type-checking
+# Pre-commit linting and formatting
+type-checking *args:
+    @docker compose run --rm django mypy {{args}}
+
 alias pc := pre-commit
 # Pre-commit linting and formatting
 pre-commit *args:

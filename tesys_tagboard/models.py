@@ -148,9 +148,10 @@ class MediaFile(Protocol):
     """A Protocol for describing requirements of all MediaFile models such as
     Audio, Image, and Video"""
 
-    # meta: type[models.OneToOneField]
-    # file: type[models.FileField]
-    # md5: type[models.CharField]
+    meta: models.OneToOneField
+    file: models.FileField
+    md5: models.CharField
+
     def category(self) -> MediaCategory: ...
 
 
@@ -185,7 +186,7 @@ class Media(models.Model):
             return MediaCategory.VIDEO
         return None
 
-    def file(self) -> MediaFileModel:
+    def file(self) -> MediaFileModel | None:
         match self.category():
             case MediaCategory.AUDIO:
                 return self.audio
@@ -193,6 +194,7 @@ class Media(models.Model):
                 return self.image
             case MediaCategory.VIDEO:
                 return self.video
+        return None
 
     def save_with_src_history(self, user, src_url: str):
         """Saves the Media with additional handling for source history"""
@@ -231,25 +233,29 @@ class Image(models.Model, MediaFileModel):
         width_field="width",
         height_field="height",
     )
-    width = models.PositiveIntegerField(default=0)
-    height = models.PositiveIntegerField(default=0)
+    width: models.PositiveIntegerField = models.PositiveIntegerField(default=0)
+    height: models.PositiveIntegerField = models.PositiveIntegerField(default=0)
     thumbnail = models.ImageField(
         upload_to=media_thumbnail_upload_path,
         width_field="width",
         height_field="height",
         null=True,
     )
-    thumbnail_width = models.PositiveIntegerField(default=0)
-    thumbnail_height = models.PositiveIntegerField(default=0)
+    thumbnail_width: models.PositiveIntegerField = models.PositiveIntegerField(
+        default=0
+    )
+    thumbnail_height: models.PositiveIntegerField = models.PositiveIntegerField(
+        default=0
+    )
 
     """MD5 hash"""
     md5 = models.CharField(validators=[validate_md5])
 
     """Perceptual (DCT) hash"""
-    phash = models.CharField(validators=[validate_phash])
+    phash: models.CharField = models.CharField(validators=[validate_phash])
 
     """Difference hash"""
-    dhash = models.CharField(validators=[validate_dhash])
+    dhash: models.CharField = models.CharField(validators=[validate_dhash])
 
     # TODO: add duplicate detection
     # See https://github.com/JohannesBuchner/imagehash/issues/127 for
@@ -264,18 +270,19 @@ class Image(models.Model, MediaFileModel):
         return f"<Image - meta: {self.meta}, file: {self.file}>"
 
     def save(self, *args, **kwargs):
-        image = PIL_Image.open(self.file)
+        image_file = PIL_Image.open(self.file)
 
-        if image.mode not in ("L", "RGB"):
-            image = image.convert("RGB")
+        if image_file.mode not in ("L", "RGB"):
+            image = image_file.convert("RGB")
+            image_file = PIL_Image.open(image.tobytes())
 
         # Set thumbnail size
         thumb_size = kwargs.get("thumb_size", (400, 400))
-        image.thumbnail(thumb_size)
+        image_file.thumbnail(thumb_size)
 
         # Save thumbnail to memory
         handle = BytesIO()
-        image.save(handle, "png")
+        image_file.save(handle, "png")
         handle.seek(0)
 
         thumbnail_name = f"{self.file.name}.png"
@@ -284,7 +291,7 @@ class Image(models.Model, MediaFileModel):
         )
 
         self.thumbnail.save(f"{suf.name}.png", suf, save=False)
-        self.thumbnail_width, self.thumbnail_height = image.size
+        self.thumbnail_width, self.thumbnail_height = image_file.size
 
         super().save(*args, **kwargs)
 
@@ -408,7 +415,7 @@ class PostQuerySet(models.QuerySet):
         return self.filter(media__id=media_id)
 
     def with_gallery_data(self, user: User):
-        """Return PostQuerySet including prefetched data such as meida, and tags"""
+        """Return PostQuerySet including prefetched data such as media, and tags"""
         posts = self.select_related("media", "media__image").prefetch_related("tags")
 
         if user.is_authenticated:
