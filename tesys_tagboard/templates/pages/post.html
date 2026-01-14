@@ -56,7 +56,7 @@
         <select onchange=""
                 name="rating_level"
                 class="font-bold select select-sm text-md w-fit">
-          {% for rating_level in post.RatingLevel %}
+          {% for rating_level in rating_levels %}
             <option value="{{ rating_level.value }}"
                     {% if rating_level.value == post.rating_level %}selected{% endif %}>
               {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>

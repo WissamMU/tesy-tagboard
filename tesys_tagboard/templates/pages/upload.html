@@ -47,7 +47,7 @@
         <select class="w-full select" name="rating_level">
           <option disabled selected value="1">Pick a rating level</option>
           {% for rating_level in rating_levels %}
-            <option value="{{ rating_level.value }}">{{ rating_level.label }} ({{ rating_level.value }})</option>
+            <option value="{{ rating_level.value }}">{{ rating_level.name }} ({{ rating_level.value }})</option>
           {% endfor %}
         </select>
       </fieldset>

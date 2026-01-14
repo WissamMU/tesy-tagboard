@@ -1,9 +1,29 @@
 from dataclasses import dataclass
 from enum import Enum
+from enum import IntEnum
 from enum import StrEnum
 from typing import Self
 
 from django.utils.deconstruct import deconstructible
+
+
+class RatingLevel(IntEnum):
+    """Rating levels for posts
+    Default: UNRATED
+
+    These levels are ordered such that SAFE < UNRATED < QUESTIONABLE < EXPLICIT
+    This enabled a simple integer comparison to be made on the RatingLevel value
+    to show only the desired posts
+    """
+
+    SAFE = 0
+    UNRATED = 1
+    QUESTIONABLE = 50
+    EXPLICIT = 100
+
+    @classmethod
+    def choices(cls):
+        return [(level.value, level.name) for level in cls]
 
 
 @dataclass

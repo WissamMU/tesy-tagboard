@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from tesys_tagboard.models import Post
+from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.models import Tag
 
 
@@ -31,8 +31,8 @@ class User(AbstractUser):
     )
     blur_tags = models.ManyToManyField(Tag, related_name="blur_tags_users", blank=True)
     blur_rating_level = models.PositiveSmallIntegerField(
-        default=Post.RatingLevel.EXPLICIT,
-        choices=Post.RatingLevel.choices,
+        default=RatingLevel.EXPLICIT,
+        choices=RatingLevel.choices(),
         db_comment="An integer matching one of the options for a Post's rating_level",
     )
 

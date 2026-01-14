@@ -31,6 +31,7 @@ from .components.comment.comment import CommentComponent
 from .components.favorite_toggle.favorite_toggle import FavoriteToggleComponent
 from .decorators import require
 from .enums import MediaCategory
+from .enums import RatingLevel
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .forms import AddCommentForm
@@ -153,6 +154,7 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
         "post": post,
         "previous_post": previous_post,
         "next_post": next_post,
+        "rating_levels": list(RatingLevel),
         "tags": tags,
         "comments_pager": comments_pager,
         "comments_page": comments_page,
@@ -651,7 +653,7 @@ def handle_media_upload(
 
 @require(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    context = {"rating_levels": Post.RatingLevel}
+    context = {"rating_levels": list(RatingLevel)}
     if request.htmx:
         # Confirming tagset
         data: dict[str, str | list[Any] | None] = {
@@ -704,6 +706,8 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
 
             tagset = form.cleaned_data.get("tagset")
             rating_level = form.cleaned_data.get("rating_level")
+            if rating_level not in list(RatingLevel):
+                rating_level = RatingLevel.UNRATED
             tags = Tag.objects.in_tagset(tagset)
             post = Post(
                 uploader=request.user, media=media_file.meta, rating_level=rating_level

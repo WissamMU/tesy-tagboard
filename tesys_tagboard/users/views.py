@@ -16,9 +16,9 @@ from django.views.generic import RedirectView
 from django.views.generic import UpdateView
 
 from tesys_tagboard.decorators import require
+from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.forms import EditUserSettingsForm
 from tesys_tagboard.models import Collection
-from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 
 from .models import User
@@ -57,7 +57,7 @@ def user_detail_view(
             "favorites_pager": favorites_pager,
             "favorites_page": favorites_page,
             "collections": collections,
-            "blur_rating_levels": Post.RatingLevel,
+            "blur_rating_levels": list(RatingLevel),
             "filter_tags": user.filter_tags.all(),
             "blur_tags": user.blur_tags.all(),
         }

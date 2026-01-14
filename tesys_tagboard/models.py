@@ -25,6 +25,7 @@ from PIL import Image as PIL_Image
 from config.settings.base import AUTH_USER_MODEL
 
 from .enums import MediaCategory
+from .enums import RatingLevel
 from .enums import SupportedMediaTypes
 from .enums import TagCategory
 from .validators import validate_dhash
@@ -422,7 +423,7 @@ class PostQuerySet(models.QuerySet):
             )
         else:
             posts.annotate(
-                blur_level=Q(rating_level__gte=Post.RatingLevel.EXPLICIT),
+                blur_level=Q(rating_level__gte=RatingLevel.EXPLICIT),
             )
         return posts
 
@@ -438,27 +439,14 @@ class PostQuerySet(models.QuerySet):
 class Post(models.Model):
     """Posts made by users with attached media"""
 
-    class RatingLevel(models.IntegerChoices):
-        """Rating levels for posts
-        Default: UNRATED
-
-        These levels are ordered such that SAFE < UNRATED < QUESTIONABLE < EXPLICIT
-        This enabled a simple integer comparison to be made on the RatingLevel value
-        to show only the desired posts
-        """
-
-        SAFE = 0
-        UNRATED = 1
-        QUESTIONABLE = 50
-        EXPLICIT = 100
-
     title = models.TextField(default="", max_length=1000)
     uploader = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     post_date = models.DateTimeField(default=now, editable=False)
     tags = models.ManyToManyField(Tag, blank=True)
     media = models.OneToOneField(Media, on_delete=models.CASCADE, primary_key=True)
     rating_level = models.PositiveSmallIntegerField(
-        default=RatingLevel.UNRATED, choices=RatingLevel.choices
+        default=RatingLevel.UNRATED,
+        choices=RatingLevel.choices(),
     )
     locked_comments = models.BooleanField(default=False, blank=True)
 
