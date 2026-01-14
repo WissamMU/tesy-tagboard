@@ -260,7 +260,6 @@ def toggle_comment_lock(
     except Post.DoesNotExist:
         return HttpResponseNotFound("That post doesn't exist")
 
-
 @require(["GET", "POST"], login=False)
 def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     user: User | AnonymousUser = request.user
@@ -293,7 +292,6 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)
     context = {
-        "posts": posts,
         "pager": pager,
         "page": page,
         "tags": tags,
