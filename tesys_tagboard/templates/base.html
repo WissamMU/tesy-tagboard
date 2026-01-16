@@ -25,6 +25,7 @@
           content="A self-hosted Booru and media tagging application" />
     <meta name="author" content="Cameron Blankenbuehler" />
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+    {% tailwind_preload_css %}
     {% tailwind_css %}
     {% block css %}
       <link href="{% static 'css/project.css' %}" rel="stylesheet" />
