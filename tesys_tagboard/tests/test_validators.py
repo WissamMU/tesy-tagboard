@@ -10,7 +10,6 @@ class TestTagSet:
         with pytest.raises(ValidationError):
             validate_tagset([-1, -2, -3])
 
-
     def test_has_letters(self):
         with pytest.raises(ValidationError):
             validate_tagset(["a", "b", "c"])
@@ -23,6 +22,7 @@ class TestTagSet:
 
         with pytest.raises(ValidationError):
             validate_tagset([1, 2, 3, "a", "b", "c", 1, 2, 3])
+
 
 class TestTagName:
     def test_name_with_category(self):

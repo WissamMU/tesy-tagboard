@@ -13,7 +13,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from tesys_tagboard.users.forms import UserAdminChangeForm
-from tesys_tagboard.users.models import User
 from tesys_tagboard.users.tests.factories import UserFactory
 from tesys_tagboard.users.views import UserRedirectView
 from tesys_tagboard.users.views import UserUpdateView
@@ -21,6 +20,8 @@ from tesys_tagboard.users.views import user_detail_view
 
 if TYPE_CHECKING:
     from django.test import RequestFactory
+
+    from tesys_tagboard.users.models import User
 
 pytestmark = pytest.mark.django_db
 

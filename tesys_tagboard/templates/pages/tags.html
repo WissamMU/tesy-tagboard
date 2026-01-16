@@ -32,45 +32,44 @@
       <div class="mt-4 lg:mt-8">
         {% partialdef tag-categories inline %}
         {% include "tags/tags_by_category.html" %}
-        {% endpartialdef tag-categories %}
-      </div>
-    {% else %}
-      <div class="text-xl text-placeholder mt-2">
-        No tags
-        {% if request.GET.aliases %}matching that query{% endif %}
-      </div>
-    {% endif %}
-    <section class="mt-16">
-      <h2 class="mb-10 text-5xl tracking-wider divider divider-primary">ALIASES</h2>
-      <label class="flex relative items-center self-center mt-4 mb-2 w-full lg:min-w-100">
-        <div class="absolute left-3 z-5">{% include "icons/feather.html" with icon="filter" %}</div>
-        <input type="search"
-               class="w-full rounded-none focus:border-none focus:shadow-none focus:outline-none ps-9 input grow f-full"
-               placeholder="Filter tags aliases..."
-               name="aliases"
-               value="{{ request.GET.aliases }}"
-               hx-get="?aliases={{ request.GET.aliases }}"
-               hx-trigger="input changed delay:500ms, keyup[key=='Enter'], search"
-               hx-target="#aliases-container"
-               hx-swap="outerHTML"
-               hx-boost="true"
-               hx-preserve="true" />
-      </label>
-      {% partialdef aliases inline %}
-      <div id="aliases-container" class="flex flex-wrap gap-2">
-        {% if aliases %}
-          {% for alias in aliases %}
-            {% component "tag" alias=alias / %}
-          {% endfor %}
-        {% else %}
-          <div class="text-xl text-placeholder">
-            No tag aliases
-            {% if request.GET.q %}matching that query{% endif %}
-          </div>
-        {% endif %}
-      </div>
-    {% endpartialdef aliases %}
-  </section>
-</div>
+      {% endpartialdef tag-categories %}
+    </div>
+  {% else %}
+    <div class="mt-2 text-xl text-placeholder">
+      No tags
+      {% if request.GET.aliases %}matching that query{% endif %}
+    </div>
+  {% endif %}
+  <section class="mt-16">
+    <h2 class="mb-10 text-5xl tracking-wider divider divider-primary">ALIASES</h2>
+    <label class="flex relative items-center self-center mt-4 mb-2 w-full lg:min-w-100">
+      <div class="absolute left-3 z-5">{% include "icons/feather.html" with icon="filter" %}</div>
+      <input type="search"
+             class="w-full rounded-none focus:border-none focus:shadow-none focus:outline-none ps-9 input grow f-full"
+             placeholder="Filter tags aliases..."
+             name="aliases"
+             value="{{ request.GET.aliases }}"
+             hx-get="?aliases={{ request.GET.aliases }}"
+             hx-trigger="input changed delay:500ms, keyup[key=='Enter'], search"
+             hx-target="#aliases-container"
+             hx-swap="outerHTML"
+             hx-boost="true"
+             hx-preserve="true" />
+    </label>
+    {% partialdef aliases inline %}
+    <div id="aliases-container" class="flex flex-wrap gap-2">
+      {% if aliases %}
+        {% for alias in aliases %}
+          {% component "tag" alias=alias / %}
+        {% endfor %}
+      {% else %}
+        <div class="text-xl text-placeholder">
+          No tag aliases
+          {% if request.GET.q %}matching that query{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  {% endpartialdef aliases %}
+</section>
 </main>
 {% endblock content %}

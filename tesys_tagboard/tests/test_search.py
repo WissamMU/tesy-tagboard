@@ -93,7 +93,7 @@ class TestTagAutocomplete:
         assert "blueberry" in tag_names
         assert "red vs. blue" in tag_names
         assert "sky blue" in tag_names
-        assert tags.count() == 6
+        assert tags.count() == 6  # noqa: PLR2004
 
     def test_autocomplete_excluded_by_name_partial(self, db):
         tags = tag_autocomplete(Tag.objects.all(), exclude_partial="blue")
@@ -135,7 +135,7 @@ class TestTagAliasAutocomplete:
         assert "red v. blue" in alias_names
         assert "red vs blue" in alias_names
         assert "red x blue" in alias_names
-        assert aliases.count() == 6
+        assert aliases.count() == 6  # noqa: PLR2004
 
     def test_autocomplete_excluded_by_name_partial(self, db):
         aliases = tag_alias_autocomplete(TagAlias.objects.all(), exclude_partial="red")

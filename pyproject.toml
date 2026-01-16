@@ -186,6 +186,7 @@ dependencies = [
     "django-redis==6.0.0",
     "django-tailwind>=4.3.0",
     "django-template-partials>=25.2",
+    "django-typer>=3.5.1",
     "django-watchfiles>=1.4.0",
     "djangorestframework==3.16.1",
     "gunicorn==23.0.0",

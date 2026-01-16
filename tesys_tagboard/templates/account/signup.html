@@ -6,13 +6,13 @@
   {% trans "Signup" %}
 {% endblock head_title %}
 {% block content %}
-{% include "heading.html" with text=_("SIGNUP") %}
-<div class="m-auto md:max-w-xl xl:max-w-3xl">
-  {% setvar link %}
-  <a href="{{ login_url }}">
-  {% endsetvar %}
-  {% setvar end_link %}
-</a>
+  {% include "heading.html" with text=_("SIGNUP") %}
+  <div class="m-auto md:max-w-xl xl:max-w-3xl">
+    {% setvar link %}
+    <a href="{{ login_url }}">
+    {% endsetvar %}
+    {% setvar end_link %}
+  </a>
 {% endsetvar %}
 <p class="py-2">
   {% blocktranslate %}Already have an account? Then please {{ link }}sign in{{ end_link }}.{% endblocktranslate %}

@@ -26,11 +26,13 @@ class TestTagsView(TestCase):
         response = client.get(reverse("tags"))
         assert response.status_code == HTTPStatus.OK
 
+
 class TestPostsView(TestCase):
     def test_posts(self):
         client = Client()
         response = client.get(reverse("posts"))
         assert response.status_code == HTTPStatus.OK
+
 
 class TestUploadView(TestCase):
     def test_upload(self):
@@ -39,11 +41,13 @@ class TestUploadView(TestCase):
         assert response.redirect_chain[0][0] == "/accounts/login/?next=/upload/"
         assert response.status_code == HTTPStatus.OK
 
+
 class TestCollectionsView(TestCase):
     def test_collections(self):
         client = Client()
         response = client.get(reverse("collections"))
         assert response.status_code == HTTPStatus.OK
+
 
 class TestHelpView(TestCase):
     def test_help(self):

@@ -684,7 +684,7 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
                 if duplicate:
                     post_url = reverse("post", args=[duplicate.meta.post.pk])
                     msg = mark_safe(  # noqa: S308
-                        f"The uploaded file was a duplicate of an existing post which can be found <a href='{post_url}'>here</a>"
+                        f"The uploaded file was a duplicate of an existing post which can be found <a href='{post_url}'>here</a>"  # noqa: E501
                     )
                     media_file.delete()
                     messages.add_message(request, messages.WARNING, msg)
@@ -702,8 +702,8 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             media_file.post = post
             media_file.save()
             post.save_with_tag_history(post.uploader, tags)
-            msg = mark_safe(
-                f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"
+            msg = mark_safe(  # noqa: S308
+                f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"  # noqa: E501
             )
             messages.add_message(request, messages.INFO, msg)
 

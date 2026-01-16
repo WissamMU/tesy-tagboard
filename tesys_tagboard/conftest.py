@@ -1,7 +1,11 @@
+from typing import TYPE_CHECKING
+
 import pytest
 
-from tesys_tagboard.users.models import User
 from tesys_tagboard.users.tests.factories import UserFactory
+
+if TYPE_CHECKING:
+    from tesys_tagboard.users.models import User
 
 
 @pytest.fixture(autouse=True)

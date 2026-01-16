@@ -450,7 +450,7 @@ class SourceHistory(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"<MediaSourceHistory - post: {self.post}, mod_time: {self.mod_time}, source: {self.src_url}>"
+        return f"<MediaSourceHistory - post: {self.post}, mod_time: {self.mod_time}, source: {self.src_url}>"  # noqa: E501
 
 
 class PostTagHistory(models.Model):
@@ -549,9 +549,9 @@ class FavoriteQuerySet(models.QuerySet):
         return self.filter(user=user)
 
     def with_gallery_data(self):
-        return self.select_related(
-            "post", "post", "post__image"
-        ).prefetch_related("post__tags")
+        return self.select_related("post", "post", "post__image").prefetch_related(
+            "post__tags"
+        )
 
 
 class Favorite(models.Model):
