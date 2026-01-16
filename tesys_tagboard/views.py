@@ -584,7 +584,7 @@ def tag_search_autocomplete(
 ) -> TemplateResponse | HttpResponseNotAllowed:
     if request.method == "GET":
         partial = request.GET.get("partial", "")
-        tags = tag_autocomplete(partial)
+        tags = tag_autocomplete(Tag.objects.all(), partial)
         context = {"tags": tags}
         return TemplateResponse(request, "tags/search_autocomplete.html", context)
 

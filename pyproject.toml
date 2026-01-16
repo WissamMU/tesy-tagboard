@@ -1,7 +1,8 @@
 # ==== pytest ====
 [tool.pytest.ini_options]
+strict = true
 minversion = "6.0"
-addopts = "--ds=config.settings.test --reuse-db --import-mode=importlib"
+addopts = "--ds=config.settings.test --import-mode=importlib"
 python_files = [
     "tests.py",
     "test_*.py",
@@ -145,9 +146,10 @@ dev = [
     "mypy==1.18.2",
     "pre-commit==4.3.0",
     "psycopg[c]==3.2.11",
-    "pytest==8.4.2",
+    "pytest>=9.0",
     "pytest-django==4.11.1",
     "pytest-sugar==1.1.1",
+    "pytest-xdist>=3.8.0",
     "ruff==0.14.2",
     "sphinx==8.2.3",
     "sphinx-autobuild==2025.8.25",
@@ -191,6 +193,7 @@ dependencies = [
     "imagehash>=4.3.2",
     "jwt>=1.4.0",
     "markdown>=3.10",
+    "more-itertools>=10.8.0",
     "pillow==12.0.0",
     "psycopg[c]==3.2.11",
     "python-slugify==8.0.4",

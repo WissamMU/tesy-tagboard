@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.db.models import QuerySet
 from django.utils.regex_helper import _lazy_re_compile
 from django.utils.translation import gettext_lazy as _
+from more_itertools import take
 
 from .enums import TagCategory
 from .models import Post
@@ -21,25 +22,39 @@ if TYPE_CHECKING:
 
 
 def tag_autocomplete(
-    partial: str,
-    exclude_tag_names: list[str] | None = None,
-    exlude_tags: QuerySet[Tag] | None = None,
+    tags: QuerySet[Tag],
+    include_partial: str | None = None,
+    exclude_partial: str | None = None,
+    exclude_tag_names: Iterable[str] | None = None,
+    exclude_tags: QuerySet[Tag] | None = None,
 ) -> QuerySet[Tag]:
-    tags = Tag.objects.filter(Q(name__icontains=partial))
+    if include_partial is not None:
+        tags = tags.filter(name__icontains=include_partial)
+    if exclude_partial is not None:
+        tags = tags.exclude(name__contains=exclude_partial)
     if exclude_tag_names is not None:
-        tags = tags.exclude(Q(name__in=exclude_tag_names))
+        tags = tags.exclude(name__in=exclude_tag_names)
+    if exclude_tags is not None:
+        tags = tags.exclude(pk__in=exclude_tags)
 
     return tags
 
 
 def tag_alias_autocomplete(
-    partial: str,
-    exclude_alias_names: list[str] | None = None,
-    exlude_aliases: QuerySet[Tag] | None = None,
+    aliases: QuerySet[TagAlias],
+    include_partial: str | None = None,
+    exclude_partial: str | None = None,
+    exclude_alias_names: Iterable[str] | None = None,
+    exclude_aliases: QuerySet[TagAlias] | None = None,
 ) -> QuerySet[TagAlias]:
-    aliases = TagAlias.objects.filter(Q(name__icontains=partial))
+    if include_partial is not None:
+        aliases = TagAlias.objects.filter(name__icontains=include_partial)
+    if exclude_partial is not None:
+        aliases = TagAlias.objects.exclude(name__icontains=exclude_partial)
     if exclude_alias_names is not None:
-        aliases = aliases.exclude(Q(name__in=exclude_alias_names))
+        aliases = aliases.exclude(name__in=exclude_alias_names)
+    if exclude_aliases is not None:
+        aliases = aliases.exclude(pk__in=exclude_aliases)
 
     return aliases
 
@@ -172,13 +187,17 @@ class PostSearch:
     def autocomplete(self, partial: str = "") -> Iterable[AutocompleteItem]:
         """Return autocomplete matches base on existing search query and
         the provided `partial`"""
-        tags = tag_autocomplete(partial, self.exclude_names + self.include_names)[
-            : self.max_tags
-        ]
-
+        tags = tag_autocomplete(
+            Tag.objects.all(),
+            partial,
+            exclude_tag_names=chain(self.exclude_names, self.include_names),
+        )
+        tags = take(self.max_tags, tags)
         tag_aliases = tag_alias_autocomplete(
-            partial, self.exclude_names + self.include_names
-        )[: self.max_tags]
+            TagAlias.objects.all(),
+            partial,
+            exclude_alias_names=chain(self.exclude_names, self.include_names),
+        )
 
         return chain(
             (

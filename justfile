@@ -60,7 +60,7 @@ logs *args:
 alias t := test
 # Run pytest(s)
 test *args:
-    @docker compose run --rm django pytest {{args}}
+    @docker compose run --rm django pytest -n 4 {{args}}
 
 # Run pytest(s) with coverage report
 coverage *args:

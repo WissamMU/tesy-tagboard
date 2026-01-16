@@ -50,7 +50,15 @@ class TagQuerySet(models.QuerySet):
 
 
 class Tag(models.Model):
-    """Tags for Media objects"""
+    """Tags for Media objects
+
+    # Fields
+    name: CharField
+    category: CharField(2)
+    description: TextField(255)
+    post_count: PositiveIntegerField
+    rating_level: PositiveSmallIntegerField
+    """
 
     category_choices = [(s.value.shortcode, s.value.display_name) for s in TagCategory]
 
