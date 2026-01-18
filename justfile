@@ -104,10 +104,10 @@ run-async *args:
     DJANGO_READ_DOT_ENV_FILE=True uv run uvicorn config.asgi:application --host 0.0.0.0 --port 55555 --reload-include "*.html" {{ args }}
 
 # Reset the database and prompt for a new admin password
-db-reset:
+db-reset superuser_name="admin":
     just manage reset_db
     just manage migrate
-    just manage createsuperuser --username admin --email tesy-tagboard@example.com
+    just manage createsuperuser --username {{superuser_name}} --email tesy-tagboard@example.com
 
 alias mkc := make-component
 # Create a new django-component with a given name

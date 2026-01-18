@@ -267,7 +267,7 @@ class Post(models.Model):
         return f"<Post - id: {self.pk}; uploader: {self.uploader.username}; title: {self.title}; posted: {self.post_date}>"  # noqa: E501
 
     # TODO: also override update() to update post counts
-    def save(self, **kwargs):
+    def save_and_update_post_count(self, **kwargs):
         super().save(**kwargs)
         update_tag_post_counts()
 
@@ -320,8 +320,8 @@ class Image(models.Model):
     height: models.PositiveIntegerField = models.PositiveIntegerField(default=0)
     thumbnail = models.ImageField(
         upload_to=media_thumbnail_upload_path,
-        width_field="width",
-        height_field="height",
+        width_field="thumbnail_width",
+        height_field="thumbnail_height",
         null=True,
     )
     thumbnail_width: models.PositiveIntegerField = models.PositiveIntegerField(
@@ -346,8 +346,9 @@ class Image(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
-        self.phash = str(imagehash.phash(PIL_Image.open(self.file)))
-        self.dhash = str(imagehash.dhash(PIL_Image.open(self.file)))
+        image_file = PIL_Image.open(self.file)
+        self.phash = str(imagehash.phash(image_file))
+        self.dhash = str(imagehash.dhash(image_file))
 
     def __str__(self) -> str:
         return (
@@ -356,10 +357,6 @@ class Image(models.Model):
 
     def save(self, *args, **kwargs):
         image_file = PIL_Image.open(self.file)
-
-        if image_file.mode not in ("L", "RGB"):
-            image = image_file.convert("RGB")
-            image_file = PIL_Image.open(image.tobytes())
 
         # Set thumbnail size
         thumb_size = kwargs.get("thumb_size", (400, 400))

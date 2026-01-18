@@ -163,18 +163,22 @@
       </div>
     </label>
     <div class="p-2 tab-content bg-base-200 border-base-300">
-      <figure class="mb-2 rounded-box">
-        <div class="relative w-fit">
-          <img class="rounded-box max-h-[80svh] xl:m-none"
-               src="{{ post.image.file.url }}"
-               alt="{{ post.title }}" />
-          <button class="absolute right-2 bottom-2 p-1 border-none hover:scale-110 rounded-field bg-neutral/40 text-neutral-content hover:bg-neutral"
-                  onclick="post_full_screen.showModal()">
-            {% include "icons/feather.html" with icon="maximize" size="large" %}
-          </button>
-        </div>
-        {% if post.title %}<figcaption class="p-2 italic opacity-70">{{ post.title }}</figcaption>{% endif %}
-      </figure>
+      {% if post.image.file.url %}
+        <figure class="mb-2 rounded-box">
+          <div class="relative w-fit">
+            <img class="rounded-box max-h-[80svh] xl:m-none"
+                 src="{{ post.image.file.url }}"
+                 alt="{{ post.title }}" />
+            <button class="absolute right-2 bottom-2 p-1 border-none hover:scale-110 rounded-field bg-neutral/40 text-neutral-content hover:bg-neutral"
+                    onclick="post_full_screen.showModal()">
+              {% include "icons/feather.html" with icon="maximize" size="large" %}
+            </button>
+          </div>
+          {% if post.title %}<figcaption class="p-2 italic opacity-70">{{ post.title }}</figcaption>{% endif %}
+        </figure>
+      {% else %}
+        <div class="my-3 text-placeholder">The media file for this post is missing</div>
+      {% endif %}
       <div class="flex flex-wrap gap-2 justify-end items-center w-fit">
         {% if request.user.is_authenticated %}
           {% component "favorite_toggle" post=post / %}

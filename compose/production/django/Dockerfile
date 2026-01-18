@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   build-essential \
   # psycopg dependencies
   libpq-dev \
+  # libmagic for file detection
+  libmagic1 \
   curl
 
 # Install Tailwind dependencies
@@ -56,6 +58,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # Translations dependencies
   gettext \
+  # libmagic for file detection
+  libmagic1 \
   # entrypoint
   wait-for-it \
   # cleaning up unused files

@@ -119,6 +119,7 @@ select = [
 
 ignore = [
     "S101", # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
+    "S311", # Use of pseud-random number generator detected
     "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
     "SIM102", # sometimes it's better to nest
     "COM812", # may cause conflicts with the formatter
@@ -126,6 +127,10 @@ ignore = [
     # Deactivated because it can make the code slow:
     # https://github.com/astral-sh/ruff/issues/7871
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore print function lint for commands
+"tesys_tagboard/management/commands/*" = ["T201"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -197,8 +202,10 @@ dependencies = [
     "more-itertools>=10.8.0",
     "pillow==12.0.0",
     "psycopg[c]==3.2.11",
+    "python-magic>=0.4.27",
     "python-slugify==8.0.4",
     "redis==6.4.0",
+    "rich>=14.2.0",
     "uvicorn-worker==0.4.0",
     "uvicorn[standard]==0.38.0",
     "whitenoise==6.11.0",
