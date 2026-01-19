@@ -1,7 +1,7 @@
 {% load humanize custom_filters %}
 
 <div data-comment="{{ comment.pk }}"
-     class="p-2 border-2 border border-info bg-base-200">
+     class="p-3 leading-5 border-2 border md:p-4 border-info bg-base-200">
   <input type="hidden" name="comment-id" />
   <div class="flex justify-between">
     <div class="flex">{% include "nav/user_link.html" with user=comment.user %}</div>
@@ -14,8 +14,9 @@
       <div>{{ comment.post_date|naturaltime }}</div>
     </div>
   </div>
-  <div>
-    <div class="px-1 my-2 w-full">
+  <div class="comment-container relative max-h-45 overflow-y-hidden md:bg-i md:overflow-y-auto md:bg-clip-border md:bg-none md:text-base-content to-none bg-clip-text bg-linear-to-b text-transparent from-base-content from-65% to-transparent to-100%">
+    <button class="absolute right-1 bottom-1 invisible text-sm show-more-btn btn btn-xs btn-info">Show more</button>
+    <div class="px-1 my-2 w-full min-h-10 comment-body">
       <div class="comment-text">{{ comment.text }}</div>
       <form class="hidden comment-edit-form">
         <input type="hidden" name="comment_id" value="{{ comment.pk }}" />

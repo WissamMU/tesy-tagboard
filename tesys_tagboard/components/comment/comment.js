@@ -1,6 +1,7 @@
 (function () { // Self invoking function to avoid variable clashing
 
   const setup_comment = (comment) => {
+    const comment_body = comment.querySelector(".comment-body");
     const comment_text = comment.querySelector(".comment-text");
     const comment_edit_form = comment.querySelector(".comment-edit-form");
     const comment_edit_mode_form = comment.querySelector(".comment-edit-mode-form");
@@ -22,6 +23,10 @@
       }
     }
 
+    const show_more_btn = comment.querySelector(".show-more-btn")
+    if (comment_body.scrollHeight !== comment_body.clientHeight) {
+      show_more_btn.classList.remove("invisible")
+    }
 
     if (comment_edit_mode_form) {
       const comment_edit_cancel_btn = comment_edit_form.querySelector(".btn.comment-edit-cancel");

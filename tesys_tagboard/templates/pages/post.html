@@ -33,7 +33,7 @@
           action="{% url "post-edit" post_id=post.pk %}">
       {% csrf_token %}
       <div class="flex gap-2 items-center">
-        <span class="font-bold">Title:</span>
+        <span class="self-start font-bold">Title:</span>
         {% if request.user.is_authenticated %}
           {% if post.title %}
             {% component "text_field_edit_toggle" input_name="title" text=post.title / %}
