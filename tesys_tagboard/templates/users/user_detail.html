@@ -93,9 +93,9 @@
       <div class="rounded-none lg:p-6 tab-content lg:bg-base-200">
         <div class="flex flex-col gap-4">
           {% if favorites_pager.num_pages > 0 %}
-            {% component "pager" with pager=favorites_pager page=favorites_page / %}
-            <div class="flex flex-wrap gap-4 justify-center">{% component "post_gallery" posts=favorites_page / %}</div>
-            {% component "pager" with pager=favorites_pager page=favorites_page / %}
+            <div class="flex flex-wrap gap-4 justify-center">
+              {% component "post_gallery" pager=favorites_pager page=favorites_page query_page_arg_name=favorites_page_arg_name page_range=favorites_page_range / %}
+            </div>
           {% else %}
             <div class="text-lg text-placeholder">No favorites yet!</div>
           {% endif %}
@@ -145,7 +145,9 @@
   let tab_buttons = document.querySelectorAll(".tabs input[name='profile_tabs']");
   tab_buttons.forEach(btn => {
     btn.addEventListener("click", e => {
-      window.history.replaceState(null, "", `{{ request.path }}?tab=${btn.value}`)
+      let url = new URL(window.location.href);
+      url.searchParams.set('tab', btn.value);
+      window.history.replaceState(null, "", url.href)
     });
   });
 </script>

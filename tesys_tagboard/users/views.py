@@ -51,11 +51,17 @@ def user_detail_view(
             post.favorited = True
 
         favorites_pager = Paginator(favorited_posts, 20, 5)
-        favorites_page_num = request.GET.get("fav_page", 1)
+        fav_page_arg_name = "fav_page"
+        favorites_page_num = request.GET.get(fav_page_arg_name, 1)
         favorites_page = favorites_pager.get_page(favorites_page_num)
+        favorites_page_range = list(
+            favorites_pager.get_elided_page_range(favorites_page_num, on_each_side=1)
+        )
         context |= {
             "favorites_pager": favorites_pager,
             "favorites_page": favorites_page,
+            "favorites_page_range": favorites_page_range,
+            "favorites_page_arg_name": fav_page_arg_name,
             "collections": collections,
             "blur_rating_levels": list(RatingLevel),
             "filter_tags": user.filter_tags.all(),

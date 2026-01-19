@@ -289,10 +289,12 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
         )
 
     pager = Paginator(posts, 32, 4)
-    page_num = request.GET.get("page", 1)
+    page_num = int(request.GET.get("page", 1))
     page = pager.get_page(page_num)
+
     context = {
         "pager": pager,
+        "page_range": list(pager.get_elided_page_range(page_num, on_each_side=1)),
         "page": page,
         "tags": tags,
     }
