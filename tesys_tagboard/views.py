@@ -154,6 +154,7 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
         "next_post": next_post,
         "rating_levels": list(RatingLevel),
         "tags": tags,
+        "meta_tag_names": " ".join(tag.name for tag in tags),
         "comments_pager": comments_pager,
         "comments_page": comments_page,
         "tag_history": tag_history,

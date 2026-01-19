@@ -23,7 +23,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description"
           content="A self-hosted Booru and media tagging application" />
-    <meta name="author" content="Cameron Blankenbuehler" />
+    {% block extra_meta %}
+    {% endblock extra_meta %}
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
     {% tailwind_preload_css %}
     {% tailwind_css %}

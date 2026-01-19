@@ -2,6 +2,19 @@
 
 {% load humanize i18n static component_tags %}
 
+{% block extra_meta %}
+  <meta name="keywords" content="{{ meta_tag_names }}" />
+  <meta property="og:title" content="{{ post.title }}" />
+  <meta property="og:description" content="{{ meta_tag_names }}" />
+  <meta property="og:url" content="{{ request.get_full_path }}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="{{ post.image.file.url }}" />
+  <meta property="og:image:height" content="{{ post.image.height }}" />
+  <meta property="og:image:width" content="{{ post.image.width }}" />
+  <meta property="twitter:title" content="{{ meta_tag_names }}" />
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:image:src" content="{{ post.image.file.url }}" />
+{% endblock extra_meta %}
 {% block title %}
   {{ block.super }} — Posts
 {% endblock title %}
