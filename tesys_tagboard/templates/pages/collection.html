@@ -13,7 +13,7 @@
     </header>
     <div class="flex flex-col gap-4 items-center">
       <section class="flex flex-col gap-4 items-center">
-        <div class="flex flex-wrap gap-4 justify-center">{% component "post_gallery" with posts=page / %}</div>
+        <div class="flex flex-wrap gap-4 justify-center">{% component "post_gallery" with page=page pager=pager / %}</div>
       </section>
     </div>
   </div>

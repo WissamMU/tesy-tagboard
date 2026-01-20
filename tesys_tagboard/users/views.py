@@ -54,13 +54,9 @@ def user_detail_view(
         fav_page_arg_name = "fav_page"
         favorites_page_num = request.GET.get(fav_page_arg_name, 1)
         favorites_page = favorites_pager.get_page(favorites_page_num)
-        favorites_page_range = list(
-            favorites_pager.get_elided_page_range(favorites_page_num, on_each_side=1)
-        )
         context |= {
             "favorites_pager": favorites_pager,
             "favorites_page": favorites_page,
-            "favorites_page_range": favorites_page_range,
             "favorites_page_arg_name": fav_page_arg_name,
             "collections": collections,
             "blur_rating_levels": list(RatingLevel),

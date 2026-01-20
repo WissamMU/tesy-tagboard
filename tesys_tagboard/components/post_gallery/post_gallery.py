@@ -14,7 +14,7 @@ class PostGalleryComponent(Component):
         # galleries on a single page
         query_page_arg_name = kwargs.get("query_page_arg_name", "page")
         page = kwargs.get("page")
-        page_range = kwargs.get("page_range")
+        page_range = list(pager.get_elided_page_range(page.number, on_each_side=1))
 
         collections = None
         # Authenticated users can use favorites and collection features

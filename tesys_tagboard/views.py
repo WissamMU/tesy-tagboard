@@ -295,7 +295,6 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
 
     context = {
         "pager": pager,
-        "page_range": list(pager.get_elided_page_range(page_num, on_each_side=1)),
         "page": page,
         "tags": tags,
     }
