@@ -12,6 +12,7 @@ from django.db import models
 from django.db.models import BooleanField
 from django.db.models import Case
 from django.db.models import OuterRef
+from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import QuerySet
 from django.db.models import Subquery
@@ -209,12 +210,28 @@ class PostQuerySet(models.QuerySet):
 
     def with_gallery_data(self, user: User):
         """Return PostQuerySet including prefetched data such as media, and tags"""
-        posts = self.prefetch_related("tags", "collection_set").select_related("image")
-
+        prefetch_tags = Tag.objects.defer("description", "rating_level")
+        posts = (
+            self.defer(
+                "title",
+                "post_date",
+                "edit_date",
+                "src_url",
+                "locked_comments",
+                "parent_id",
+            )
+            .prefetch_related(
+                Prefetch("tags", queryset=prefetch_tags), "collection_set"
+            )
+            .select_related("image")
+            .defer("image__orig_name", "image__md5", "image__phash", "image__dhash")
+        )
         if user.is_authenticated:
-            post_blur_tag_overlap = Tag.objects.filter(
-                post=OuterRef("pk")
-            ).intersection(user.blur_tags.all())
+            post_blur_tag_overlap = (
+                Tag.objects.filter(post=OuterRef("pk"))
+                .only("pk")
+                .intersection(user.blur_tags.only("pk").all())
+            )
             posts = posts.annotate(
                 blur_level=Q(rating_level__gte=user.blur_rating_level),
                 blur_tag=Subquery(
@@ -242,7 +259,6 @@ class Post(models.Model):
 
     title = models.TextField(default="", max_length=1000)
     uploader = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    upload_date = models.DateTimeField(default=now, editable=False)
     post_date = models.DateTimeField(default=now, editable=False)
     edit_date = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag, blank=True)
