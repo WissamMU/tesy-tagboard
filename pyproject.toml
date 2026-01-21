@@ -190,6 +190,7 @@ dependencies = [
     "django-model-utils==5.0.0",
     "django-ninja>=1.4.5",
     "django-redis==6.0.0",
+    "django-silk>=5.4.3",
     "django-tailwind>=4.3.0",
     "django-template-partials>=25.2",
     "django-typer>=3.5.1",

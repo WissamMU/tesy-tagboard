@@ -85,6 +85,7 @@ THIRD_PARTY_APPS = [
     "django_htmx",
     "django_components",
     "django_minify_html",
+    "silk",
     "tailwind",
 ]
 
@@ -152,6 +153,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # Silk profiling
+    "silk.middleware.SilkyMiddleware",
     # Locale
     "django.middleware.locale.LocaleMiddleware",
     # HTMX
@@ -299,6 +302,10 @@ LOGGING = {
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
+# PROFILING
+# ------------------------------------------------------------------------------
+SILKY_PYTHON_PROFILER = env.bool("SILKY_PYTHON_PROFILER", True)
+SILKY_PYTHON_PROFILER_BINARY = env.bool("SILKY_PYTHON_PROFILER_BINARY", True)
 
 # django-allauth
 # ------------------------------------------------------------------------------
