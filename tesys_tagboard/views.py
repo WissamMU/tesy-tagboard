@@ -283,12 +283,6 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             tags = Tag.objects.in_tagset(tagset)
             posts = posts.has_tags(tags)
 
-    if request.user.is_authenticated:
-        favorites = Favorite.objects.for_user(request.user)
-        posts = posts.exclude(tags__in=user.filter_tags.all()).annotate_favorites(
-            favorites
-        )
-
     pager = Paginator(posts, 32, 4)
     page_num = int(request.GET.get("page", 1))
     page = pager.get_page(page_num)

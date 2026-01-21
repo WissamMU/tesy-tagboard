@@ -209,8 +209,8 @@ class PostQuerySet(models.QuerySet):
         return self.filter(media__id=media_id)
 
     def with_gallery_data(self, user: User):
-        """Return PostQuerySet including prefetched data such as media, and tags"""
-        prefetch_tags = Tag.objects.defer("description", "rating_level")
+        """Return PostQuerySet including prefetched data such as media and tags"""
+        prefetch_tags = Tag.objects.only("name", "id", "category", "post_count")
         posts = (
             self.defer(
                 "title",
@@ -221,10 +221,16 @@ class PostQuerySet(models.QuerySet):
                 "parent_id",
             )
             .prefetch_related(
-                Prefetch("tags", queryset=prefetch_tags), "collection_set"
+                Prefetch("tags", queryset=prefetch_tags),
+                "collection_set",
             )
             .select_related("image")
-            .defer("image__orig_name", "image__md5", "image__phash", "image__dhash")
+            .defer(
+                "image__orig_name",
+                "image__md5",
+                "image__phash",
+                "image__dhash",
+            )
         )
         if user.is_authenticated:
             post_blur_tag_overlap = (
@@ -238,7 +244,10 @@ class PostQuerySet(models.QuerySet):
                     post_blur_tag_overlap.values("pk"), output_field=BooleanField()
                 ),
             )
-
+            favorites = Favorite.objects.for_user(user)
+            posts = posts.exclude(tags__in=user.filter_tags.all()).annotate_favorites(
+                favorites
+            )
         else:
             posts.annotate(
                 blur_level=Q(rating_level__gte=RatingLevel.EXPLICIT),
