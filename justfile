@@ -89,19 +89,19 @@ db-rm-backups:
 alias m := manage
 # Django management CLI
 manage *args:
-    @docker compose exec -t django uv run python manage.py {{args}}
+    @docker compose exec -t django python manage.py {{args}}
 
 alias r := run
 # Start the Django app on the host system
 run:
     @echo "Starting Tesy's Tagboard..."
-    DJANGO_READ_DOT_ENV_FILE=True uv run python manage.py tailwind dev
+    uv run python manage.py tailwind dev
 
 alias ra := run-async
 # Start the Django app on the host system via uvicorn (asgi)
 run-async *args:
     @echo "Starting Tesy's Tagboard in async mode..."
-    DJANGO_READ_DOT_ENV_FILE=True uv run uvicorn config.asgi:application --host 0.0.0.0 --port 55555 --reload-include "*.html" {{ args }}
+    uv run uvicorn config.asgi:application --host 0.0.0.0 --port 55555 --reload-include "*.html" {{ args }}
 
 # Reset the database and prompt for a new admin password
 db-reset superuser_name="admin":
@@ -136,11 +136,15 @@ make-component name:
 # Load the fixture data from demo.json into the database
 load-demo:
     @echo "Loading demo data..."
-    DJANGO_READ_DOT_ENV_FILE=True just manage loaddata demo.json
+    just manage loaddata demo.json
     cp -r tesys_tagboard/fixtures/uploads tesys_tagboard/media/
     cp -r tesys_tagboard/fixtures/thumbnails tesys_tagboard/media/
 
 # Save the current database into the demo.json fixture
 save-demo:
     @echo "Saving demo fixture..."
-    just manage dumpdata --exclude admin --exclude sessions --exclude auth --indent 2 -o tesys_tagboard/fixtures/demo.json
+    just manage dumpdata --exclude admin --exclude sessions --exclude auth --exlude silk --indent 2 -o tesys_tagboard/fixtures/demo.json
+
+clean-media:
+    @echo "Cleaning out media folder..."
+    rm -rf tesys_tagboard/media/*
