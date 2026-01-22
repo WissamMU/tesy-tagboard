@@ -272,3 +272,5 @@ tesys_tagboard/media/
 
 # Dev env
 .helix
+
+staticfiles
