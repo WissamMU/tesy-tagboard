@@ -119,10 +119,11 @@ select = [
 
 ignore = [
     "S101", # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
-    "S311", # Use of pseud-random number generator detected
+    "S311", # Use of pseudo-random number generator detected
     "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
     "SIM102", # sometimes it's better to nest
     "COM812", # may cause conflicts with the formatter
+    "PLR2004",# allow hardcoded values
     # of types for comparison.
     # Deactivated because it can make the code slow:
     # https://github.com/astral-sh/ruff/issues/7871
