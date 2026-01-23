@@ -507,7 +507,7 @@ class CollectionQuerySet(models.QuerySet):
     def with_gallery_data(self):
         """Return optimized CollectionQuerySet including gallery data
         such as related posts for the given user"""
-        return self.prefetch_related("posts")
+        return self.prefetch_related("posts").select_related("user")
 
 
 class Collection(models.Model):

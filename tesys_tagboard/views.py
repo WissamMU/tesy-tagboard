@@ -355,7 +355,7 @@ def create_tag_alias(request: HtmxHttpRequest) -> TemplateResponse | HttpRespons
 
 @require(["GET"], login=False)
 def collections(request: HttpRequest) -> TemplateResponse:
-    collections = Collection.objects.public()
+    collections = Collection.objects.public().with_gallery_data()
     pager = Paginator(collections, 36, 4)
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)
