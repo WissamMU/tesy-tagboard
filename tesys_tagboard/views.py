@@ -245,12 +245,12 @@ def confirm_tagset(request: HtmxHttpRequest):
 
 
 @require(["POST"])
-@permission_required("edit_post")
+@permission_required("edit_post", "lock_comments")
 def toggle_comment_lock(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
     try:
-        post = Post.objects.get(pk=post_id, uploader=request.user)
+        post = Post.objects.get(pk=post_id)
         post.locked_comments = not post.locked_comments
         post.save()
         return TemplateResponse(
