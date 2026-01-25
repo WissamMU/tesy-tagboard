@@ -43,52 +43,68 @@
     </div>
     <form id="edit-post-form"
           method="post"
+          class="overflow-x-auto p-2 border rounded-box border-base-content/15 bg-base-100"
           action="{% url "post-edit" post_id=post.pk %}">
       {% csrf_token %}
-      <div class="flex gap-2 items-center">
-        <span class="self-start font-bold">Title:</span>
-        {% if request.user.is_authenticated %}
-          {% if post.title %}
-            {% component "text_field_edit_toggle" input_name="title" text=post.title / %}
-          {% else %}
-            {% component "text_field_edit_toggle" input_name="title" empty_text="No title" / %}
-          {% endif %}
-        {% else %}
-          <div class="{% if not post.title %}text-placeholder{% endif %}">{{ post.title|default:"No title" }}</div>
-        {% endif %}
-      </div>
-      <div class="flex gap-1 items-center min-w-72">
-        <span class="font-bold">Uploaded by</span>
-        {% include "nav/user_link.html" with user=post.uploader %}
-      </div>
-      <div>
-        <span class="font-bold">Posted on</span> {{ post.post_date }}
-      </div>
-      <div id="post-rating-field">
-        <span class="font-bold">Rating:</span>
-        <select onchange=""
-                name="rating_level"
-                class="font-bold select select-sm text-md w-fit">
-          {% for rating_level in rating_levels %}
-            <option value="{{ rating_level.value }}"
-                    {% if rating_level.value == post.rating_level %}selected{% endif %}>
-              {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="flex gap-2 items-center">
-        <span class="self-start font-bold">Source:</span>
-        {% if request.user.is_authenticated %}
-          {% if post.src_url %}
-            {% component "text_field_edit_toggle" is_link=True input_name="src_url" edit_url=post_edit_url text=post.src_url / %}
-          {% else %}
-            {% component "text_field_edit_toggle" input_name="src_url" edit_url=post_edit_url empty_text="Unknown" / %}
-          {% endif %}
-        {% else %}
-          <div class="{% if not post.title %}italic opacity-75{% endif %}">{{ post.src_url|default:"Unknown" }}</div>
-        {% endif %}
-      </div>
+      <table class="table table-fixed border-bottom border-b-1 border-base-content/5 text-sm/5 lg:text-base/6">
+        <colgroup>
+          <col />
+          <col class="w-3/4" />
+        </colgroup>
+        <tr>
+          <td class="font-bold">Title</td>
+          <td>
+            {% if request.user.is_authenticated %}
+              {% if post.title %}
+                {% component "text_field_edit_toggle" input_name="title" text=post.title / %}
+              {% else %}
+                {% component "text_field_edit_toggle" input_name="title" empty_text="No title" / %}
+              {% endif %}
+            {% else %}
+              <div class="{% if not post.title %}text-placeholder{% endif %}">{{ post.title|default:"No title" }}</div>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="font-bold">Uploaded by</td>
+          <td>{% include "nav/user_link.html" with user=post.uploader %}</td>
+        </tr>
+        <tr>
+          <td>
+            <span class="font-bold">Posted on</span>
+          </td>
+          <td>{{ post.post_date }}</td>
+        </tr>
+        <tr id="post-rating-field">
+          <td class="font-bold">Rating</td>
+          <td>
+            <select onchange=""
+                    name="rating_level"
+                    class="font-bold select select-sm text-md w-fit">
+              {% for rating_level in rating_levels %}
+                <option value="{{ rating_level.value }}"
+                        {% if rating_level.value == post.rating_level %}selected{% endif %}>
+                  {{ rating_level.name|lower|capfirst }} <span class="font-mono">({{ rating_level.value }})</span>
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td class="font-bold">Source</td>
+          <td>
+            {% if request.user.is_authenticated %}
+              {% if post.title %}
+                {% component "text_field_edit_toggle" input_name="src_url" text=post.src_url / %}
+              {% else %}
+                {% component "text_field_edit_toggle" input_name="src_url" empty_text="Unknown" / %}
+              {% endif %}
+            {% else %}
+              <div class="{% if not post.title %}text-placeholder{% endif %}">{{ post.src_url|default:"Unknown" }}</div>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
       <div class="flex flex-wrap gap-1 mt-4 post-tags shrink">
         {% component "add_tagset" post=post tags=tags size="sm" add_tag_enabled=True / %}
       </div>
