@@ -24,11 +24,11 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(TagAlias)
 class TagAliasAdmin(admin.ModelAdmin):
     list_display = [
+        "pk",
         "name",
         "tag__name",
         "tag__category",
         "tag__rating_level",
-        "tag__description",
     ]
     search_fields = ["name", "tag__name", "tag__category"]
     list_filter = ["tag__category", "tag__rating_level"]
@@ -57,10 +57,8 @@ class SourceHistoryAdmin(admin.ModelAdmin):
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
     list_display = [
+        "pk",
         "file",
-        "orig_name",
-        "post__id",
-        "post__type",
         "md5",
         "phash",
         "dhash",
@@ -71,19 +69,29 @@ class ImageAdmin(admin.ModelAdmin):
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "file",
+        "md5",
+    ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    search_fields = ["post__type", "post__src_url"]
 
 
 @admin.register(Audio)
 class AudioAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "file",
+        "md5",
+    ]
     autocomplete_fields = ["post"]
     search_fields = ["post__type", "post__orig_name", "post__src_url"]
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ["user", "text", "post", "post_date", "edit_date"]
+    list_display = ["pk", "user", "post_id", "post_date", "edit_date", "text"]
     list_filter = ["user"]
     search_fields = ["text", "user__username", "post__title", "post_date", "edit_date"]
     autocomplete_fields = ["user"]
@@ -117,11 +125,23 @@ class PostTagHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "user",
+        "name",
+        "desc",
+        "public",
+    ]
     autocomplete_fields = ["user", "posts"]
     search_fields = ["user", "name", "desc"]
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "user",
+        "post",
+    ]
     autocomplete_fields = ["user", "post"]
     search_fields = ["user"]

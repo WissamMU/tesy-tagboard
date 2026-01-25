@@ -564,6 +564,9 @@ class Comment(models.Model):
 
     objects = CommentQuerySet.as_manager()
 
+    class Meta:
+        ordering = ["-post_date"]
+
     def __str__(self) -> str:
         return f'<Comment: user: {self.user}, text: "{self.text}">'
 
