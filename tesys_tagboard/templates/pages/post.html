@@ -43,7 +43,7 @@
     </div>
     <form id="edit-post-form"
           method="post"
-          class="overflow-x-auto p-2 border rounded-box border-base-content/15 bg-base-100"
+          class="p-2 border rounded-box border-base-content/15 bg-base-100"
           action="{% url "post-edit" post_id=post.pk %}">
       {% csrf_token %}
       <table class="table table-fixed border-bottom border-b-1 border-base-content/5 text-sm/5 lg:text-base/6">
@@ -105,7 +105,7 @@
           </td>
         </tr>
       </table>
-      <div class="flex flex-wrap gap-1 mt-4 post-tags shrink">
+      <div class="flex flex-wrap gap-1 my-2 post-tags shrink">
         {% component "add_tagset" post=post tags=tags size="sm" add_tag_enabled=True / %}
       </div>
       <button disabled

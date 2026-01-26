@@ -3,9 +3,9 @@
     <li data-id="{{ item.tag_id }}"
         data-name="{{ item.name }}"
         tabindex="-1"
-        class="border-1 border-b-0 border-neutral/80 last:border-b-1 rounded-none hover:brightness-115 focus:brightness-115 focus:outline-none focus:font-bold text-tag-content {% if item.tag_category == "BA" %}bg-tag-basic {% elif item.tag_category == "AR" %}bg-tag-artist {% elif item.tag_category == "CO" %}bg-tag-copyright {% else %}bg-filter-func{% endif %}">
-      <div class="flex justify-between rounded-none">
-        <div class="inline-flex gap-2 items-center grow-0">
+        class="max-w-full border-1 border-b-0 border-neutral/80 last:border-b-1 rounded-none hover:brightness-115 focus:brightness-115 focus:outline-none focus:font-bold text-tag-content {% if item.tag_category == "BA" %}bg-tag-basic {% elif item.tag_category == "AR" %}bg-tag-artist {% elif item.tag_category == "CO" %}bg-tag-copyright {% else %}bg-filter-func{% endif %}">
+      <div class="flex justify-between leading-5 rounded-none">
+        <div class="inline-flex overflow-hidden gap-2 items-center grow-0 max-w-9/10">
           {% if item.alias %}
             <div>{% include "icons/feather.html" with icon="corner-down-right" %}</div>
           {% elif item.tag_category %}
@@ -15,7 +15,7 @@
           {% endif %}
           <div>
             {% if item.alias %}
-              <div class="inline-flex gap-1 items-center">
+              <div class="flex flex-wrap gap-1 items-center">
                 <div>{{ item.alias }}</div>
                 {% include "icons/feather.html" with icon="arrow-right" %}
                 <div>{{ item.name }}</div>
@@ -26,7 +26,7 @@
           </div>
         </div>
       </div>
-      <div class="absolute right-4">{{ item.extra }}</div>
+      <div class="flex absolute right-2 h-full lg:right-4">{{ item.extra }}</div>
     </li>
   {% endfor %}
 </ul>
