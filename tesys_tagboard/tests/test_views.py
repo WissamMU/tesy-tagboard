@@ -1,11 +1,17 @@
 from http import HTTPStatus
+from mimetypes import types_map
+from pathlib import Path
 
 import pytest
 from django.contrib.auth.models import Permission
+from django.core.files.storage import storages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
+from tesys_tagboard.enums import MediaCategory
 from tesys_tagboard.enums import TagCategory
+from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
 from tesys_tagboard.users.models import User
@@ -231,6 +237,29 @@ class TestPostsView:
             client.get(self.url)
 
 
+def get_uploaded_test_media_file(
+    filename: str, ext: str, *, cat: MediaCategory = MediaCategory.IMAGE
+):
+    ext = f".{ext}" if ext[0] != "." else ext
+    store = storages["test-media"]
+    match cat:
+        case MediaCategory.IMAGE:
+            file = Path(store.path(f"images/{filename}{ext}"))
+        case MediaCategory.AUDIO:
+            file = Path(store.path(f"audios/{filename}{ext}"))
+        case MediaCategory.VIDEO:
+            file = Path(store.path(f"videos/{filename}{ext}"))
+
+    if content_type := types_map.get(ext):
+        return SimpleUploadedFile(
+            filename,
+            file.read_bytes(),
+            content_type=content_type,
+        )
+    msg = "Invalid file or extension provided."
+    raise ValueError(msg)
+
+
 @pytest.mark.django_db
 class TestUploadView:
     url = reverse("upload")
@@ -244,6 +273,127 @@ class TestUploadView:
     def test_max_query_count(self, client, django_assert_max_num_queries):
         with django_assert_max_num_queries(20):
             client.get(self.url)
+
+    def test_user_without_add_post_perm(self, client):
+        """User's without the 'add_post' permission cannot make posts"""
+        user = UserFactory()
+        user.save()
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "png")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts
+
+    def test_create_png_img_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        user.save()
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "png")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_jpg_img_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "jpeg")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_webp_img_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "webp")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_tiff_img_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "tif")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_gif_img_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        img_file = get_uploaded_test_media_file("1x1", "gif")
+        data = {"file": img_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_mp3_audio_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        audio_file = get_uploaded_test_media_file("1s", "mp3", cat=MediaCategory.AUDIO)
+        data = {"file": audio_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
+
+    def test_create_wav_audio_post(self, client):
+        user = UserFactory()
+        add_post_perm = Permission.objects.get(codename="add_post")
+        user.user_permissions.add(add_post_perm)
+        client.force_login(user)
+
+        audio_file = get_uploaded_test_media_file("1s", "wav", cat=MediaCategory.AUDIO)
+        data = {"file": audio_file}
+
+        before_posts = Post.objects.all().count()
+        client.post(self.url, data)
+        after_posts = Post.objects.all().count()
+
+        assert after_posts == before_posts + 1
 
 
 @pytest.mark.django_db

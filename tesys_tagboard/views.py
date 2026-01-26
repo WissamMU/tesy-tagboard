@@ -624,7 +624,6 @@ def find_duplicate_media_file(media_file):
 
 def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> tuple:
     """Detects media type and creates a new Media derivative"""
-
     if file is None:
         msg = "The uploaded file cannot be empty"
         raise ValidationError(msg)
@@ -659,38 +658,27 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> tuple
 @require(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     context = {"rating_levels": list(RatingLevel)}
-    if request.htmx:
-        # Confirming tagset
-        data: dict[str, str | list[Any] | None] = {
-            key: request.POST.get(key) for key in request.POST
-        }
-        data["tagset"] = request.POST.getlist("tagset")
-        form = (
-            TagsetForm(data, request.FILES)
-            if request.method == "POST"
-            else TagsetForm()
-        )
-
-        if form.is_valid():
-            tagset = form.cleaned_data.get("tagset")
-            tags = Tag.objects.in_tagset(tagset)
-
-            kwargs = {"tags": tags, "add_tag_enabled": True, "post_url": "upload"}
-
-            return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)
-
+    user = request.user
     if request.method == "POST":
+        if not user.has_perm("tesys_tagboard.add_post"):
+            msg = f"You ({user.username}) are not allowed to create posts."
+            messages.add_message(request, messages.INFO, msg)
+            return TemplateResponse(request, "pages/upload.html", context=context)
         data: dict[str, str | list[Any] | None] = {
             key: request.POST.get(key) for key in request.POST
         }
         data["tagset"] = request.POST.getlist("tagset")
         form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
         context |= {"form": form}
+
         if form.is_valid():
             try:
                 duplicate, media_file = handle_media_upload(
                     form.files.get("file"), form.cleaned_data.get("src_url")
                 )
+
+                if not form.cleaned_data.get("rating_level"):
+                    form.cleaned_data["rating_level"] = RatingLevel.UNRATED.value
             except ValidationError:
                 msg = "Failed to validate uploaded media file"
                 messages.add_message(request, messages.INFO, msg)
@@ -728,6 +716,7 @@ def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
                     f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"  # noqa: E501
                 )
                 messages.add_message(request, messages.INFO, msg)
+
             else:
                 msg = "The filetype of the uploaded file is not supported."
                 messages.add_message(request, messages.ERROR, msg)

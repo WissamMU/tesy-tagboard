@@ -66,6 +66,7 @@ class UploadMedia(forms.Form):
     rating_level = forms.ChoiceField(
         choices=RatingLevel.choices,
         initial=RatingLevel.UNRATED,
+        required=False,
         validators=[validate_rating_level],
     )
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
