@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
+from django.core.validators import URLValidator
 from django.utils.translation import gettext_lazy as _
 
 from tesys_tagboard.users.models import User
@@ -95,7 +97,13 @@ class PostForm(forms.Form):
     tags: an array of tag IDs"""
 
     title = forms.CharField(max_length=200, label=_("Title"), required=False)
-    src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
+    src_url = forms.URLField(
+        label=_("Source"),
+        required=False,
+        assume_scheme="https",
+        max_length=1024,
+        validators=[URLValidator(["https", "http"])],
+    )
     rating_level = forms.ChoiceField(choices=RatingLevel.choices(), required=False)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
 
@@ -103,7 +111,12 @@ class PostForm(forms.Form):
 class AddCommentForm(forms.Form):
     """Form for adding Comments"""
 
-    text = forms.CharField(widget=forms.Textarea, required=True)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        required=True,
+        max_length=1024,
+        validators=[MaxLengthValidator(2048)],
+    )
 
 
 class EditCommentForm(forms.Form):

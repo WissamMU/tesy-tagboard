@@ -12,6 +12,7 @@ from pytest_django.asserts import assertTemplateUsed
 from tesys_tagboard.enums import MediaCategory
 from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.enums import TagCategory
+from tesys_tagboard.models import Comment
 from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
@@ -194,6 +195,60 @@ class TestCreateTagAliasView:
 
         after_alias = TagAlias.objects.get(name=existing_alias.name)
         assert before_alias.tag == after_alias.tag
+
+
+@pytest.mark.django_db
+class TestCommenting:
+    def add_comment_url(self, pk):
+        return reverse("post-add-comment", args=[pk])
+
+    def test_add_comment_without_perm(self, client):
+        post = PostFactory.create()
+        user = UserFactory()
+        client.force_login(user)
+        url = self.add_comment_url(post.pk)
+        data = {"text": "testing comment"}
+        client.post(url, data)
+        assert post.comment_set.all().count() == 0
+
+    def test_add_comment(self, client, user_with_add_comment):
+        post = PostFactory.create()
+        client.force_login(user_with_add_comment)
+        url = self.add_comment_url(post.pk)
+        text = "testing comment"
+        data = {"text": text}
+        client.post(url, data)
+        assert post.comment_set.filter(text=text).exists()
+
+    def test_add_comment_with_locked_comments(self, client, user_with_add_comment):
+        """Comments cannot be added to a post while it's comments are locked"""
+        post = PostFactory.create(locked_comments=True)
+        client.force_login(user_with_add_comment)
+        url = self.add_comment_url(post.pk)
+        text = "testing comment"
+        data = {"text": text}
+        client.post(url, data)
+        assert not post.comment_set.filter(text=text).exists()
+
+    def test_add_too_long_comment(self, client, user_with_add_comment):
+        post = PostFactory.create()
+        client.force_login(user_with_add_comment)
+        url = self.add_comment_url(post.pk)
+        text = "A" * 1025
+        data = {"text": text}
+        client.post(url, data)
+        assert not post.comment_set.filter(text=text).exists()
+
+    def test_add_empty_comment(self, client, user_with_add_comment):
+        """Empty comments (or only whitespace) are not allowed"""
+        post = PostFactory.create()
+        client.force_login(user_with_add_comment)
+        url = self.add_comment_url(post.pk)
+        text = "   \n"
+        data = {"text": text}
+        client.post(url, data)
+        assert Comment.objects.all().count() == 0
+        assert not post.comment_set.filter(text=text).exists()
 
 
 @pytest.mark.django_db

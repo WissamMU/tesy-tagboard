@@ -1,6 +1,3 @@
-import datetime
-
-from django.utils import timezone
 from factory import Faker
 from factory import SubFactory
 from factory.django import DjangoModelFactory
@@ -56,22 +53,10 @@ class TagAliasFactory(DjangoModelFactory[TagAlias]):
 class PostFactory(DjangoModelFactory[Post]):
     title = Faker("text", max_nb_chars=50)
     uploader = SubFactory(UserFactory)
-    post_date = Faker(
-        "date_time_between",
-        start_date=timezone.now() - datetime.timedelta(days=365 * 50),
-        end_date=timezone.now() + datetime.timedelta(days=365 * 50),
-        tzinfo=datetime.UTC,
-    )
-    edit_date = Faker(
-        "date_time_between",
-        start_date=timezone.now() - datetime.timedelta(days=365 * 50),
-        end_date=timezone.now() + datetime.timedelta(days=365 * 50),
-        tzinfo=datetime.UTC,
-    )
 
     rating_level = Faker("enum", enum_cls=RatingLevel)
     src_url = Faker("uri", schemes=["http", "https"])
-    locked_comments = Faker("boolean")
+    locked_comments = False
 
     type = Faker("supported_media_type")
 

@@ -522,6 +522,7 @@ def remove_post_from_collection(
 
 
 @require(["POST"])
+@permission_required(["tesys_tagboard.add_comment"])
 def add_comment(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:

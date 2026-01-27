@@ -62,6 +62,13 @@ def user_with_lock_comments(db) -> User:
     )
 
 
+@pytest.fixture
+def user_with_add_comment(db) -> User:
+    return UserFactory().with_permissions(
+        [Permission.objects.get(codename="add_comment")]
+    )
+
+
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
