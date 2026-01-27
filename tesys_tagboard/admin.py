@@ -58,35 +58,41 @@ class SourceHistoryAdmin(admin.ModelAdmin):
 class ImageAdmin(admin.ModelAdmin):
     list_display = [
         "pk",
+        "post__id",
         "file",
         "md5",
         "phash",
         "dhash",
     ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5", "phash", "dhash"]
 
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
     list_display = [
         "pk",
+        "post__id",
         "file",
         "md5",
     ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5"]
 
 
 @admin.register(Audio)
 class AudioAdmin(admin.ModelAdmin):
     list_display = [
         "pk",
+        "post__id",
         "file",
         "md5",
     ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5"]
 
 
 @admin.register(Comment)
@@ -106,7 +112,7 @@ class PostAdmin(admin.ModelAdmin):
         "rating_level",
         "src_url",
     ]
-    search_fields = ["src_url", "uploader__username"]
+    search_fields = ["pk", "src_url", "uploader__username"]
     autocomplete_fields = ["uploader"]
     list_filter = ["rating_level", "uploader"]
 
