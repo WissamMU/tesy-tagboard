@@ -92,12 +92,12 @@
       </label>
       <div class="rounded-none lg:p-6 tab-content lg:bg-base-200">
         <div class="flex flex-col gap-4">
-          {% if favorites_pager.num_pages > 0 %}
+          {% if favorites_pager.object_list|length == 0 %}
+            <div class="text-lg text-placeholder">No favorites yet!</div>
+          {% else %}
             <div class="flex flex-wrap gap-4 justify-center">
               {% component "post_gallery" pager=favorites_pager page=favorites_page query_page_arg_name=favorites_page_arg_name / %}
             </div>
-          {% else %}
-            <div class="text-lg text-placeholder">No favorites yet!</div>
           {% endif %}
         </div>
       </div>

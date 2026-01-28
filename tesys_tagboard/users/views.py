@@ -50,7 +50,7 @@ def user_detail_view(
         for post in favorited_posts:
             post.favorited = True
 
-        favorites_pager = Paginator(favorited_posts, 20, 5)
+        favorites_pager = Paginator(favorited_posts, 24, 4)
         fav_page_arg_name = "fav_page"
         favorites_page_num = request.GET.get(fav_page_arg_name, 1)
         favorites_page = favorites_pager.get_page(favorites_page_num)
