@@ -20,16 +20,15 @@
           <div class="hidden sm:block group-has-[input:checked]:block">Account</div>
         </div>
       </label>
-      <div class="p-6 rounded-none tab-content lg:bg-base-200">
-        <div>
-          <div>
-            <h2>{{ user.username }}</h2>
-            {% if user.name %}<p>{{ user.name }}</p>{% endif %}
-          </div>
+      <div class="relative p-6 rounded-none tab-content lg:bg-base-200">
+        <div class="py-2 px-4 w-full text-center md:absolute md:top-0 md:right-0 bg-base-300 md:size-fit md:max-2-400">
+          <h2 class="text-4xl">{{ user.username }}</h2>
+          {% if user.name %}<p>{{ user.name }}</p>{% endif %}
         </div>
         {% if user == request.user %}
           <!-- Action buttons -->
-          <div>
+          <h2 class="py-4 upper">Account Options</h2>
+          <div class="flex gap-2">
             <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
             <a class="btn btn-primary"
                href="{% url 'account_email' %}"
