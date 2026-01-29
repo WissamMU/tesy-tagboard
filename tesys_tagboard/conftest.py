@@ -97,6 +97,20 @@ def user_with_delete_collection(db) -> User:
     )
 
 
+@pytest.fixture
+def user_with_add_favorite(db) -> User:
+    return UserFactory().with_permissions(
+        [Permission.objects.get(codename="add_favorite")]
+    )
+
+
+@pytest.fixture
+def user_with_delete_favorite(db) -> User:
+    return UserFactory().with_permissions(
+        [Permission.objects.get(codename="delete_favorite")]
+    )
+
+
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():

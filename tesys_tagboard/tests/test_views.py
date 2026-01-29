@@ -14,6 +14,7 @@ from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
+from tesys_tagboard.models import Favorite
 from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
@@ -22,6 +23,7 @@ from tesys_tagboard.users.tests.factories import UserFactory
 
 from .factories import CollectionFactory
 from .factories import CommentFactory
+from .factories import FavoriteFactory
 from .factories import PostFactory
 from .factories import TagAliasFactory
 from .factories import TagFactory
@@ -798,6 +800,71 @@ class TestUploadView:
         client.post(self.url, data)
         after_posts = Post.objects.all().count()
         assert after_posts == before_posts + 1
+
+
+@pytest.mark.django_db
+class TestFavorites:
+    def add_url(self, post_id):
+        return reverse("add-favorite", args=[post_id])
+
+    def delete_url(self, post_id):
+        return reverse("remove-favorite", args=[post_id])
+
+    def test_add_favorite_without_perm(self, client):
+        """Users without the add_favorite permission may not create favorites"""
+        user = UserFactory()
+        client.force_login(user)
+        post = PostFactory.create()
+        client.put(self.add_url(post.pk))
+        assert not Favorite.objects.filter(post=post, user=user).exists()
+
+    def test_add_favorite(self, client, user_with_add_favorite):
+        """Users with the add_favorite permission may create new favorites for
+        themselves"""
+        client.force_login(user_with_add_favorite)
+        post = PostFactory.create()
+        client.put(self.add_url(post.pk))
+        assert Favorite.objects.filter(post=post, user=user_with_add_favorite).exists()
+
+    def test_add_multiple_favorites(self, client, user_with_add_favorite):
+        """Users with the add_favorite permission may create multiple new favorites for
+        themselves"""
+        client.force_login(user_with_add_favorite)
+        posts = PostFactory.create_batch(10)
+        for post in posts:
+            client.put(self.add_url(post.pk))
+
+        for post in posts:
+            assert Favorite.objects.filter(
+                post=post, user=user_with_add_favorite
+            ).exists()
+
+    def test_add_favorite_with_invalid_post_id(self, client, user_with_add_favorite):
+        """Requests to add a favorite with a non-existant Post should return an error"""
+        client.force_login(user_with_add_favorite)
+        bad_id = 9999
+        response = client.put(self.add_url(bad_id))
+        assert response.status_code == 404
+        assert not Favorite.objects.filter(
+            post__pk=bad_id, user=user_with_add_favorite
+        ).exists()
+
+    def test_delete_favorite_without_perm(self, client):
+        """Users without the delete_favorite permission may not delete favorites"""
+        user = UserFactory()
+        client.force_login(user)
+        favorite = FavoriteFactory.create()
+        client.put(self.delete_url(favorite.post.pk))
+        assert Favorite.objects.filter(post=favorite.post, user=favorite.user).exists()
+
+    def test_delete_favorite(self, client, user_with_delete_favorite):
+        """Users with the delete_favorite permission may delete their own favorites"""
+        client.force_login(user_with_delete_favorite)
+        favorite = FavoriteFactory(user=user_with_delete_favorite)
+        client.put(self.delete_url(favorite.post.pk))
+        assert not Favorite.objects.filter(
+            post=favorite.post, user=favorite.user
+        ).exists()
 
 
 @pytest.mark.django_db

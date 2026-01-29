@@ -447,6 +447,7 @@ def delete_collection(
 
 
 @require(["PUT"])
+@permission_required(["tesys_tagboard.add_favorite"])
 def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
     try:
         post = Post.objects.get(pk=post_id)
@@ -464,6 +465,7 @@ def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
 
 
 @require(["DELETE"])
+@permission_required(["tesys_tagboard.delete_favorite"])
 def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
     try:
         post = Post.objects.get(pk=post_id)

@@ -9,6 +9,7 @@ from tesys_tagboard.enums import SupportedMediaTypes
 from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
+from tesys_tagboard.models import Favorite
 from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
@@ -92,3 +93,11 @@ class CollectionFactory(DjangoModelFactory[Collection]):
 
         # Add the iterable of groups using bulk addition
         self.posts.add(*extracted)
+
+
+class FavoriteFactory(DjangoModelFactory[Favorite]):
+    post = SubFactory(PostFactory)
+    user = SubFactory(UserFactory)
+
+    class Meta:
+        model = Favorite
