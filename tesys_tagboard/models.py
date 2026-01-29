@@ -547,6 +547,10 @@ class Collection(models.Model):
     objects = CollectionQuerySet.as_manager()
 
     class Meta:
+        permissions = [
+            ("add_post_to_collection", "Can add posts to a collection"),
+            ("remove_post_from_collection", "Can remove posts from a collection"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "name"], name="unique_collection_name_user"

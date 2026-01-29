@@ -844,7 +844,7 @@ class TestFavorites:
         client.force_login(user_with_add_favorite)
         bad_id = 9999
         response = client.put(self.add_url(bad_id))
-        assert response.status_code == 404
+        assert response.status_code == HTTPStatus.NOT_FOUND
         assert not Favorite.objects.filter(
             post__pk=bad_id, user=user_with_add_favorite
         ).exists()
@@ -868,7 +868,7 @@ class TestFavorites:
 
 
 @pytest.mark.django_db
-class TestCollectionsView:
+class TestCollections:
     view_url = reverse("collections")
     create_url = reverse("create-collection")
 
@@ -973,6 +973,69 @@ class TestCollectionsView:
         collection = CollectionFactory.create(user=user)
         client.delete(self.delete_url(collection.pk))
         assert Collection.objects.filter(pk=collection.pk).exists()
+
+    def test_add_post_to_collection(self, client):
+        """Users may add posts to their own collections"""
+        user = UserFactory.create().with_permissions(
+            [Permission.objects.get(codename="add_post_to_collection")]
+        )
+        post = PostFactory.create()
+        collection = CollectionFactory.create(user=user)
+        url = reverse("collection-add-post", args=[collection.pk])
+
+        client.force_login(user)
+        resp = client.post(url, {"post": post.pk})
+        assert resp.status_code == HTTPStatus.OK
+        assert collection.posts.filter(pk=post.pk).exists()
+
+    def test_add_post_to_collection_without_perm(self, client):
+        """Users may add posts to their own collections"""
+        user = UserFactory.create()
+        post = PostFactory.create()
+        collection = CollectionFactory.create(user=user)
+        url = reverse("collection-add-post", args=[collection.pk])
+
+        client.force_login(user)
+        resp = client.post(url, {"post": post.pk})
+        assert resp.status_code == HTTPStatus.FORBIDDEN
+        assert not collection.posts.filter(pk=post.pk).exists()
+
+    def test_remove_post_from_collection(self, client):
+        """Users may remove posts from their own collections"""
+        user = UserFactory.create().with_permissions(
+            [Permission.objects.get(codename="remove_post_from_collection")]
+        )
+        posts = PostFactory.create_batch(10)
+        collection = CollectionFactory.create(user=user)
+        collection.posts.set(posts)
+
+        client.force_login(user)
+        removed_post = posts[0]
+        url = reverse("collection-remove-post", args=[collection.pk])
+        resp = client.post(url, {"post": removed_post.pk})
+        assert resp.status_code == HTTPStatus.OK
+        assert not collection.posts.filter(pk=removed_post.pk).exists()
+
+        # Ensure all remaining posts still exist in collection
+        for post in posts[1:]:
+            assert collection.posts.filter(pk=post.pk).exists()
+
+    def test_remove_post_from_collection_without_perm(self, client):
+        """Users may not remove posts from any collections without the remove perm"""
+        user = UserFactory.create()
+        posts = PostFactory.create_batch(10)
+        collection = CollectionFactory.create(user=user)
+        collection.posts.set(posts)
+
+        client.force_login(user)
+        removed_post = posts[0]
+        url = reverse("collection-remove-post", args=[collection.pk])
+        resp = client.post(url, {"post": removed_post.pk})
+        assert resp.status_code == HTTPStatus.FORBIDDEN
+
+        # Ensure all remaining posts still exist in collection
+        for post in posts[1:]:
+            assert collection.posts.filter(pk=post.pk).exists()
 
 
 @pytest.mark.django_db
