@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   curl \
   gettext \
   postgresql \
+  libmagic1 \
   wait-for-it
 
 # Install Tailwind dependencies

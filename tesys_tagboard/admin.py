@@ -24,11 +24,11 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(TagAlias)
 class TagAliasAdmin(admin.ModelAdmin):
     list_display = [
+        "pk",
         "name",
         "tag__name",
         "tag__category",
         "tag__rating_level",
-        "tag__description",
     ]
     search_fields = ["name", "tag__name", "tag__category"]
     list_filter = ["tag__category", "tag__rating_level"]
@@ -57,33 +57,47 @@ class SourceHistoryAdmin(admin.ModelAdmin):
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
     list_display = [
-        "file",
-        "orig_name",
+        "pk",
         "post__id",
-        "post__type",
+        "file",
         "md5",
         "phash",
         "dhash",
     ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5", "phash", "dhash"]
 
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "post__id",
+        "file",
+        "md5",
+    ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5"]
 
 
 @admin.register(Audio)
 class AudioAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "post__id",
+        "file",
+        "md5",
+    ]
     autocomplete_fields = ["post"]
-    search_fields = ["post__type", "post__orig_name", "post__src_url"]
+    list_filter = ["post__type"]
+    search_fields = ["pk", "post__id", "orig_name", "md5"]
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ["user", "text", "post", "post_date", "edit_date"]
+    list_display = ["pk", "user", "post_id", "post_date", "edit_date", "text"]
     list_filter = ["user"]
     search_fields = ["text", "user__username", "post__title", "post_date", "edit_date"]
     autocomplete_fields = ["user"]
@@ -98,7 +112,7 @@ class PostAdmin(admin.ModelAdmin):
         "rating_level",
         "src_url",
     ]
-    search_fields = ["src_url", "uploader__username"]
+    search_fields = ["pk", "src_url", "uploader__username"]
     autocomplete_fields = ["uploader"]
     list_filter = ["rating_level", "uploader"]
 
@@ -117,11 +131,23 @@ class PostTagHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "user",
+        "name",
+        "desc",
+        "public",
+    ]
     autocomplete_fields = ["user", "posts"]
     search_fields = ["user", "name", "desc"]
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
+    list_display = [
+        "pk",
+        "user",
+        "post",
+    ]
     autocomplete_fields = ["user", "post"]
     search_fields = ["user"]

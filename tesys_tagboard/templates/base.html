@@ -23,7 +23,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description"
           content="A self-hosted Booru and media tagging application" />
-    <meta name="author" content="Cameron Blankenbuehler" />
+    {% block extra_meta %}
+    {% endblock extra_meta %}
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
     {% tailwind_preload_css %}
     {% tailwind_css %}
@@ -82,7 +83,7 @@
                 <button type="button"
                         class="btn-close btn btn-sm btn-error"
                         data-bs-dismiss="alert"
-                        aria-label="Close">{% include "icons/feather.html" with size="large" icon="x" %}</button>
+                        aria-label="Close">{% include "icons/feather.html" with size="lg" icon="x" %}</button>
               </div>
             </div>
           {% endfor %}

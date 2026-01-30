@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
+from django.core.validators import URLValidator
 from django.utils.translation import gettext_lazy as _
 
 from tesys_tagboard.users.models import User
@@ -53,7 +55,8 @@ class CreateTagAliasForm(forms.ModelForm):
 class CreateCollectionForm(forms.ModelForm):
     user = forms.ModelChoiceField(User.objects.all(), required=False)
     public = forms.BooleanField(required=False, initial=True)
-    desc = forms.CharField(required=False)
+    name = forms.CharField(max_length=200, validators=[MaxLengthValidator(100)])
+    desc = forms.CharField(required=False, validators=[MaxLengthValidator(250)])
 
     class Meta:
         model = Collection
@@ -66,6 +69,7 @@ class UploadMedia(forms.Form):
     rating_level = forms.ChoiceField(
         choices=RatingLevel.choices,
         initial=RatingLevel.UNRATED,
+        required=False,
         validators=[validate_rating_level],
     )
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
@@ -94,23 +98,38 @@ class PostForm(forms.Form):
     tags: an array of tag IDs"""
 
     title = forms.CharField(max_length=200, label=_("Title"), required=False)
-    src_url = forms.URLField(label=_("Source"), required=False, assume_scheme="https")
+    src_url = forms.URLField(
+        label=_("Source"),
+        required=False,
+        assume_scheme="https",
+        max_length=1024,
+        validators=[URLValidator(["https", "http"])],
+    )
     rating_level = forms.ChoiceField(choices=RatingLevel.choices(), required=False)
     tagset = TagsetField(required=False, widget=forms.HiddenInput)
-    lock_comments = forms.BooleanField(required=False)
 
 
 class AddCommentForm(forms.Form):
     """Form for adding Comments"""
 
-    text = forms.CharField(widget=forms.Textarea, required=True)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        required=True,
+        max_length=2048,
+        validators=[MaxLengthValidator(2048)],
+    )
 
 
 class EditCommentForm(forms.Form):
     """Form for editing Comments"""
 
     comment_id = forms.IntegerField(required=True)
-    text = forms.CharField(widget=forms.Textarea, required=True)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        required=True,
+        max_length=2048,
+        validators=[MaxLengthValidator(2048)],
+    )
 
 
 class EditUserSettingsForm(forms.Form):

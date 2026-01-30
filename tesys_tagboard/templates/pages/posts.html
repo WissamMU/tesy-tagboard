@@ -18,10 +18,6 @@
              value="Search"
              class="w-full text-xl btn btn-lg btn-primary" />
     </form>
-    <section class="flex flex-col gap-4 items-center w-full">
-      {% component "pager" pager=pager page=page / %}
-      {% component "post_gallery" posts=page / %}
-      {% component "pager" pager=pager page=page / %}
-    </section>
+    {% component "post_gallery" page=page pager=pager / %}
   </div>
 {% endblock content %}

@@ -20,16 +20,15 @@
           <div class="hidden sm:block group-has-[input:checked]:block">Account</div>
         </div>
       </label>
-      <div class="p-6 rounded-none tab-content lg:bg-base-200">
-        <div>
-          <div>
-            <h2>{{ user.username }}</h2>
-            {% if user.name %}<p>{{ user.name }}</p>{% endif %}
-          </div>
+      <div class="relative p-6 rounded-none tab-content lg:bg-base-200">
+        <div class="py-2 px-4 w-full text-center md:absolute md:top-0 md:right-0 bg-base-300 md:size-fit md:max-2-400">
+          <h2 class="text-4xl">{{ user.username }}</h2>
+          {% if user.name %}<p>{{ user.name }}</p>{% endif %}
         </div>
         {% if user == request.user %}
           <!-- Action buttons -->
-          <div>
+          <h2 class="py-4 upper">Account Options</h2>
+          <div class="flex gap-2">
             <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
             <a class="btn btn-primary"
                href="{% url 'account_email' %}"
@@ -92,12 +91,12 @@
       </label>
       <div class="rounded-none lg:p-6 tab-content lg:bg-base-200">
         <div class="flex flex-col gap-4">
-          {% if favorites_pager.num_pages > 0 %}
-            {% component "pager" with pager=favorites_pager page=favorites_page / %}
-            <div class="flex flex-wrap gap-4 justify-center">{% component "post_gallery" posts=favorites_page / %}</div>
-            {% component "pager" with pager=favorites_pager page=favorites_page / %}
-          {% else %}
+          {% if favorites_pager.object_list|length == 0 %}
             <div class="text-lg text-placeholder">No favorites yet!</div>
+          {% else %}
+            <div class="flex flex-wrap gap-4 justify-center">
+              {% component "post_gallery" pager=favorites_pager page=favorites_page query_page_arg_name=favorites_page_arg_name / %}
+            </div>
           {% endif %}
         </div>
       </div>
@@ -145,7 +144,9 @@
   let tab_buttons = document.querySelectorAll(".tabs input[name='profile_tabs']");
   tab_buttons.forEach(btn => {
     btn.addEventListener("click", e => {
-      window.history.replaceState(null, "", `{{ request.path }}?tab=${btn.value}`)
+      let url = new URL(window.location.href);
+      url.searchParams.set('tab', btn.value);
+      window.history.replaceState(null, "", url.href)
     });
   });
 </script>

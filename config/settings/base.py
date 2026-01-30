@@ -9,14 +9,11 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # tesys_tagboard/
 APPS_DIR = BASE_DIR / "tesys_tagboard"
 env = environ.Env()
-
-READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
-if READ_DOT_ENV_FILE:
-    # OS environment variables take precedence over variables from .env
-    env.read_env(str(BASE_DIR / ".env"))
+env.read_env(str(BASE_DIR / ".env"))
 
 # GENERAL
 # ------------------------------------------------------------------------------
+PRODUCTION = False
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = env.bool("DJANGO_DEBUG", False)
 # Local time zone. Choices are
@@ -84,6 +81,8 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_htmx",
     "django_components",
+    "django_minify_html",
+    "silk",
     "tailwind",
 ]
 
@@ -151,10 +150,14 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # Silk profiling
+    "silk.middleware.SilkyMiddleware",
     # Locale
     "django.middleware.locale.LocaleMiddleware",
     # HTMX
     "django_htmx.middleware.HtmxMiddleware",
+    # HTML minification
+    "django_minify_html.middleware.MinifyHtmlMiddleware",
 ]
 
 # STATIC
@@ -296,6 +299,10 @@ LOGGING = {
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
+# PROFILING
+# ------------------------------------------------------------------------------
+SILKY_PYTHON_PROFILER = env.bool("DJANGO_SILKY_PYTHON_PROFILER", True)
+SILKY_PYTHON_PROFILER_BINARY = env.bool("DJANGO_SILKY_PYTHON_PROFILER_BINARY", True)
 
 # django-allauth
 # ------------------------------------------------------------------------------
@@ -315,13 +322,13 @@ SOCIALACCOUNT_ADAPTER = "tesys_tagboard.users.adapters.SocialAccountAdapter"
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
 SOCIALACCOUNT_FORMS = {"signup": "tesys_tagboard.users.forms.UserSocialSignupForm"}
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
-SOCIALACCOUNT_ENABLED = env.bool("TT_SOCIAL_LOGIN_ENABLED", default=True)
+SOCIALACCOUNT_ENABLED = env.bool("DJANGO_SOCIAL_LOGIN_ENABLED", default=True)
 SOCIALACCOUNT_PROVIDERS = {
     "discord": {
         "APP": {
-            "client_id": env.str("TT_DISCORD_CLIENT_ID", default=""),
-            "secret": env.str("TT_DISCORD_CLIENT_SECRET", default=""),
-            "key": env.str("TT_DISCORD_PUBLIC_KEY", default=""),
+            "client_id": env.str("DJANGO_DISCORD_CLIENT_ID", default=""),
+            "secret": env.str("DJANGO_DISCORD_CLIENT_SECRET", default=""),
+            "key": env.str("DJANGO_DISCORD_PUBLIC_KEY", default=""),
         }
     }
 }
@@ -359,7 +366,7 @@ THEMES = [
 ]
 
 HOMEPAGE_LINKS = env.list(
-    "TT_HOMEPAGE_LINKS",
+    "DJANGO_HOMEPAGE_LINKS",
     default=[
         ("Home", "/"),
         ("Posts", "/posts"),

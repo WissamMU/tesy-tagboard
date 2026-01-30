@@ -154,10 +154,12 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
         "next_post": next_post,
         "rating_levels": list(RatingLevel),
         "tags": tags,
+        "meta_tag_names": " ".join(tag.name for tag in tags),
         "comments_pager": comments_pager,
         "comments_page": comments_page,
         "tag_history": tag_history,
         "source_history": source_history,
+        "child_posts": Post.objects.filter(parent=post).with_gallery_data(request.user),
     }
 
     return TemplateResponse(request, "pages/post.html", context)
@@ -204,8 +206,11 @@ def edit_post(
 def delete_post(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
+    user = request.user
+    if not user.has_perm("tesys_tagboard.delete_post"):
+        return HttpResponseForbidden("User not allowed to delete this post")
     try:
-        post = Post.objects.get(pk=post_id, uploader=request.user)
+        post = Post.objects.get(pk=post_id)
         post.delete()
         return redirect(reverse("posts"))
 
@@ -243,12 +248,12 @@ def confirm_tagset(request: HtmxHttpRequest):
 
 
 @require(["POST"])
-@permission_required("edit_post")
+@permission_required(["tesys_tagboard.change_post", "tesys_tagboard.lock_comments"])
 def toggle_comment_lock(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
     try:
-        post = Post.objects.get(pk=post_id, uploader=request.user)
+        post = Post.objects.get(pk=post_id)
         post.locked_comments = not post.locked_comments
         post.save()
         return TemplateResponse(
@@ -281,15 +286,10 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             tags = Tag.objects.in_tagset(tagset)
             posts = posts.has_tags(tags)
 
-    if request.user.is_authenticated:
-        favorites = Favorite.objects.for_user(request.user)
-        posts = posts.exclude(tags__in=user.filter_tags.all()).annotate_favorites(
-            favorites
-        )
-
-    pager = Paginator(posts, 32, 4)
-    page_num = request.GET.get("page", 1)
+    pager = Paginator(posts, 36, 4)
+    page_num = int(request.GET.get("page", 1))
     page = pager.get_page(page_num)
+
     context = {
         "pager": pager,
         "page": page,
@@ -340,26 +340,44 @@ def tags(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
 
 @require(["POST"])
 def create_tag(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    create_tag_form = CreateTagForm(request.POST)
-    if create_tag_form.is_valid():
-        create_tag_form.save()
+    user = request.user
+    if user.has_perm("tesys_tagboard.add_tag"):
+        create_tag_form = CreateTagForm(request.POST)
+        if create_tag_form.is_valid():
+            create_tag_form.save()
+        else:
+            msg = "The tag inputs were invalid."
+            messages.add_message(request, messages.WARNING, msg)
+    else:
+        msg = f"You ({user.username}) don't have permission to create tags."
+        messages.add_message(request, messages.WARNING, msg)
 
     return redirect(reverse("tags"))
 
 
 @require(["POST"])
 def create_tag_alias(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    form = CreateTagAliasForm(request.POST)
-    if form.is_valid():
-        form.save()
+    user = request.user
+    if user.has_perm("tesys_tagboard.add_tagalias"):
+        form = CreateTagAliasForm(request.POST)
+        if form.is_valid():
+            form.save()
+            msg = f"The tag alias, {form.cleaned_data.get('name')}, was created!"
+            messages.add_message(request, messages.WARNING, msg)
+        else:
+            msg = "The tag alias inputs were invalid."
+            messages.add_message(request, messages.WARNING, msg)
+    else:
+        msg = f"You ({user.username}) don't have permission to create tag aliases."
+        messages.add_message(request, messages.WARNING, msg)
 
     return redirect(reverse("tags"))
 
 
 @require(["GET"], login=False)
 def collections(request: HttpRequest) -> TemplateResponse:
-    collections = Collection.objects.public()
-    pager = Paginator(collections, 25, 5)
+    collections = Collection.objects.public().with_gallery_data()
+    pager = Paginator(collections, 36, 4)
     page_num = request.GET.get("page", 1)
     page = pager.get_page(page_num)
     context = {
@@ -397,6 +415,7 @@ def collection(
 
 
 @require(["POST"])
+@permission_required(["tesys_tagboard.add_collection"])
 def create_collection(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     create_collection_form = CreateCollectionForm(request.POST)
     if create_collection_form.is_valid():
@@ -408,26 +427,27 @@ def create_collection(request: HtmxHttpRequest) -> TemplateResponse | HttpRespon
 
 
 @require(["DELETE"])
+@permission_required(["tesys_tagboard.delete_collection"])
 def delete_collection(
     request: HtmxHttpRequest, collection_id: int
 ) -> TemplateResponse | HttpResponse:
-    if request.htmx:
-        try:
-            collection = Collection.objects.get(user=request.user, pk=collection_id)
-            collection.delete()
-            collections = request.user.collection_set.with_gallery_data()
-            context = {"collections": collections}
+    try:
+        collection = Collection.objects.get(user=request.user, pk=collection_id)
+        collection.delete()
+        collections = request.user.collection_set.with_gallery_data()
+        context = {"collections": collections}
 
-            return TemplateResponse(
-                request, "users/user_detail.html#collection-gallery", context
-            )
-        except Collection.DoesNotExist:
-            return HttpResponseNotFound("That collection doesn't exist")
+        return TemplateResponse(
+            request, "users/user_detail.html#collection-gallery", context
+        )
+    except Collection.DoesNotExist:
+        return HttpResponseNotFound("That collection doesn't exist")
 
     return redirect(reverse("collections"))
 
 
 @require(["PUT"])
+@permission_required(["tesys_tagboard.add_favorite"])
 def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
     try:
         post = Post.objects.get(pk=post_id)
@@ -445,6 +465,7 @@ def add_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
 
 
 @require(["DELETE"])
+@permission_required(["tesys_tagboard.delete_favorite"])
 def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
     try:
         post = Post.objects.get(pk=post_id)
@@ -460,50 +481,53 @@ def remove_favorite(request: HtmxHttpRequest, post_id: int) -> HttpResponse:
 
 
 @require(["POST"])
+@permission_required(["tesys_tagboard.add_post_to_collection"], raise_exception=True)
 def add_post_to_collection(
     request: HtmxHttpRequest, collection_id: int
 ) -> HttpResponse:
-    if request.htmx:
-        try:
-            collection = Collection.objects.get(user=request.user, pk=collection_id)
-            post = Post.objects.get(pk=request.POST.get("post"))
-            collection.posts.add(post)
-            collection.save()
+    try:
+        collection = Collection.objects.get(user=request.user, pk=collection_id)
+        post = Post.objects.get(pk=request.POST.get("post"))
+        collection.posts.add(post)
+        collection.save()
 
-            return render(
-                request,
-                "collections/picker_item.html",
-                context={"collection": collection, "post": post, "checked": True},
-                status=200,
-            )
-        except Post.DoesNotExist, Collection.DoesNotExist:
-            return HttpResponse(status=404)
+        return render(
+            request,
+            "collections/picker_item.html",
+            context={"collection": collection, "post": post, "checked": True},
+            status=200,
+        )
+    except Post.DoesNotExist, Collection.DoesNotExist:
+        return HttpResponse("That post and/or collection doesn't exist", status=404)
     return HttpResponse("Not allowed", status=403)
 
 
 @require(["POST"])
+@permission_required(
+    ["tesys_tagboard.remove_post_from_collection"], raise_exception=True
+)
 def remove_post_from_collection(
     request: HtmxHttpRequest, collection_id: int
 ) -> HttpResponse:
-    if request.htmx:
-        try:
-            collection = Collection.objects.get(user=request.user, pk=collection_id)
-            post = Post.objects.get(pk=request.POST.get("post"))
-            collection.posts.remove(post)
-            collection.save()
+    try:
+        collection = Collection.objects.get(user=request.user, pk=collection_id)
+        post = Post.objects.get(pk=request.POST.get("post"))
+        collection.posts.remove(post)
+        collection.save()
 
-            return render(
-                request,
-                "collections/picker_item.html",
-                context={"collection": collection, "post": post, "checked": False},
-                status=200,
-            )
-        except Post.DoesNotExist, Collection.DoesNotExist:
-            return HttpResponse(status=404)
+        return render(
+            request,
+            "collections/picker_item.html",
+            context={"collection": collection, "post": post, "checked": False},
+            status=200,
+        )
+    except Post.DoesNotExist, Collection.DoesNotExist:
+        return HttpResponse(status=404)
     return HttpResponse("Not allowed", status=403)
 
 
 @require(["POST"])
+@permission_required(["tesys_tagboard.add_comment"])
 def add_comment(
     request: HtmxHttpRequest, post_id: int
 ) -> TemplateResponse | HttpResponse:
@@ -533,19 +557,27 @@ def add_comment(
 
 
 @require(["POST"])
+@permission_required(["tesys_tagboard.change_comment"])
 def edit_comment(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     data = EditCommentForm(request.POST)
     if data.is_valid():
         comment_id = data.cleaned_data.get("comment_id")
-        comment = Comment.objects.get(pk=comment_id, user=request.user)
-        comment.text = data.cleaned_data.get("text")
-        comment.save()
-        kwargs = {"comment": comment}
-        return CommentComponent.render_to_response(request=request, kwargs=kwargs)
+        try:
+            comment = Comment.objects.get(pk=comment_id, user=request.user)
+        except Comment.DoesNotExist:
+            msg = "Only the original poster of a comment may edit it."
+            messages.add_message(request, messages.INFO, msg)
+            return HttpResponseForbidden(msg)
+        else:
+            comment.text = data.cleaned_data.get("text")
+            comment.save()
+            kwargs = {"comment": comment}
+            return CommentComponent.render_to_response(request=request, kwargs=kwargs)
     return HttpResponse(status=422)
 
 
 @require(["DELETE"])
+@permission_required(["tesys_tagboard.delete_comment"])
 def delete_comment(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     comment_id = request.POST.get("comment_id")
     try:
@@ -609,7 +641,6 @@ def find_duplicate_media_file(media_file):
 
 def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> tuple:
     """Detects media type and creates a new Media derivative"""
-
     if file is None:
         msg = "The uploaded file cannot be empty"
         raise ValidationError(msg)
@@ -644,68 +675,68 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> tuple
 @require(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     context = {"rating_levels": list(RatingLevel)}
-    if request.htmx:
-        # Confirming tagset
-        data: dict[str, str | list[Any] | None] = {
-            key: request.POST.get(key) for key in request.POST
-        }
-        data["tagset"] = request.POST.getlist("tagset")
-        form = (
-            TagsetForm(data, request.FILES)
-            if request.method == "POST"
-            else TagsetForm()
-        )
-
-        if form.is_valid():
-            tagset = form.cleaned_data.get("tagset")
-            tags = Tag.objects.in_tagset(tagset)
-
-            kwargs = {"tags": tags, "add_tag_enabled": True, "post_url": "upload"}
-
-            return AddTagsetComponent.render_to_response(request=request, kwargs=kwargs)
-
+    user = request.user
     if request.method == "POST":
+        if not user.has_perm("tesys_tagboard.add_post"):
+            msg = f"You ({user.username}) are not allowed to create posts."
+            messages.add_message(request, messages.INFO, msg)
+            return TemplateResponse(request, "pages/upload.html", context=context)
         data: dict[str, str | list[Any] | None] = {
             key: request.POST.get(key) for key in request.POST
         }
         data["tagset"] = request.POST.getlist("tagset")
         form = PostForm(data, request.FILES) if request.method == "POST" else PostForm()
         context |= {"form": form}
+
         if form.is_valid():
             try:
                 duplicate, media_file = handle_media_upload(
                     form.files.get("file"), form.cleaned_data.get("src_url")
                 )
+
             except ValidationError:
                 msg = "Failed to validate uploaded media file"
                 messages.add_message(request, messages.INFO, msg)
                 return TemplateResponse(request, "pages/upload.html", context=context)
             else:
                 if duplicate:
-                    post_url = reverse("post", args=[duplicate.meta.post.pk])
+                    post_url = reverse("post", args=[duplicate.post.pk])
                     msg = mark_safe(  # noqa: S308
                         f"The uploaded file was a duplicate of an existing post which can be found <a href='{post_url}'>here</a>"  # noqa: E501
                     )
-                    media_file.delete()
                     messages.add_message(request, messages.WARNING, msg)
                     return TemplateResponse(
                         request, "pages/upload.html", context=context
                     )
 
             tagset = form.cleaned_data.get("tagset")
-            rating_level = form.cleaned_data.get("rating_level")
-            if rating_level not in list(RatingLevel):
-                rating_level = RatingLevel.UNRATED
+            try:
+                rating_level = int(form.cleaned_data.get("rating_level"))
+            except ValueError:
+                rating_level = RatingLevel.UNRATED.value
+            src_url = form.cleaned_data.get("src_url")
             tags = Tag.objects.in_tagset(tagset)
-            post = Post(uploader=request.user, rating_level=rating_level)
-            post.save()
-            media_file.post = post
-            media_file.save()
-            post.save_with_tag_history(post.uploader, tags)
-            msg = mark_safe(  # noqa: S308
-                f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"  # noqa: E501
-            )
-            messages.add_message(request, messages.INFO, msg)
+            if media_type := SupportedMediaTypes.find(
+                media_file.file.file.content_type
+            ):
+                post = Post(
+                    uploader=request.user,
+                    rating_level=rating_level,
+                    src_url=src_url,
+                    type=media_type.value.get_template(),
+                )
+                post.save()
+                media_file.post = post
+                media_file.save()
+                post.save_with_tag_history(post.uploader, tags)
+                msg = mark_safe(  # noqa: S308
+                    f"Your post was create successfully, Check it out <a href='{reverse('post', args=[post.pk])}'>here</a>"  # noqa: E501
+                )
+                messages.add_message(request, messages.INFO, msg)
+
+            else:
+                msg = "The filetype of the uploaded file is not supported."
+                messages.add_message(request, messages.ERROR, msg)
 
     return TemplateResponse(request, "pages/upload.html", context=context)
 

@@ -4,7 +4,9 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include
 from django.urls import path
+from django.urls import re_path
 from django.views import defaults as default_views
+from django.views.static import serve
 
 from tesys_tagboard import views
 from tesys_tagboard.api import api
@@ -64,15 +66,14 @@ urlpatterns = [
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
     # Django components
     path("", include("django_components.urls")),
+    # API URLS
+    path("api/", api.urls),
 ]
+
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development
     urlpatterns += staticfiles_urlpatterns()
 
-# API URLS
-urlpatterns += [path("api/", api.urls)]
-
-if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
     # these url in browser to see how these error pages look like.
     urlpatterns = [
@@ -92,13 +93,38 @@ if settings.DEBUG:
             kwargs={"exception": Exception("Page not Found")},
         ),
         path("500/", default_views.server_error),
+        *urlpatterns,
+    ]
+
+if "debug_toolbar" in settings.INSTALLED_APPS and settings.DEBUG_TOOLBAR:
+    import debug_toolbar
+
+    urlpatterns = [
+        path("__debug__/", include(debug_toolbar.urls)),
+        *urlpatterns,
+    ]
+
+if "silk" in settings.INSTALLED_APPS and settings.SILKY_PYTHON_PROFILER:
+    urlpatterns = [
+        path("silk/", include("silk.urls", namespace="silk")),
+        *urlpatterns,
+    ]
+
+if not settings.PRODUCTION:
+    urlpatterns = [
         path("__reload__/", include("django_browser_reload.urls")),
         *urlpatterns,
     ]
-    if "debug_toolbar" in settings.INSTALLED_APPS:
-        import debug_toolbar
 
-        urlpatterns = [
-            path("__debug__/", include(debug_toolbar.urls)),
-            *urlpatterns,
-        ]
+# Serve media files locally when not in PRODUCTION mode and DEBUG is disabled
+if not settings.PRODUCTION and not settings.DEBUG:
+    urlpatterns = [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            serve,
+            {
+                "document_root": settings.MEDIA_ROOT,
+            },
+        ),
+        *urlpatterns,
+    ]

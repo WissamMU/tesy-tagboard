@@ -1,10 +1,6 @@
 from django_components import Component
 from django_components import register
 
-from tesys_tagboard.models import Collection
-from tesys_tagboard.models import CollectionQuerySet
-from tesys_tagboard.models import PostQuerySet
-
 
 @register("post_gallery")
 class PostGalleryComponent(Component):
@@ -12,16 +8,23 @@ class PostGalleryComponent(Component):
     js_file = "post_gallery.js"
 
     def get_template_data(self, args, kwargs, slots, context):
-        posts: PostQuerySet = kwargs.get("posts")
-        collections: CollectionQuerySet = kwargs.get("collections", [])
-        if self.request.user.is_authenticated:
-            if collections:
-                collections = collections.for_user(
-                    self.request.user
-                ).with_gallery_data()
-            else:
-                collections = Collection.objects.for_user(
-                    self.request.user
-                ).with_gallery_data()
+        pager = kwargs.get("pager")
 
-        return {"collections": collections, "posts": posts}
+        # Must specificity an querystring arg name to render multiple
+        # galleries on a single page
+        query_page_arg_name = kwargs.get("query_page_arg_name", "page")
+        page = kwargs.get("page")
+        page_range = list(pager.get_elided_page_range(page.number, on_each_side=1))
+
+        collections = None
+        # Authenticated users can use favorites and collection features
+        if self.request.user.is_authenticated:
+            collections = self.request.user.collection_set.with_gallery_data()
+
+        return {
+            "collections": collections,
+            "query_page_arg_name": query_page_arg_name,
+            "pager": pager,
+            "page": page,
+            "page_range": page_range,
+        }

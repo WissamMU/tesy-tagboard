@@ -12,7 +12,7 @@ class RatingLevel(IntEnum):
     Default: UNRATED
 
     These levels are ordered such that SAFE < UNRATED < QUESTIONABLE < EXPLICIT
-    This enabled a simple integer comparison to be made on the RatingLevel value
+    This enables a simple integer comparison to be made on the RatingLevel value
     to show only the desired posts
     """
 
@@ -106,11 +106,14 @@ class SupportedMediaTypes(Enum):
     JPEG = MediaType("JPEG image", ["jpg", "jpeg"], MediaCategory.IMAGE, "jpeg")
     PNG = MediaType("PNG", ["png"], MediaCategory.IMAGE, "png")
     WEBP = MediaType("WEBP image", ["webp"], MediaCategory.IMAGE, "webp")
+    TIFF = MediaType("TIFF image", ["tif", "tiff"], MediaCategory.IMAGE, "tiff")
     # TODO: support SVG
 
     # Audio types
     MP3 = MediaType("MP3 audio", ["mp3", "mpeg"], MediaCategory.AUDIO, "mpeg")
-    WAV = MediaType("WAV audio", ["wav"], MediaCategory.AUDIO, "wav")
+    WAV = MediaType("WAV audio", ["wav"], MediaCategory.AUDIO, "vnd.wav")
+    WAV2 = MediaType("WAV audio", ["wav"], MediaCategory.AUDIO, "vnd.wave")
+    WAV3 = MediaType("WAV audio", ["wav"], MediaCategory.AUDIO, "wave")
 
     # Video types
     MP4 = MediaType("MP4 video", ["mp4"], MediaCategory.VIDEO, "mp4")

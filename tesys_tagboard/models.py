@@ -1,17 +1,19 @@
 """Models for Tesys's Tagboard"""
 
+import re
 import uuid
 from hashlib import md5
 from io import BytesIO
 from typing import TYPE_CHECKING
 
 import imagehash
-import regex as re
+from django.contrib.postgres.indexes import HashIndex
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
 from django.db.models import BooleanField
 from django.db.models import Case
 from django.db.models import OuterRef
+from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import QuerySet
 from django.db.models import Subquery
@@ -84,6 +86,9 @@ class Tag(models.Model):
             models.UniqueConstraint(
                 fields=["name", "category"], name="unique_tag_name_cat"
             ),
+        ]
+        indexes = [
+            models.Index("category", name="tag_category_idx"),
         ]
 
     def __str__(self) -> str:
@@ -177,7 +182,7 @@ def csv_to_tag_ids(tags_csv: str) -> Sequence[int]:
         return tag_ids
 
 
-def add_tag_history(tags: TagQuerySet, post: Post, user):
+def add_tag_history(tags: QuerySet[Tag], post: Post, user):
     old_tags = set(post.tags.order_by("pk"))
     new_tags = set(tags.all())
     tag_histories = PostTagHistory.objects.filter(post=post)
@@ -208,18 +213,44 @@ class PostQuerySet(models.QuerySet):
         return self.filter(media__id=media_id)
 
     def with_gallery_data(self, user: User):
-        """Return PostQuerySet including prefetched data such as media, and tags"""
-        posts = self.prefetch_related("tags").select_related("image")
-
+        """Return PostQuerySet including prefetched data such as media and tags"""
+        prefetch_tags = Tag.objects.only("name", "id", "category", "post_count")
+        posts = (
+            self.defer(
+                "title",
+                "post_date",
+                "edit_date",
+                "src_url",
+                "locked_comments",
+                "parent_id",
+            )
+            .prefetch_related(
+                Prefetch("tags", queryset=prefetch_tags),
+                "collection_set",
+            )
+            .select_related("image")
+            .defer(
+                "image__orig_name",
+                "image__md5",
+                "image__phash",
+                "image__dhash",
+            )
+        )
         if user.is_authenticated:
-            post_blur_tag_overlap = Tag.objects.filter(
-                post=OuterRef("pk")
-            ).intersection(user.blur_tags.all())
+            post_blur_tag_overlap = (
+                Tag.objects.filter(post=OuterRef("pk"))
+                .only("pk")
+                .intersection(user.blur_tags.only("pk").all())
+            )
             posts = posts.annotate(
                 blur_level=Q(rating_level__gte=user.blur_rating_level),
                 blur_tag=Subquery(
                     post_blur_tag_overlap.values("pk"), output_field=BooleanField()
                 ),
+            )
+            favorites = Favorite.objects.for_user(user)
+            posts = posts.exclude(tags__in=user.filter_tags.all()).annotate_favorites(
+                favorites
             )
         else:
             posts.annotate(
@@ -241,7 +272,6 @@ class Post(models.Model):
 
     title = models.TextField(default="", max_length=1000)
     uploader = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    upload_date = models.DateTimeField(default=now, editable=False)
     post_date = models.DateTimeField(default=now, editable=False)
     edit_date = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag, blank=True)
@@ -256,6 +286,7 @@ class Post(models.Model):
         (x.name, x.value.desc) for x in SupportedMediaTypes.__members__.values()
     )
     type = models.CharField(max_length=20, choices=media_choices)
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
 
     objects = PostQuerySet.as_manager()
 
@@ -267,7 +298,7 @@ class Post(models.Model):
         return f"<Post - id: {self.pk}; uploader: {self.uploader.username}; title: {self.title}; posted: {self.post_date}>"  # noqa: E501
 
     # TODO: also override update() to update post counts
-    def save(self, **kwargs):
+    def save_and_update_post_count(self, **kwargs):
         super().save(**kwargs)
         update_tag_post_counts()
 
@@ -279,11 +310,15 @@ class Post(models.Model):
 
     def save_with_src_history(self, user, src_url: str):
         """Saves the Media with additional handling for source history"""
-        source_hist = SourceHistory.objects.filter(media=self)
+        source_hist = SourceHistory.objects.filter(post=self)
         if (self.src_url != src_url or not source_hist) and not src_url.isspace():
-            SourceHistory(media=self, user=user, src_url=src_url).save()
+            SourceHistory(post=self, user=user, src_url=src_url).save()
             self.src_url = src_url
         self.save()
+
+    def tagset(self) -> set[int]:
+        """Returns set of tag IDs"""
+        return set(self.tags.all().values_list("pk", flat=True))
 
     def category(self) -> MediaCategory | None:
         if hasattr(self, "audio"):
@@ -320,8 +355,8 @@ class Image(models.Model):
     height: models.PositiveIntegerField = models.PositiveIntegerField(default=0)
     thumbnail = models.ImageField(
         upload_to=media_thumbnail_upload_path,
-        width_field="width",
-        height_field="height",
+        width_field="thumbnail_width",
+        height_field="thumbnail_height",
         null=True,
     )
     thumbnail_width: models.PositiveIntegerField = models.PositiveIntegerField(
@@ -343,11 +378,19 @@ class Image(models.Model):
     # TODO: add duplicate detection
     # See https://github.com/JohannesBuchner/imagehash/issues/127 for
 
+    class Meta:
+        indexes = [
+            HashIndex("md5", name="image_md5_idx"),
+            HashIndex("phash", name="image_phash_idx"),
+            HashIndex("dhash", name="image_dhash_idx"),
+        ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
-        self.phash = str(imagehash.phash(PIL_Image.open(self.file)))
-        self.dhash = str(imagehash.dhash(PIL_Image.open(self.file)))
+        image_file = PIL_Image.open(self.file)
+        self.phash = str(imagehash.phash(image_file))
+        self.dhash = str(imagehash.dhash(image_file))
 
     def __str__(self) -> str:
         return (
@@ -356,10 +399,6 @@ class Image(models.Model):
 
     def save(self, *args, **kwargs):
         image_file = PIL_Image.open(self.file)
-
-        if image_file.mode not in ("L", "RGB"):
-            image = image_file.convert("RGB")
-            image_file = PIL_Image.open(image.tobytes())
 
         # Set thumbnail size
         thumb_size = kwargs.get("thumb_size", (400, 400))
@@ -397,6 +436,11 @@ class Video(models.Model):
     """MD5 hash"""
     md5 = models.CharField(validators=[validate_md5])
 
+    class Meta:
+        indexes = [
+            HashIndex("md5", name="video_md5_idx"),
+        ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
@@ -421,6 +465,11 @@ class Audio(models.Model):
     """MD5 hash"""
     md5 = models.CharField(validators=[validate_md5])
 
+    class Meta:
+        indexes = [
+            HashIndex("md5", name="audio_md5_idx"),
+        ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.md5 = md5(self.file.open().read()).hexdigest()  # noqa: S324
@@ -436,7 +485,7 @@ class Audio(models.Model):
 
 
 class SourceHistory(models.Model):
-    """Model for tracking changes in a Media's src_url"""
+    """Model for tracking changes in a Post's src_url"""
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -483,7 +532,7 @@ class CollectionQuerySet(models.QuerySet):
     def with_gallery_data(self):
         """Return optimized CollectionQuerySet including gallery data
         such as related posts for the given user"""
-        return self.prefetch_related("posts")
+        return self.prefetch_related("posts").select_related("user")
 
 
 class Collection(models.Model):
@@ -498,6 +547,10 @@ class Collection(models.Model):
     objects = CollectionQuerySet.as_manager()
 
     class Meta:
+        permissions = [
+            ("add_post_to_collection", "Can add posts to a collection"),
+            ("remove_post_from_collection", "Can remove posts from a collection"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "name"], name="unique_collection_name_user"
@@ -539,6 +592,9 @@ class Comment(models.Model):
     )
 
     objects = CommentQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-post_date"]
 
     def __str__(self) -> str:
         return f'<Comment: user: {self.user}, text: "{self.text}">'
