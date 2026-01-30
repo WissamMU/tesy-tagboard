@@ -54,6 +54,11 @@ ROOT_URLCONF = "config.urls"
 # https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = "config.wsgi.application"
 
+# PROFILING
+# ------------------------------------------------------------------------------
+SILKY_PYTHON_PROFILER = env.bool("DJANGO_SILKY_PYTHON_PROFILER", False)
+SILKY_PYTHON_PROFILER_BINARY = env.bool("DJANGO_SILKY_PYTHON_PROFILER_BINARY", False)
+
 # APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
@@ -82,9 +87,11 @@ THIRD_PARTY_APPS = [
     "django_htmx",
     "django_components",
     "django_minify_html",
-    "silk",
     "tailwind",
 ]
+
+if SILKY_PYTHON_PROFILER:
+    THIRD_PARTY_APPS.append("silk")
 
 LOCAL_APPS = [
     "tesys_tagboard",
@@ -150,8 +157,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    # Silk profiling
-    "silk.middleware.SilkyMiddleware",
     # Locale
     "django.middleware.locale.LocaleMiddleware",
     # HTMX
@@ -159,6 +164,9 @@ MIDDLEWARE = [
     # HTML minification
     "django_minify_html.middleware.MinifyHtmlMiddleware",
 ]
+
+if SILKY_PYTHON_PROFILER:
+    THIRD_PARTY_APPS.append("silk.middleware.SilkyMiddleware")
 
 # STATIC
 # ------------------------------------------------------------------------------
@@ -299,10 +307,6 @@ LOGGING = {
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
-# PROFILING
-# ------------------------------------------------------------------------------
-SILKY_PYTHON_PROFILER = env.bool("DJANGO_SILKY_PYTHON_PROFILER", True)
-SILKY_PYTHON_PROFILER_BINARY = env.bool("DJANGO_SILKY_PYTHON_PROFILER_BINARY", True)
 
 # django-allauth
 # ------------------------------------------------------------------------------
