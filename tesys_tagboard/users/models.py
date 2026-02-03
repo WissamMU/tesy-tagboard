@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.db import models
 from django.urls import reverse
@@ -49,4 +50,10 @@ class User(AbstractUser):
     def with_permissions(self, perms: list[Permission]) -> User:
         self.user_permissions.add(*perms)
         self.save()
+        return self
+
+    def add_to_group(self, group_name: str) -> User:
+        """Add a user to the group specified by `group_name`"""
+        group = Group.objects.get(name=group_name)
+        self.groups.add(group)
         return self
