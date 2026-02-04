@@ -89,3 +89,42 @@ class TestTagAliasAutocomplete:
             TagAlias.objects.all(), exclude_aliases=exclude_aliases
         )
         assert len(aliases.intersection(exclude_aliases)) == 0
+
+
+@pytest.mark.django_db
+class TestPostAdvancedSearch:
+    def test_empty_query(self):
+        # TODO
+        pass
+
+    def test_query_only_tags(self):
+        # TODO
+        pass
+
+    def test_exclude_tags(self):
+        # TODO
+        pass
+
+    def test_comment_count(self):
+        # TODO
+        pass
+
+    def test_commented_by_user(self):
+        # TODO
+        pass
+
+    def test_favorited_once(self):
+        # TODO
+        pass
+
+    def test_favorited_more_than_once(self):
+        # TODO
+        pass
+
+    def test_favorited_by_user(self):
+        # TODO
+        pass
+
+    def test_filetype_extension(self):
+        # TODO
+        pass
