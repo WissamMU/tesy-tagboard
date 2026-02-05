@@ -1,8 +1,8 @@
 import pytest
 
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
+from tesys_tagboard.models import TagCategory
 from tesys_tagboard.search import tag_alias_autocomplete
 from tesys_tagboard.search import tag_autocomplete
 
@@ -42,9 +42,8 @@ class TestTagAutocomplete:
         assert "violet hyacinth" in tag_names
 
     def test_autocomplete_excluded_by_tag(self, db):
-        exclude_tags = Tag.objects.filter(
-            category=TagCategory.COPYRIGHT.value.shortcode
-        )
+        copyright_category = TagCategory.objects.get(name="copyright")
+        exclude_tags = Tag.objects.filter(category=copyright_category)
         tags = tag_autocomplete(Tag.objects.all(), exclude_tags=exclude_tags)
         assert len(tags.intersection(exclude_tags)) == 0
 
@@ -82,9 +81,8 @@ class TestTagAliasAutocomplete:
         assert "Z. Zolan" not in alias_names
 
     def test_autocomplete_excluded_by_alias(self, db):
-        exclude_aliases = TagAlias.objects.filter(
-            tag__category=TagCategory.COPYRIGHT.value.shortcode
-        )
+        copyright_category = TagCategory.objects.get(name="copyright")
+        exclude_aliases = TagAlias.objects.filter(tag__category=copyright_category)
         aliases = tag_alias_autocomplete(
             TagAlias.objects.all(), exclude_aliases=exclude_aliases
         )

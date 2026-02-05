@@ -11,7 +11,6 @@ from pytest_django.asserts import assertTemplateUsed
 
 from tesys_tagboard.enums import MediaCategory
 from tesys_tagboard.enums import RatingLevel
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
 from tesys_tagboard.models import Favorite
@@ -67,9 +66,9 @@ class TestCreateTagView:
         user = UserFactory()
         client.force_login(user)
         tag_name = "test_tag_1"
+
         data = {
             "name": tag_name,
-            "category": TagCategory.BASIC.value.shortcode,
             "rating_level": "0",
         }
         response = client.post(self.url, data)
@@ -86,7 +85,6 @@ class TestCreateTagView:
         tag_name = "test_tag"
         data = {
             "name": tag_name,
-            "category": TagCategory.BASIC.value.shortcode,
             "rating_level": "0",
         }
 
@@ -94,14 +92,13 @@ class TestCreateTagView:
         assert response.status_code == HTTPStatus.FOUND
         tag = Tag.objects.get(name=tag_name)
         assert tag.name == tag_name
-        assert tag.category == TagCategory.BASIC.value.shortcode
+        assert tag.category is None
         assert tag.rating_level == 0
         new_count = Tag.objects.all().count()
         assert new_count == tag_count + 1
 
     def test_create_basic_tag_defaults(self, client, user_with_add_tag):
-        """Tags created without a category should be assigned
-        the BASIC category and rating_level of 0 by default"""
+        """Tags created without a category (None) and rating_level of 0 by default"""
         client.force_login(user_with_add_tag)
 
         tag_name = "test_tag"
@@ -111,7 +108,7 @@ class TestCreateTagView:
         assert response.status_code == HTTPStatus.FOUND
         tag = Tag.objects.get(name=tag_name)
         assert tag.name == tag_name
-        assert tag.category == TagCategory.BASIC.value.shortcode
+        assert tag.category is None
         assert tag.rating_level == 0
 
     def test_create_tag_with_invalid_category(self, client, user_with_add_tag):

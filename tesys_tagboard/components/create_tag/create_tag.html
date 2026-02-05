@@ -15,9 +15,7 @@
       <legend class="fieldset-legend">Category</legend>
       <select class="w-full select" name="category">
         <option disabled selected>Pick a category</option>
-        {% for cat in categories %}
-          <option value="{{ cat.value.shortcode }}">{{ cat.value.display_name|capfirst }}</option>
-        {% endfor %}
+        {% for category in categories %}<option value="{{ category.pk }}">{{ category.name|capfirst }}</option>{% endfor %}
       </select>
     </fieldset>
     <fieldset class="w-full fieldset">

@@ -35,6 +35,7 @@ class TagsetField(forms.Field):
 
 class CreateTagForm(forms.ModelForm):
     rating_level = forms.IntegerField(initial=0, required=False)
+    category = forms.IntegerField(initial=None, required=False)
 
     class Meta:
         model = Tag

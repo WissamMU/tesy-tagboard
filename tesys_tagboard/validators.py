@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from .enums import RatingLevel
 from .enums import SupportedMediaTypes
 
+rgb_validator = validators.RegexValidator(r"^#[0-9A-F]{6}$")
 md5_validator = validators.RegexValidator(r"^[0-9A-Z]{32}$")
 phash_validator = validators.RegexValidator(r"^[0-9a-z]{16}$")
 dhash_validator = validators.RegexValidator(r"^[0-9a-z]{16}$")

@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -33,7 +34,6 @@ from .decorators import require
 from .enums import MediaCategory
 from .enums import RatingLevel
 from .enums import SupportedMediaTypes
-from .enums import TagCategory
 from .forms import AddCommentForm
 from .forms import CreateCollectionForm
 from .forms import CreateTagAliasForm
@@ -51,6 +51,7 @@ from .models import Image
 from .models import Post
 from .models import Tag
 from .models import TagAlias
+from .models import TagCategory
 from .models import Video
 from .models import csv_to_tag_ids
 from .search import PostSearch
@@ -135,7 +136,10 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
 
     # Collect tag_history tags in a single DB call
     history_tags_by_id = {
-        tag.pk: tag for tag in Tag.objects.filter(pk__in=tag_history_unique_ids)
+        tag.pk: tag
+        for tag in Tag.objects.select_related("category").filter(
+            pk__in=tag_history_unique_ids
+        )
     }
 
     tag_history = [
@@ -310,28 +314,30 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
 
 @require(["GET", "POST"], login=False)
 def tags(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
-    categories = TagCategory.__members__.values()
-
+    categories = TagCategory.objects.filter(parent=None).all()
     try:
         tag_query = request.GET.get("q", "")
         tags_by_cat = {
-            cat: Tag.objects.filter(
-                category=cat.value.shortcode, name__icontains=tag_query
+            cat: Tag.objects.select_related("category").filter(
+                category=cat, name__icontains=tag_query
             )
             for cat in categories
         }
+        uncategorized_tags = Tag.objects.select_related("category").filter(
+            category=None, name__icontains=tag_query
+        )
 
         alias_query = request.GET.get("aliases", "")
         aliases = (
             TagAlias.objects.filter(name__icontains=alias_query)
-            .select_related("tag")
-            .order_by("tag__category")
+            .select_related("tag", "tag__category")
+            .order_by(F("tag__category__name").asc(nulls_first=True))
         )
     except ValidationError:
         return HttpResponseBadRequest("Invalid tag name or alias provided")
 
     context = {
-        "tags": Tag.objects.order_by("name"),
+        "uncategorized_tags": uncategorized_tags,
         "tags_by_cat": tags_by_cat,
         "tag_name": tag_query,
         "aliases": aliases,
@@ -607,7 +613,7 @@ def post_search_autocomplete(
     request: HtmxHttpRequest,
 ) -> TemplateResponse | HttpResponse:
     if request.method == "GET" and request.htmx:
-        tag_prefixes = [cat.name.lower() for cat in TagCategory]
+        tag_prefixes = [cat.name.lower() for cat in TagCategory.objects.all()]
         query = request.GET.get("q", "")
         ps = PostSearch(query, tag_prefixes)
         partial = request.GET.get("partial", "")

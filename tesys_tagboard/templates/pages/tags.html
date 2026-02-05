@@ -28,7 +28,7 @@
              hx-boost="true"
              hx-preserve="true" />
     </label>
-    {% if tags %}
+    {% if tags_by_cat or uncategorized_tags %}
       <div class="mt-4 lg:mt-8">
         {% partialdef tag-categories inline %}
         {% include "tags/tags_by_category.html" %}

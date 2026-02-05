@@ -23,7 +23,6 @@ from rich.progress import track
 from tesys_tagboard.enums import MediaCategory
 from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.enums import SupportedMediaTypes
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Audio
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
@@ -31,6 +30,7 @@ from tesys_tagboard.models import Image
 from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
+from tesys_tagboard.models import TagCategory
 from tesys_tagboard.models import Video
 from tesys_tagboard.models import add_tag_history
 from tesys_tagboard.models import update_tag_post_counts
@@ -49,7 +49,6 @@ DEFAULT_USER_USERNAMES = ["user1", "user2", "user3"]
 DEFAULT_MOD_USERNAMES = ["mod1", "mod2", "mod3"]
 DEFAULT_USER_GROUP = Group.objects.get(name="Users")
 DEFAULT_MOD_GROUP = Group.objects.get(name="Moderators")
-TAG_CATEGORY_SHORTCODES = [tc.value.shortcode for tc in TagCategory]
 
 app = Typer()
 
@@ -193,13 +192,21 @@ def create_random_tags(n: int = 500):
         transient=True,
     ) as progress:
         progress.add_task(description="Creating random tags...", total=None)
-        random_tag_names = fake.words(n, unique=True)
-        tags = [
-            Tag(name=name, category=choice(TAG_CATEGORY_SHORTCODES))
-            for name in random_tag_names
+
+        tag_split = 0.5
+        simple_random_tag_names = fake.words(int(n * tag_split), unique=True)
+        categorized_random_tag_names = fake.words(int(n * (1 - tag_split)), unique=True)
+
+        simple_tags = [
+            Tag(name=name, category=None) for name in simple_random_tag_names
         ]
-        Tag.objects.bulk_create(tags, ignore_conflicts=True)
-    print(f"Created {len(tags)} tags.")
+        tags_with_categories = [
+            Tag(name=name, category=choice(TagCategory.objects.all()))
+            for name in categorized_random_tag_names
+        ]
+        Tag.objects.bulk_create(simple_tags, ignore_conflicts=True)
+        Tag.objects.bulk_create(tags_with_categories, ignore_conflicts=True)
+    print(f"Created {len(tags_with_categories)} tags.")
 
 
 def create_random_tag_aliases(tags: QuerySet[Tag], percent: float = 0.1):

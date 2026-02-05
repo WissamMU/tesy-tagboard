@@ -10,10 +10,10 @@ from django.db.models import Q
 from django.db.models import QuerySet
 from more_itertools import take
 
-from .enums import TagCategory
 from .models import Post
 from .models import Tag
 from .models import TagAlias
+from .models import TagCategory
 from .validators import tag_name_validator
 from .validators import username_validator
 
@@ -244,14 +244,18 @@ class PostSearch:
                         # TODO: also search TagAliases
                         self.exclude_tags = Tag.objects.filter(
                             name__in=self.exclude_names,
-                            category=TagCategory.select(named_token.prefix),
+                            category=TagCategory.objects.filter(
+                                name__startswith=named_token.prefix
+                            ),
                         )
                     else:
                         self.include_names.append(named_token.value)
                         # TODO: also search TagAliases
                         self.include_tags = Tag.objects.filter(
                             name__in=self.include_names,
-                            category=TagCategory.select(named_token.prefix),
+                            category=TagCategory.objects.filter(
+                                name__startswith=named_token.prefix
+                            ),
                         )
 
     def autocomplete(self, partial: str = "") -> Iterable[AutocompleteItem]:
