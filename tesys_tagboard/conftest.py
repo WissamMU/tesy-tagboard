@@ -1,9 +1,9 @@
 import pytest
 from django.contrib.auth.models import Permission
 
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
+from tesys_tagboard.models import TagCategory
 from tesys_tagboard.users.models import User
 from tesys_tagboard.users.tests.factories import UserFactory
 
@@ -125,55 +125,56 @@ def django_db_setup(django_db_setup, django_db_blocker):
             ]
         )
 
+        artist_category = TagCategory.objects.get(name__icontains="artist")
+        copyright_category = TagCategory.objects.get(name__icontains="copyright")
+
         Tag.objects.bulk_create(
             [
-                Tag(name="alabaster", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="amaranth pink", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="amaranth purple", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="amaranth", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="amber", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="arctic white", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="beige", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="black", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="blue jeans", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="blue", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="blue-gray", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="blueberry", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="brown", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="crimson", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="evergreen", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="green", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="grey", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="indigo", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="lime green", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="orange", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="purple", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="red", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="red vs. blue", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="sky blue", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="violet", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="violet hyacinth", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="white", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="white rapids", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="yellow", category=TagCategory.BASIC.value.shortcode),
-                Tag(name="yellow flowers", category=TagCategory.BASIC.value.shortcode),
-                Tag(
-                    name="Avery Luis Stein", category=TagCategory.ARTIST.value.shortcode
-                ),
-                Tag(name="Elif", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Garbold Loop", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Justin Knope", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Solomon Steven", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Terry Toller", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Warren Witt", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Yura Yebolsky", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="Zammy Zolan", category=TagCategory.ARTIST.value.shortcode),
-                Tag(name="CC-BY", category=TagCategory.COPYRIGHT.value.shortcode),
-                Tag(name="MIT", category=TagCategory.COPYRIGHT.value.shortcode),
-                Tag(
-                    name="Public Domain", category=TagCategory.COPYRIGHT.value.shortcode
-                ),
-                Tag(name="Unlicense", category=TagCategory.COPYRIGHT.value.shortcode),
+                Tag(name="alabaster"),
+                Tag(name="amaranth pink"),
+                Tag(name="amaranth purple"),
+                Tag(name="amaranth"),
+                Tag(name="amber"),
+                Tag(name="arctic white"),
+                Tag(name="beige"),
+                Tag(name="black"),
+                Tag(name="blue jeans"),
+                Tag(name="blue"),
+                Tag(name="blue-gray"),
+                Tag(name="blueberry"),
+                Tag(name="brown"),
+                Tag(name="crimson"),
+                Tag(name="evergreen"),
+                Tag(name="green"),
+                Tag(name="grey"),
+                Tag(name="indigo"),
+                Tag(name="lime green"),
+                Tag(name="orange"),
+                Tag(name="purple"),
+                Tag(name="red"),
+                Tag(name="red vs. blue"),
+                Tag(name="sky blue"),
+                Tag(name="violet"),
+                Tag(name="violet hyacinth"),
+                Tag(name="white"),
+                Tag(name="white rapids"),
+                Tag(name="yellow"),
+                Tag(name="yellow flowers"),
+                # Tags in the artist category
+                Tag(name="Avery Luis Stein", category=artist_category),
+                Tag(name="Elif", category=artist_category),
+                Tag(name="Garbold Loop", category=artist_category),
+                Tag(name="Justin Knope", category=artist_category),
+                Tag(name="Solomon Steven", category=artist_category),
+                Tag(name="Terry Toller", category=artist_category),
+                Tag(name="Warren Witt", category=artist_category),
+                Tag(name="Yura Yebolsky", category=artist_category),
+                Tag(name="Zammy Zolan", category=artist_category),
+                # Tags in the copyright category
+                Tag(name="CC-BY", category=copyright_category),
+                Tag(name="MIT", category=copyright_category),
+                Tag(name="Public Domain", category=copyright_category),
+                Tag(name="Unlicense", category=copyright_category),
             ]
         )
 

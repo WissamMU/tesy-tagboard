@@ -6,24 +6,17 @@ from faker.providers import BaseProvider
 
 from tesys_tagboard.enums import RatingLevel
 from tesys_tagboard.enums import SupportedMediaTypes
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
 from tesys_tagboard.models import Favorite
 from tesys_tagboard.models import Post
 from tesys_tagboard.models import Tag
 from tesys_tagboard.models import TagAlias
+from tesys_tagboard.models import TagCategory
 from tesys_tagboard.users.tests.factories import UserFactory
 
 
 # Add TT-specific providers
-class TagCategoryProvider(BaseProvider):
-    tag_categories = [tc.value.shortcode for tc in TagCategory]
-
-    def tag_category(self):
-        return self.random_element(self.tag_categories)
-
-
 class SupportedMediaTypeProvider(BaseProvider):
     supported_media_types = [smt.name for smt in SupportedMediaTypes]
 
@@ -31,13 +24,20 @@ class SupportedMediaTypeProvider(BaseProvider):
         return self.random_element(self.supported_media_types)
 
 
-Faker.add_provider(TagCategoryProvider)
 Faker.add_provider(SupportedMediaTypeProvider)
+
+
+class TagCategoryFactory(DjangoModelFactory[TagCategory]):
+    name = Faker("name")
+
+    class Meta:
+        model = TagCategory
+        django_get_or_create = ["name"]
 
 
 class TagFactory(DjangoModelFactory[Tag]):
     name = Faker("name")
-    category = Faker("tag_category")
+    category = None
     rating_level = Faker("enum", enum_cls=RatingLevel)
 
     class Meta:

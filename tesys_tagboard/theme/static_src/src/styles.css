@@ -92,9 +92,10 @@
   --font-heading: "Komikula", "Pak Kumis", "Courier New", mono;
 
   /* Colors */
-  --color-tag-basic: #a8e6cf;
+  --color-tag-default: #a8e6cf;
   --color-tag-copyright: #ffd3b6;
   --color-tag-artist: #bae1ff;
+
   --color-filter-func: #fceb7e;
   --color-tag-content: #383737; /* Tag text */
   --color-user: #121212;

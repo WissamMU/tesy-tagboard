@@ -11,6 +11,7 @@ from .models import PostTagHistory
 from .models import SourceHistory
 from .models import Tag
 from .models import TagAlias
+from .models import TagCategory
 from .models import Video
 
 
@@ -32,6 +33,19 @@ class TagAliasAdmin(admin.ModelAdmin):
     ]
     search_fields = ["name", "tag__name", "tag__category"]
     list_filter = ["tag__category", "tag__rating_level"]
+
+
+@admin.register(TagCategory)
+class TagCategoryAdmin(admin.ModelAdmin):
+    list_display = ["pk", "name", "parent", "bg", "fg"]
+    search_fields = ["name", "pk"]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if form:
+            form.base_fields["bg"].required = False
+            form.base_fields["fg"].required = False
+        return form
 
 
 @admin.register(Artist)

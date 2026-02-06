@@ -7,6 +7,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 import imagehash
+from colorfield.fields import ColorField
 from django.contrib.postgres.indexes import HashIndex
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
@@ -28,10 +29,9 @@ from config.settings.base import AUTH_USER_MODEL
 from .enums import MediaCategory
 from .enums import RatingLevel
 from .enums import SupportedMediaTypes
-from .enums import TagCategory
-from .validators import validate_dhash
-from .validators import validate_md5
-from .validators import validate_phash
+from .validators import dhash_validator
+from .validators import md5_validator
+from .validators import phash_validator
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -42,35 +42,58 @@ if TYPE_CHECKING:
 
 class TagQuerySet(models.QuerySet):
     def for_post(self, post: Post):
-        return self.filter(post=post)
+        return self.select_related("category").filter(post=post)
 
     def in_tagset(self, tagset: list[int] | None):
-        return self.filter(pk__in=tagset)
+        return self.select_related("category").filter(pk__in=tagset)
 
     def as_list(self) -> list[int]:
         return [t.pk for t in self]
 
 
-class Tag(models.Model):
-    """Tags for Media objects
+class TagCategory(models.Model):
+    """Categories for Tags
 
-    # Fields
-    name: CharField
-    category: CharField(2)
-    description: TextField(255)
-    post_count: PositiveIntegerField
-    rating_level: PositiveSmallIntegerField
+    Tag categories may be nested into subcategories via the `parent` attribute. Checks
+    are made to prevent loops when creating new categories, but otherwise categories may
+    be nested as deeply as desired, though very deep trees may negatively effect
+    performance.
+
+    Attributes
+        name: CharField
+        parent: ForeignKey(self)
+        bg: Charfield(7) the background color for the category
+        fg: Charfield(7) the foreground color for the category
     """
 
-    category_choices = [(s.value.shortcode, s.value.display_name) for s in TagCategory]
+    name = models.CharField(max_length=100, unique=True)
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
+    bg = ColorField(format="hexa", null=True)
+    fg = ColorField(format="hexa", null=True)
+
+    class Meta:
+        ordering = ["name"]
+        indexes = [
+            models.Index("name", name="tag_category_name_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"<TagCategory - {self.name}, bg: {self.bg}, fg: {self.fg}, parent: {self.parent}>"  # noqa: E501
+
+
+class Tag(models.Model):
+    """Tags for Posts. They are used for "tagging" Posts and searching
+
+    Attributes
+        name: CharField
+        category: CharField(2)
+        description: TextField(255)
+        post_count: PositiveIntegerField
+        rating_level: PositiveSmallIntegerField
+    """
 
     name = models.CharField(max_length=100)
-    category = models.CharField(
-        max_length=2,
-        choices=category_choices,
-        default=TagCategory.BASIC.value.shortcode,
-        blank=True,
-    )
+    category = models.ForeignKey(TagCategory, null=True, on_delete=models.CASCADE)
     description = models.TextField(max_length=255, blank=True, default="")
     post_count = models.PositiveIntegerField(default=0)
 
@@ -86,9 +109,6 @@ class Tag(models.Model):
             models.UniqueConstraint(
                 fields=["name", "category"], name="unique_tag_name_cat"
             ),
-        ]
-        indexes = [
-            models.Index("category", name="tag_category_idx"),
         ]
 
     def __str__(self) -> str:
@@ -214,7 +234,9 @@ class PostQuerySet(models.QuerySet):
 
     def with_gallery_data(self, user: User):
         """Return PostQuerySet including prefetched data such as media and tags"""
-        prefetch_tags = Tag.objects.only("name", "id", "category", "post_count")
+        prefetch_tags = Tag.objects.select_related("category").only(
+            "name", "id", "category", "post_count"
+        )
         posts = (
             self.defer(
                 "title",
@@ -238,7 +260,8 @@ class PostQuerySet(models.QuerySet):
         )
         if user.is_authenticated:
             post_blur_tag_overlap = (
-                Tag.objects.filter(post=OuterRef("pk"))
+                Tag.objects.select_related("category")
+                .filter(post=OuterRef("pk"))
                 .only("pk")
                 .intersection(user.blur_tags.only("pk").all())
             )
@@ -367,13 +390,13 @@ class Image(models.Model):
     )
 
     """MD5 hash"""
-    md5 = models.CharField(validators=[validate_md5])
+    md5 = models.CharField(validators=[md5_validator])
 
     """Perceptual (DCT) hash"""
-    phash: models.CharField = models.CharField(validators=[validate_phash])
+    phash: models.CharField = models.CharField(validators=[phash_validator])
 
     """Difference hash"""
-    dhash: models.CharField = models.CharField(validators=[validate_dhash])
+    dhash: models.CharField = models.CharField(validators=[dhash_validator])
 
     # TODO: add duplicate detection
     # See https://github.com/JohannesBuchner/imagehash/issues/127 for
@@ -434,7 +457,7 @@ class Video(models.Model):
     file = models.FileField(upload_to=media_upload_path, unique=True)
 
     """MD5 hash"""
-    md5 = models.CharField(validators=[validate_md5])
+    md5 = models.CharField(validators=[md5_validator])
 
     class Meta:
         indexes = [
@@ -463,7 +486,7 @@ class Audio(models.Model):
     file = models.FileField(upload_to=media_upload_path, unique=True)
 
     """MD5 hash"""
-    md5 = models.CharField(validators=[validate_md5])
+    md5 = models.CharField(validators=[md5_validator])
 
     class Meta:
         indexes = [

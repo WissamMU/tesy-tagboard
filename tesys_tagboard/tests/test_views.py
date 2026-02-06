@@ -11,7 +11,6 @@ from pytest_django.asserts import assertTemplateUsed
 
 from tesys_tagboard.enums import MediaCategory
 from tesys_tagboard.enums import RatingLevel
-from tesys_tagboard.enums import TagCategory
 from tesys_tagboard.models import Collection
 from tesys_tagboard.models import Comment
 from tesys_tagboard.models import Favorite
@@ -50,6 +49,7 @@ class TestTagsView:
 
     def test_tags(self, client):
         response = client.get(self.url)
+        assertTemplateUsed(response, "pages/tags.html")
         assert response.status_code == HTTPStatus.OK
 
     def test_max_query_count(self, client, django_assert_max_num_queries):
@@ -62,17 +62,17 @@ class TestCreateTagView:
     url = reverse("create-tag")
 
     def test_create_basic_tag_without_perm(self, client):
-        """An user without the add_tag permission should not
-        be able to create a tag"""
+        """A user without the add_tag permission should not be able to create a tag"""
         user = UserFactory()
         client.force_login(user)
         tag_name = "test_tag_1"
+
         data = {
             "name": tag_name,
-            "category": TagCategory.BASIC.value.shortcode,
             "rating_level": "0",
         }
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
         with pytest.raises(Tag.DoesNotExist):
             Tag.objects.get(name=tag_name)
@@ -85,7 +85,6 @@ class TestCreateTagView:
         tag_name = "test_tag"
         data = {
             "name": tag_name,
-            "category": TagCategory.BASIC.value.shortcode,
             "rating_level": "0",
         }
 
@@ -93,23 +92,23 @@ class TestCreateTagView:
         assert response.status_code == HTTPStatus.FOUND
         tag = Tag.objects.get(name=tag_name)
         assert tag.name == tag_name
-        assert tag.category == TagCategory.BASIC.value.shortcode
+        assert tag.category is None
         assert tag.rating_level == 0
         new_count = Tag.objects.all().count()
         assert new_count == tag_count + 1
 
     def test_create_basic_tag_defaults(self, client, user_with_add_tag):
-        """Tags created without a category should be assigned
-        the BASIC category and rating_level of 0 by default"""
+        """Tags created without a category (None) and rating_level of 0 by default"""
         client.force_login(user_with_add_tag)
 
         tag_name = "test_tag"
         data = {"name": tag_name}
 
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.FOUND
         tag = Tag.objects.get(name=tag_name)
         assert tag.name == tag_name
-        assert tag.category == TagCategory.BASIC.value.shortcode
+        assert tag.category is None
         assert tag.rating_level == 0
 
     def test_create_tag_with_invalid_category(self, client, user_with_add_tag):
@@ -118,7 +117,8 @@ class TestCreateTagView:
 
         tag_name = "test_tag"
         data = {"name": tag_name, "category": "ZZ"}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
         with pytest.raises(Tag.DoesNotExist):
             Tag.objects.get(name=tag_name)
@@ -129,7 +129,8 @@ class TestCreateTagView:
 
         tag_name = "test_tag"
         data = {"name": tag_name, "rating_level": "999999"}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
         with pytest.raises(Tag.DoesNotExist):
             Tag.objects.get(name=tag_name)
@@ -140,7 +141,8 @@ class TestCreateTagView:
 
         tag_name = "test_tag"
         data = {"name": tag_name, "rating_level": "-1"}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
         with pytest.raises(Tag.DoesNotExist):
             Tag.objects.get(name=tag_name)
@@ -157,7 +159,8 @@ class TestCreateTagAliasView:
         client.force_login(user)
         alias_name = "test_alias_1"
         data = {"name": alias_name, "tag": TagFactory.build()}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
         with pytest.raises(Tag.DoesNotExist):
             Tag.objects.get(name=alias_name)
@@ -170,7 +173,8 @@ class TestCreateTagAliasView:
         alias_name = "test_alias_1"
         tag = TagFactory.create()
         data = {"name": alias_name, "tag": str(tag.pk)}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.FOUND
 
         alias = TagAlias.objects.get(name=alias_name)
         assert alias.name == alias_name
@@ -184,8 +188,8 @@ class TestCreateTagAliasView:
 
         duped_alias = TagAliasFactory.create()
         data = {"name": duped_alias.name, "tag": duped_alias.tag.pk}
-        client.post(self.url, data)
-
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST
         assert TagAlias.objects.filter(name=duped_alias.name).count() == 1
 
     def test_tag_alias_create_cannot_edit_alias(self, client, user_with_add_tagalias):
@@ -196,7 +200,8 @@ class TestCreateTagAliasView:
         before_alias = TagAlias.objects.get(name=existing_alias.name)
         other_tag = TagFactory.create()
         data = {"name": existing_alias.name, "tag": other_tag.pk}
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST
 
         after_alias = TagAlias.objects.get(name=existing_alias.name)
         assert before_alias.tag == after_alias.tag
@@ -211,12 +216,14 @@ class TestCommenting:
     delete_comment_url = reverse("post-delete-comment")
 
     def test_add_comment_without_perm(self, client):
+        """Users without the `add_comment` permission may not add commennts"""
         post = PostFactory.create()
         user = UserFactory()
         client.force_login(user)
         url = self.add_comment_url(post.pk)
         data = {"text": "testing comment"}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert post.comment_set.all().count() == 0
 
     def test_add_comment(self, client, user_with_add_comment):
@@ -225,7 +232,8 @@ class TestCommenting:
         url = self.add_comment_url(post.pk)
         text = "testing comment"
         data = {"text": text}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.OK
         assert post.comment_set.filter(text=text).exists()
 
     def test_add_comment_with_locked_comments(self, client, user_with_add_comment):
@@ -235,7 +243,8 @@ class TestCommenting:
         url = self.add_comment_url(post.pk)
         text = "testing comment"
         data = {"text": text}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert not post.comment_set.filter(text=text).exists()
 
     def test_add_too_long_comment(self, client, user_with_add_comment):
@@ -244,7 +253,8 @@ class TestCommenting:
         url = self.add_comment_url(post.pk)
         text = "A" * 2049
         data = {"text": text}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         assert not post.comment_set.filter(text=text).exists()
 
     def test_add_empty_comment(self, client, user_with_add_comment):
@@ -254,7 +264,9 @@ class TestCommenting:
         url = self.add_comment_url(post.pk)
         text = ""
         data = {"text": text}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
         assert Comment.objects.all().count() == 0
         assert not post.comment_set.filter(text=text).exists()
 
@@ -266,7 +278,8 @@ class TestCommenting:
         text = "   \n"
         data = {"text": text}
         url = self.add_comment_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
         assert Comment.objects.all().count() == 0
         assert not post.comment_set.filter(text=text).exists()
@@ -282,7 +295,8 @@ class TestCommenting:
         assert text != comment.text
         data = {"text": text, "comment_id": comment.pk}
         url = self.edit_comment_url
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
         assert post.comment_set.filter(text=comment.text).exists()
         assert not post.comment_set.filter(text=text).exists()
@@ -299,7 +313,8 @@ class TestCommenting:
         text = "testing text"
         assert text != comment.text
         data = {"text": text, "comment_id": comment.pk}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
         assert post.comment_set.filter(text=comment.text).exists()
         assert not post.comment_set.filter(text=text).exists()
@@ -313,7 +328,8 @@ class TestCommenting:
         url = self.edit_comment_url
         text = "testing comment text here"
         data = {"text": text, "comment_id": comment.pk}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.OK
         comment.refresh_from_db()
         assert comment.text == text
 
@@ -327,7 +343,8 @@ class TestCommenting:
 
         url = self.delete_comment_url
         data = {"comment_id": comment.pk}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert Comment.objects.filter(pk=comment.pk).exists()
 
     def test_delete_comment_of_another_user(self, client, user_with_delete_comment):
@@ -340,7 +357,8 @@ class TestCommenting:
 
         url = self.delete_comment_url
         data = {"comment_id": comment.pk}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert Comment.objects.filter(pk=comment.pk).exists()
 
     def test_delete_comment(self, client, user_with_delete_comment):
@@ -351,7 +369,8 @@ class TestCommenting:
 
         url = self.delete_comment_url
         data = {"comment_id": comment.pk}
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.OK
         assert not Comment.objects.filter(pk=comment.pk).exists()
 
 
@@ -372,23 +391,28 @@ class TestPostView:
     def test_view_post(self, client):
         post = PostFactory.create()
         url = self.view_url(post.pk)
-        client.get(url)
+        response = client.get(url)
+        assert response.status_code == HTTPStatus.OK
 
     def test_delete_post_without_perm(self, client):
+        """Users without the `delete_post` permission may not delete posts"""
         post = PostFactory.create()
         user = UserFactory()
         client.force_login(user)
 
         url = self.delete_url(post.pk)
-        client.delete(url)
+        response = client.delete(url)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert Post.objects.filter(pk=post.pk).exists()
 
     def test_delete_post_with_perm(self, client, user_with_delete_post):
+        """Users with the `delete_post` permission may delete posts"""
         post = PostFactory.create()
         client.force_login(user_with_delete_post)
 
         url = self.delete_url(post.pk)
-        client.delete(url)
+        response = client.delete(url)
+        assert response.status_code == HTTPStatus.FOUND
         assert not Post.objects.filter(pk=post.pk).exists()
 
     def test_edit_post_only_title(self, client, user_with_change_post):
@@ -404,7 +428,8 @@ class TestPostView:
         assert post.title != new_title
         data = {"title": new_title}
         url = self.edit_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FOUND
         post.refresh_from_db()
         assert post.title == new_title
         assert post.src_url == before_src_url
@@ -425,7 +450,8 @@ class TestPostView:
         assert post.rating_level != new_rating_level
         data = {"rating_level": new_rating_level}
         url = self.edit_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FOUND
         post.refresh_from_db()
         assert post.title == before_title
         assert post.src_url == before_src_url
@@ -446,7 +472,8 @@ class TestPostView:
         assert post.src_url != new_src_url
         data = {"src_url": new_src_url}
         url = self.edit_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FOUND
         post.refresh_from_db()
         assert post.title == before_title
         assert post.src_url == new_src_url
@@ -470,7 +497,8 @@ class TestPostView:
         assert post.tagset() != new_tagset
         data = {"tagset": new_tagset}
         url = self.edit_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FOUND
         post.refresh_from_db()
         assert post.title == before_title
         assert post.src_url == before_src_url
@@ -499,7 +527,8 @@ class TestPostView:
             "rating_level": rating_level,
         }
         url = self.edit_url(post.pk)
-        client.post(url, data)
+        response = client.post(url, data)
+        assert response.status_code == HTTPStatus.FOUND
         post.refresh_from_db()
         assert post.title == title
         assert post.src_url == src_url
@@ -518,7 +547,8 @@ class TestPostView:
         client.force_login(user)
         url = self.lock_comments_url(post.pk)
 
-        client.post(url)
+        response = client.post(url)
+        assert response.status_code == HTTPStatus.OK
         post.refresh_from_db()
         assert post.locked_comments != initial
 
@@ -529,7 +559,8 @@ class TestPostView:
         client.force_login(user)
         url = self.lock_comments_url(post.pk)
 
-        client.post(url)
+        response = client.post(url)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         post.refresh_from_db()
         assert post.locked_comments == initial
 
@@ -600,7 +631,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts
@@ -612,7 +644,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -624,7 +657,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -636,7 +670,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -648,7 +683,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -660,7 +696,8 @@ class TestUploadView:
         data = {"file": img_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -672,7 +709,8 @@ class TestUploadView:
         data = {"file": audio_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -684,7 +722,8 @@ class TestUploadView:
         data = {"file": audio_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -696,7 +735,8 @@ class TestUploadView:
         data = {"file": video_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -708,7 +748,8 @@ class TestUploadView:
         data = {"file": video_file}
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
 
         assert after_posts == before_posts + 1
@@ -721,7 +762,8 @@ class TestUploadView:
         tag_ids = [tag.pk for tag in tags]
         data = {"file": img_file, "tagset": tag_ids}
 
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
 
         post = Post.objects.filter(tags__in=tag_ids).distinct().first()
         assert set(tag_ids) == set(post.tags.values_list("pk", flat=True))
@@ -740,7 +782,8 @@ class TestUploadView:
             "rating_level": RatingLevel.SAFE.value,
         }
 
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
 
         post = Post.objects.filter(tags__in=tag_ids).distinct().first()
         assert set(tag_ids) == set(post.tags.values_list("pk", flat=True))
@@ -762,7 +805,8 @@ class TestUploadView:
         }
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         after_posts = Post.objects.all().count()
         assert after_posts == before_posts
 
@@ -777,11 +821,12 @@ class TestUploadView:
         }
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         after_posts = Post.objects.all().count()
         assert after_posts == before_posts
 
-    def test_create_post_with_invalid_tags(self, client, user_with_add_post):
+    def test_create_post_with_invalid_tag_ids(self, client, user_with_add_post):
         """Post request may include invalid tag IDs, they just won't be included
         on the new Post"""
         client.force_login(user_with_add_post)
@@ -797,9 +842,30 @@ class TestUploadView:
         }
 
         before_posts = Post.objects.all().count()
-        client.post(self.url, data)
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.OK
         after_posts = Post.objects.all().count()
         assert after_posts == before_posts + 1
+
+    def test_create_post_with_invalid_tag_values(self, client, user_with_add_post):
+        """Post request may not include non-integer values"""
+        client.force_login(user_with_add_post)
+
+        img_file = get_uploaded_test_media_file("1x1", "png")
+        tags = TagFactory.create_batch(10)
+        tag_ids = [tag.pk for tag in tags]
+        bad_ids = ["abc", 2, 3, 4, 5]
+        tag_ids.extend(bad_ids)
+        data = {
+            "file": img_file,
+            "tagset": tag_ids,
+        }
+
+        before_posts = Post.objects.all().count()
+        response = client.post(self.url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+        after_posts = Post.objects.all().count()
+        assert after_posts == before_posts
 
 
 @pytest.mark.django_db
@@ -815,7 +881,8 @@ class TestFavorites:
         user = UserFactory()
         client.force_login(user)
         post = PostFactory.create()
-        client.put(self.add_url(post.pk))
+        response = client.put(self.add_url(post.pk))
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert not Favorite.objects.filter(post=post, user=user).exists()
 
     def test_add_favorite(self, client, user_with_add_favorite):
@@ -832,7 +899,8 @@ class TestFavorites:
         client.force_login(user_with_add_favorite)
         posts = PostFactory.create_batch(10)
         for post in posts:
-            client.put(self.add_url(post.pk))
+            response = client.put(self.add_url(post.pk))
+            assert response.status_code == HTTPStatus.OK
 
         for post in posts:
             assert Favorite.objects.filter(
@@ -854,14 +922,16 @@ class TestFavorites:
         user = UserFactory()
         client.force_login(user)
         favorite = FavoriteFactory.create()
-        client.put(self.delete_url(favorite.post.pk))
+        response = client.put(self.delete_url(favorite.post.pk))
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert Favorite.objects.filter(post=favorite.post, user=favorite.user).exists()
 
     def test_delete_favorite(self, client, user_with_delete_favorite):
         """Users with the delete_favorite permission may delete their own favorites"""
         client.force_login(user_with_delete_favorite)
         favorite = FavoriteFactory(user=user_with_delete_favorite)
-        client.put(self.delete_url(favorite.post.pk))
+        response = client.put(self.delete_url(favorite.post.pk))
+        assert response.status_code == HTTPStatus.OK
         assert not Favorite.objects.filter(
             post=favorite.post, user=favorite.user
         ).exists()
@@ -894,7 +964,8 @@ class TestCollections:
             "name": name,
             "desc": "description for this collection",
         }
-        client.post(self.create_url, data)
+        response = client.post(self.create_url, data)
+        assert response.status_code == HTTPStatus.FORBIDDEN
         with pytest.raises(Collection.DoesNotExist):
             Collection.objects.get(name=name)
 
@@ -907,7 +978,8 @@ class TestCollections:
             "name": name,
             "desc": "description for this collection",
         }
-        client.post(self.create_url, data)
+        response = client.post(self.create_url, data)
+        assert response.status_code == HTTPStatus.FOUND
         assert Collection.objects.filter(
             name=name, user=user_with_add_collection
         ).exists()
@@ -922,7 +994,8 @@ class TestCollections:
             "name": too_long_name,
             "desc": "description for this collection",
         }
-        client.post(self.create_url, data)
+        response = client.post(self.create_url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         assert not Collection.objects.filter(name=too_long_name).exists()
 
     def test_create_collection_with_empty_name(self, client, user_with_add_collection):
@@ -933,7 +1006,8 @@ class TestCollections:
             "name": empty_name,
             "desc": "description for this collection",
         }
-        client.post(self.create_url, data)
+        response = client.post(self.create_url, data)
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         assert not Collection.objects.filter(name=empty_name).exists()
 
     def test_create_collection_with_too_long_description(
@@ -954,14 +1028,16 @@ class TestCollections:
         user = UserFactory()
         client.force_login(user)
         collection = CollectionFactory.create()
-        client.delete(self.delete_url(collection.pk))
+        response = client.delete(self.delete_url(collection.pk))
+        assert response.status_code == HTTPStatus.FORBIDDEN
         assert Collection.objects.filter(pk=collection.pk).exists()
 
     def test_delete_collection(self, client, user_with_delete_collection):
         """Users may delete their *own* collections"""
         client.force_login(user_with_delete_collection)
         collection = CollectionFactory.create(user=user_with_delete_collection)
-        client.delete(self.delete_url(collection.pk))
+        response = client.delete(self.delete_url(collection.pk))
+        assert response.status_code == HTTPStatus.OK
         assert not Collection.objects.filter(pk=collection.pk).exists()
 
     def test_delete_collection_of_another_user(
@@ -971,7 +1047,8 @@ class TestCollections:
         user = UserFactory()
         client.force_login(user_with_delete_collection)
         collection = CollectionFactory.create(user=user)
-        client.delete(self.delete_url(collection.pk))
+        response = client.delete(self.delete_url(collection.pk))
+        assert response.status_code == HTTPStatus.NOT_FOUND
         assert Collection.objects.filter(pk=collection.pk).exists()
 
     def test_add_post_to_collection(self, client):

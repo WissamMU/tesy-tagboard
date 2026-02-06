@@ -4,8 +4,6 @@ from enum import IntEnum
 from enum import StrEnum
 from typing import Self
 
-from django.utils.deconstruct import deconstructible
-
 
 class RatingLevel(IntEnum):
     """Rating levels for posts
@@ -24,46 +22,6 @@ class RatingLevel(IntEnum):
     @classmethod
     def choices(cls):
         return [(level.value, level.name) for level in cls]
-
-
-@dataclass
-@deconstructible
-class TagCategoryData:
-    """Class for categorizes tags"""
-
-    shortcode: str
-    prefixes: set[str]
-    display_name: str
-
-    def __repr__(self):
-        return f"<TagCategory: {self.shortcode} - {','.join(self.prefixes)}>"
-
-    def __eq__(self, other):
-        return (
-            self.shortcode == other.shortcode
-            and self.prefixes == other.prefixes
-            and self.display_name == other.display_name
-        )
-
-    def __hash__(self):
-        return hash(self.shortcode)
-
-
-class TagCategory(Enum):
-    """A basic tag with no prefix"""
-
-    BASIC = TagCategoryData("BA", {"", "basic"}, "basic")
-    ARTIST = TagCategoryData("AR", {"art", "artist"}, "artist")
-    COPYRIGHT = TagCategoryData("CO", {"copy", "copyright"}, "copyright")
-
-    @classmethod
-    def select(cls, name: str):
-        """Select TagCategory by name or one of its aliases"""
-        for names, category in [(x.value.prefixes, x) for x in TagCategory]:
-            if name in names:
-                return category
-
-        return cls.BASIC
 
 
 class MediaCategory(StrEnum):
