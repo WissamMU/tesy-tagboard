@@ -548,9 +548,9 @@ class CollectionQuerySet(models.QuerySet):
         """Returns only `public` Collections"""
         return self.filter(public=True)
 
-    def for_user(self, user):
+    def for_user(self, user_id):
         """Return Collections of a `user`"""
-        return self.filter(user=user).select_related("user")
+        return self.filter(user=user_id).select_related("user")
 
     def with_gallery_data(self):
         """Return optimized CollectionQuerySet including gallery data
@@ -624,8 +624,8 @@ class Comment(models.Model):
 
 
 class FavoriteQuerySet(models.QuerySet):
-    def for_user(self, user):
-        return self.filter(user=user)
+    def for_user(self, user_id):
+        return self.filter(user=user_id)
 
     def with_gallery_data(self):
         return self.select_related("post", "post", "post__image").prefetch_related(

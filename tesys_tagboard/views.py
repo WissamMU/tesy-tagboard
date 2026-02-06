@@ -117,7 +117,7 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
 
     posts = Post.objects.filter(pk=post_id).select_related("uploader")
     if request.user.is_authenticated:
-        favorites = Favorite.objects.for_user(request.user)
+        favorites = Favorite.objects.for_user(request.user.pk)
         posts = posts.annotate_favorites(favorites)
     post = get_object_or_404(posts.prefetch_related("posttaghistory_set"))
     comments = post.comment_set.order_by("-post_date").select_related("user")
@@ -165,6 +165,7 @@ def post(request: HtmxHttpRequest, post_id: int) -> TemplateResponse | HttpRespo
         "meta_tag_names": " ".join(tag.name for tag in tags),
         "comments_pager": comments_pager,
         "comments_page": comments_page,
+        "collections": Collection.objects.for_user(request.user.pk),
         "tag_history": tag_history,
         "source_history": source_history,
         "child_posts": Post.objects.filter(parent=post).with_gallery_data(request.user),
