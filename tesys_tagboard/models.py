@@ -62,14 +62,14 @@ class TagCategory(models.Model):
     Attributes
         name: CharField
         parent: ForeignKey(self)
-        bg: Charfield(7) the background color for the category
-        fg: Charfield(7) the foreground color for the category
+        bg: ColorField the background color for the category
+        fg: ColorField the foreground color for the category
     """
 
     name = models.CharField(max_length=100, unique=True)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
-    bg = ColorField(format="hexa", null=True)
-    fg = ColorField(format="hexa", null=True)
+    bg = ColorField(format="hex", null=True)
+    fg = ColorField(format="hex", null=True)
 
     class Meta:
         ordering = ["name"]

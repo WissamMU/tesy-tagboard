@@ -3,7 +3,9 @@
     <li data-id="{{ item.tag_id }}"
         data-name="{{ item.name }}"
         tabindex="-1"
-        class="max-w-full border-1 border-b-0 border-neutral/80 last:border-b-1 rounded-none hover:brightness-115 focus:brightness-115 focus:outline-none focus:font-bold text-tag-content {% if item.tag_category == "BA" %}bg-tag-basic {% elif item.tag_category == "AR" %}bg-tag-artist {% elif item.tag_category == "CO" %}bg-tag-copyright {% else %}bg-filter-func{% endif %}">
+        style="{% if item.tag_category.bg %}background: {{ item.tag_category.bg }};
+               {% endif %} {% if item.tag_category.fg %}color: {{ item.tag_category.fg }};{% endif %}"
+        class="max-w-full rounded-none border-b-0 focus:font-bold focus:outline-none border-1 border-neutral/80 text-tag-content bg-tag-default last:border-b-1 hover:brightness-115 focus:brightness-115">
       <div class="flex justify-between leading-5 rounded-none">
         <div class="inline-flex overflow-hidden gap-2 items-center grow-0 max-w-9/10">
           {% if item.alias %}
@@ -15,7 +17,7 @@
           {% endif %}
           <div>
             {% if item.alias %}
-              <div class="flex flex-wrap gap-1 items-center">
+              <div class="flex flex-wrap gap-1 items-center leading-2">
                 <div>{{ item.alias }}</div>
                 {% include "icons/feather.html" with icon="arrow-right" %}
                 <div>{{ item.name }}</div>
