@@ -46,6 +46,7 @@ from .forms import tagset_to_array
 from .models import Audio
 from .models import Collection
 from .models import Comment
+from .models import DefaultPostTag
 from .models import Favorite
 from .models import Image
 from .models import Post
@@ -690,7 +691,13 @@ def handle_media_upload(file: UploadedFile | None, src_url: str | None) -> tuple
 
 @require(["GET", "POST"])
 def upload(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:  # noqa: C901
-    context = {"rating_levels": list(RatingLevel)}
+    context = {
+        "rating_levels": list(RatingLevel),
+        "default_tags": [
+            default.tag
+            for default in DefaultPostTag.objects.select_related("tag", "tag__category")
+        ],
+    }
     user = request.user
     if request.method == "POST":
         if not user.has_perm("tesys_tagboard.add_post"):

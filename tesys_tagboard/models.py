@@ -134,6 +134,15 @@ class TagAlias(models.Model):
         return f"<TagAlias - {self.name}, tag: {self.tag}>"
 
 
+class DefaultPostTag(models.Model):
+    """Default Tags applied to new Posts"""
+
+    tag = models.OneToOneField(Tag, on_delete=models.CASCADE, primary_key=True)
+
+    def __str__(self) -> str:
+        return f"<DefaultPostTag - {self.tag}>"
+
+
 class Artist(models.Model):
     """Model for Artists to identify all artwork from a particular source"""
 
