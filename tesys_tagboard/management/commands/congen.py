@@ -185,7 +185,8 @@ def create_random_users(n: int = 50):
             n, ext_word_list=[fake.user_name() for _ in range(n * 2)], unique=True
         )
         users = [
-            User(username=name, password=name + name) for name in random_user_names
+            User(username=name, password=fake.password(20))
+            for name in random_user_names
         ]
         random_users = User.objects.bulk_create(users)
         for user in random_users:
