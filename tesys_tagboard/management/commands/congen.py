@@ -1,3 +1,4 @@
+import sys
 from itertools import islice
 from pathlib import Path
 from random import choice
@@ -15,6 +16,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django_typer.management import Typer
 from faker import Faker
 from PIL import UnidentifiedImageError
+from rich.console import Console
 from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from rich.progress import TextColumn
@@ -35,6 +37,8 @@ from tesys_tagboard.models import Video
 from tesys_tagboard.models import add_tag_history
 from tesys_tagboard.models import update_tag_post_counts
 from tesys_tagboard.users.models import User
+
+console = Console()
 
 Faker.seed(0)
 fake = Faker()
@@ -108,6 +112,15 @@ def main(  # noqa: PLR0913
     Users will be generated randomly with options to adjust the thresholds.
     """
 
+    media_dir_path = Path(media_dir)
+    if not media_dir_path.exists():
+        console.print(
+            f"Error: The target media directory ({media_dir}) could not be found. Please note that if congen.py was executed via Docker then only files within the project directory will be available to the docker container.",  # noqa: E501
+            style="bold red on black",
+        )
+
+        sys.exit(1)
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -150,7 +163,7 @@ def main(  # noqa: PLR0913
 
     create_random_tag_aliases(Tag.objects.all())
 
-    media_files = get_media_files_from_disk(Path(media_dir), max_files=max_posts)
+    media_files = get_media_files_from_disk(media_dir_path, max_files=max_posts)
     create_random_posts(media_files, user_select_max=50, max_posts=max_posts)
 
     create_random_post_collections(Post.objects.all(), max_collections=50)
