@@ -7,11 +7,13 @@ Welcome to Tesy's Tagboard's documentation!
 ======================================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-   howto
-   users
+   documentation
+   DEVELOPMENT
+   DEPLOYMENT
+   ARCHITECTURE
 
 
 
