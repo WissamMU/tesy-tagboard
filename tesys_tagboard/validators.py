@@ -28,10 +28,15 @@ wildcard_url_validator = validators.RegexValidator(
     r"[ A-Za-z0-9-.,_~:\/#@!$&';%=\*\+\(\)\?\[\]]",
     message=_("Enter a valid URL with wildcards"),
 )
-mimetype_validator = validators.RegexValidator(
-    _lazy_re_compile(r"^[a-z]+[/][a-z]+[+]?[a-z]*$"),
-    message=_("Enter a valid MIME type (e.g. image/jpeg)"),
-)
+
+
+def mimetype_validator(mimetype: str):
+    mimetypes = [smt.value.get_mimetype() for smt in SupportedMediaType]
+    if mimetype not in mimetypes:
+        msg = _(
+            "The MIME type argument must match one of the supported MIME types: %s"
+        ) % ", ".join(mimetypes)
+        raise ValidationError(msg)
 
 
 def tagset_validator(tag_ids: list):

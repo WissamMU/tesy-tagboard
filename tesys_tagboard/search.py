@@ -37,9 +37,11 @@ if TYPE_CHECKING:
 
 
 class SearchTokenNameError(Exception):
+    message = "The provided name does not match an existing TokenCategory"
+
     def __init__(
         self,
-        msg="The provided name does not match an existing TokenCategory",
+        msg=message,
         *args,
         **kwargs,
     ):
@@ -47,6 +49,8 @@ class SearchTokenNameError(Exception):
 
 
 class UnsupportedSearchOperatorError(Exception):
+    message = "Unsupported search operator provided"
+
     def __init__(
         self,
         operator: str,
@@ -59,9 +63,11 @@ class UnsupportedSearchOperatorError(Exception):
 
 
 class InvalidRatingLabelError(Exception):
+    message = "The provided rating label does not match an existing RatingLevel"
+
     def __init__(
         self,
-        msg="The provided rating label does not match an existing RatingLevel",
+        msg=message,
         *args,
         **kwargs,
     ):
@@ -70,10 +76,11 @@ class InvalidRatingLabelError(Exception):
 
 class InvalidMimetypeError(Exception):
     mimetypes = ", ".join([smt.value.get_mimetype() for smt in SupportedMediaType])
+    message = "The provided mimetype does not match any of the supported mimetypes."
 
     def __init__(
         self,
-        msg=f"The provided mimetype does not match any of the supported mimetypes: {mimetypes}",  # noqa: E501
+        msg=f"The provided mimetype does not match any of the supported mimetypes: {mimetypes}.",  # noqa: E501
         *args,
         **kwargs,
     ):
@@ -504,13 +511,16 @@ class PostSearch:
                     msg = f'The {token_category.value.name} filter does not accept the "{arg_relation}" operator'  # noqa: E501
                     raise ValidationError(msg)
 
-            return NamedToken(
+            named_token = NamedToken(
                 token_category,
                 name=token_name,
                 arg=token_arg,
                 arg_relation_str=arg_relation,
                 negate=negate,
             )
+
+            named_token.is_arg_valid()
+            return named_token
 
         # Invalid token
         msg = f'The query token "{token}" is invalid'
@@ -599,6 +609,11 @@ class PostSearch:
 
         Args:
             tokens: parsed tokens from a query string
+
+        Raises:
+            InvalidMimetypeError
+            InvalidRatingLabelError
+            UnsupportedSearchOperatorError
         """
         if self.exclude_tags is not None:
             search_conditions = [~Q(tags__in=self.exclude_tags)]
