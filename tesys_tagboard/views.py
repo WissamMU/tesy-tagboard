@@ -54,7 +54,10 @@ from .models import TagAlias
 from .models import TagCategory
 from .models import Video
 from .models import csv_to_tag_ids
+from .search import InvalidMimetypeError
+from .search import InvalidRatingLabelError
 from .search import PostSearch
+from .search import UnsupportedSearchOperatorError
 from .search import autocomplete_tag_aliases
 from .search import autocomplete_tags
 from .validators import media_file_supported_validator
@@ -287,20 +290,28 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
     tags: QuerySet[Tag] | None = None
 
     context = {}
-    if request.GET:
-        if q := request.GET.get("q"):
-            ps = PostSearch(q)
-            posts = ps.get_posts().with_gallery_data(request.user)
-            context |= {"query": q}
+    try:
+        if request.GET:
+            if q := request.GET.get("q"):
+                context |= {"query": q}
+                ps = PostSearch(q)
+                posts = ps.get_posts().with_gallery_data(request.user)
 
-    elif request.POST:
-        ps = PostSearch(request.POST)
-        if user.is_authenticated:
-            posts = ps.get_posts().with_gallery_data(request.user)
-            tagset = request.POST.getlist("tagset")
-            tags = Tag.objects.in_tagset(tagset)
-        else:
-            posts = ps.get_posts()
+        elif request.POST:
+            ps = PostSearch(request.POST)
+            if user.is_authenticated:
+                posts = ps.get_posts().with_gallery_data(request.user)
+                tagset = request.POST.getlist("tagset")
+                tags = Tag.objects.in_tagset(tagset)
+            else:
+                posts = ps.get_posts()
+    except (
+        InvalidMimetypeError,
+        InvalidRatingLabelError,
+        UnsupportedSearchOperatorError,
+        ValidationError,
+    ) as err:
+        messages.add_message(request, messages.ERROR, err.message)
 
     pager = Paginator(posts, 36, 4)
     page_num = int(request.GET.get("page", 1))
