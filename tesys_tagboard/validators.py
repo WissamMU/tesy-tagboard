@@ -1,3 +1,4 @@
+import re
 from itertools import chain
 
 from django.core import validators
@@ -33,6 +34,10 @@ wildcard_url_validator = validators.RegexValidator(
 iso_date_validator = validators.RegexValidator(
     _lazy_re_compile(r"^\d{4}-\d{2}-\d{2}$"),
     message=_("Enter a date of the form: YYYY-MM-DD"),
+)
+yes_no_validator = validators.RegexValidator(
+    _lazy_re_compile(r"^(yes|no)$", re.IGNORECASE),
+    message=_('Enter "yes" or "no"'),
 )
 
 

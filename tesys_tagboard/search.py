@@ -27,6 +27,7 @@ from .validators import rating_label_validator
 from .validators import tag_name_validator
 from .validators import username_validator
 from .validators import wildcard_url_validator
+from .validators import yes_no_validator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -36,6 +37,22 @@ if TYPE_CHECKING:
     from colorfield.validators import RegexValidator
 
     from tesys_tagboard.users.models import User
+
+
+class SearchTokenFilterNotImplementedError(Exception):
+    """Raised when a SearchToken is defined as a TokenCategory but does not have
+    a related post search filter implementation"""
+
+    message = "The provided search filter has not been implemented yet."
+
+    def __init__(
+        self,
+        search_token: SearchTokenBase,
+        *args,
+        **kwargs,
+    ):
+        self.message = f'The provided search filter type: "{search_token.name}" has not been implemented yet.'  # noqa: E501
+        super().__init__(self.message, *args, **kwargs)
 
 
 class SearchTokenNameError(ValidationError):
@@ -60,8 +77,8 @@ class UnsupportedSearchOperatorError(ValidationError):
         *args,
         **kwargs,
     ):
-        msg = f'The provided search operator: "{operator}" is not supported for the token: "{token}"'  # noqa: E501
-        super().__init__(msg, *args, **kwargs)
+        self.message = f'The provided search operator: "{operator}" is not supported for the token: "{token}"'  # noqa: E501
+        super().__init__(self.message, *args, **kwargs)
 
 
 class InvalidRatingLabelError(ValidationError):
@@ -345,6 +362,13 @@ class TokenCategory(Enum):
         name="collection_id",
         desc="The ID of a collection",
         arg_validator=positive_int_validator,
+    )
+
+    COLLECTION = SimpleSearchToken(
+        name="collection",
+        desc="Whether not a post is part of a collection (yes/no)",
+        aliases=("in_collection",),
+        arg_validator=yes_no_validator,
     )
 
     @classmethod
@@ -845,8 +869,19 @@ class PostSearch:
                             raise UnsupportedSearchOperatorError(
                                 token.arg_relation_str, token
                             )
+                case TokenCategory.COLLECTION:
+                    match token.arg_relation:
+                        case TokenArgRelation.EQUAL:
+                            if token.arg.lower() == "no":
+                                token_expr = Q(collection=None)
+                            else:
+                                token_expr = ~Q(collection=None)
+                        case _:
+                            raise UnsupportedSearchOperatorError(
+                                token.arg_relation_str, token
+                            )
                 case _:
-                    continue
+                    raise SearchTokenFilterNotImplementedError(token.category.value)
 
             if token.negate:
                 token_expr = ~token_expr

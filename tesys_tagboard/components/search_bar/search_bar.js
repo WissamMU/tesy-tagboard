@@ -55,7 +55,6 @@
             focus_autocomplete_item(active_autocomplete_index - 1);
             break;
           case "Enter":
-            e.preventDefault();
             remove_results();
           default:
         }

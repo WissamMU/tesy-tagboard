@@ -1065,3 +1065,11 @@ class TestPostAdvancedSearchCollections:
         # collection_id tokens
         # TODO
         pass
+
+    def test_posts_in_a_collection(self):
+        # TODO
+        pass
+
+    def test_posts_not_in_a_collection(self):
+        # TODO
+        pass
