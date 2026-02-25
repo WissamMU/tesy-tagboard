@@ -55,6 +55,7 @@ from .models import TagCategory
 from .models import Video
 from .models import csv_to_tag_ids
 from .search import PostSearch
+from .search import SearchTokenFilterNotImplementedError
 from .search import autocomplete_tag_aliases
 from .search import autocomplete_tags
 from .validators import media_file_supported_validator
@@ -303,6 +304,8 @@ def posts(request: HtmxHttpRequest) -> TemplateResponse | HttpResponse:
             else:
                 posts = ps.get_posts()
     except ValidationError as err:
+        messages.add_message(request, messages.ERROR, err.message)
+    except SearchTokenFilterNotImplementedError as err:
         messages.add_message(request, messages.ERROR, err.message)
 
     pager = Paginator(posts, 36, 4)
