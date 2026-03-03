@@ -34,11 +34,13 @@ Below is a list of the environment variables specific to developement. For a det
 
 ## Debugging
 
-Besides the usual browser [dev tools](https://developer.chrome.com/docs/devtools), the dev environment also includes the [Django Debug Toolbar](https://django-debug-toolbar.readthedocs.io/en/latest/index.html) which includes many useful tools for debugging and optimizing the Django app. Additionally, you may find it useful to set breakpoints in the django application to troubleshoot errors. To do so, simply write `import ipdb; ipdb.set_trace()`. This will set a breakpoint to launch the IPython debugger wherever that line is executed. Be sure you have launched the application with `just up-debug` so that debugging is enabled and you have access to the shell when a breakpoint is reached to perform any debugging.
+Besides the usual browser [dev tools](https://developer.chrome.com/docs/devtools), the dev environment also includes the [Django Debug Toolbar](https://django-debug-toolbar.readthedocs.io/en/latest/index.html) which includes many useful tools for debugging and optimizing the Django app. The Debug Toolbar can be enabled by setting the `DJANGE_DEBUG_TOOLBAR` environment variable to `True` in your `.env` file.
+
+Additionally, you may find it useful to set breakpoints in the django application to troubleshoot errors. To do so, simply write `import ipdb; ipdb.set_trace()`. This will set a breakpoint to launch the IPython debugger wherever that line is executed. Be sure you have launched the application with `just up-debug` so that debugging is enabled and you have access to the shell when a breakpoint is reached to perform any debugging.
 
 ## Pre-commit
 
-The linting and code formatting for this project is handled by `pre-commit`. Please see the [official installation instruction](https://pre-commit.com/#installation) to install it for your system. All of the configured pre-commit hooks may be found in the [.pre-commit.config-yml](/.pre-commit-config-yml) config file.
+The linting and code formatting for this project are handled by `pre-commit`. Please see the [official installation instruction](https://pre-commit.com/#installation) to install it for your system. All of the configured pre-commit hooks may be found in the [.pre-commit.config-yml](/.pre-commit-config-yml) config file.
 
 Once you've installed `pre-commit`, you may then install the git hook scripts by running `pre-commit install` from the project's root directory. This will ensure all the required pre-commit hooks will run every time you make a commit. If you'd like to catch any pre-commit errors before actually attempting a `git commit` or prefer not to install git hooks, you may run the pre-commit hooks manually with `pre-commit run`.
 
@@ -47,6 +49,24 @@ Once you've installed `pre-commit`, you may then install the git hook scripts by
 Tests should be run with `just test`. This will launch pytest in the dev container with a default number of workers. If you have many cores on your machine, you may wish to increase the worker count with the `-n` flag. For example, running `just test -n 8` which may decrease the test runtime though you will need to experiment with the number for the best results on your own machine.
 
 All tests should pass or be updated if required before a PR is merged. I recommend running the tests before each commit (when reasonable) and certainly before pushing to your feature branch.
+
+## Testing Email
+
+The dev docker environment also includes an instance of [Mailpit](https://mailpit.axllent.org) which is an email testing tool. The web interface for mailpit should be reachable at `http://localhost:8025`. By default, all emails sent by the app will be sent to mailpit over SMTP and can be viewed for correctness in the web interface. To manually send mail via the Django app please see the [official documentation](https://docs.djangoproject.com/en/6.0/topics/email/#module-django.core.mail)
+
+## Testing Third-party Login
+
+Social account or third-party account registration and login requires some additional setup to test properly.
+
+### Discord Auth
+
+See the official Discord [documentation](https://docs.discord.com/developers/topics/oauth2) on how to setup OAuth2.
+
+The relevant environment variables are:
+- `DJANGO_DISCORD_CLIENT_ID`
+- `DJANGO_DISCORD_CLIENT_SECRET`
+- `DJANGO_DISCORD_PUBLIC_KEY`
+
 
 ## Local Development Without Docker
 

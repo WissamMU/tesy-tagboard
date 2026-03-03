@@ -315,9 +315,11 @@ ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_LOGIN_METHODS = {"username"}
 # https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email", "password1*", "password2*"]
 # https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+ACCOUNT_SIGNUP_FORM_HONEYPOT_FIELD = "name"
+# https://docs.allauth.org/en/latest/account/configuration.html
+ACCOUNT_EMAIL_VERIFICATION = env.str("DJANGO_EMAIL_VERIFICATION", default="optional")
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ADAPTER = "tesys_tagboard.users.adapters.AccountAdapter"
 # https://docs.allauth.org/en/latest/account/forms.html
@@ -330,11 +332,12 @@ SOCIALACCOUNT_FORMS = {"signup": "tesys_tagboard.users.forms.UserSocialSignupFor
 SOCIALACCOUNT_ENABLED = env.bool("DJANGO_SOCIAL_LOGIN_ENABLED", default=True)
 SOCIALACCOUNT_PROVIDERS = {
     "discord": {
+        "VERIFIED_EMAIL": True,
         "APP": {
             "client_id": env.str("DJANGO_DISCORD_CLIENT_ID", default=""),
             "secret": env.str("DJANGO_DISCORD_CLIENT_SECRET", default=""),
             "key": env.str("DJANGO_DISCORD_PUBLIC_KEY", default=""),
-        }
+        },
     }
 }
 

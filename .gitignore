@@ -272,5 +272,6 @@ tesys_tagboard/media/
 
 # Dev env
 .helix
+mailpit_data
 
 staticfiles
