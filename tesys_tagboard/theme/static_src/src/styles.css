@@ -376,7 +376,7 @@ rendered document size */
   padding: var(--spacing) calc(var(--spacing) * 3)
 }
 
-/* smooth scrolling IF user doesn't have a preference due to motion sensitivities */
+/* Smooth scrolling IF user doesn't have a preference due to motion sensitivities */
 @media screen and (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -385,9 +385,9 @@ rendered document size */
 
 .back-to-top-wrapper {
   position: absolute;
-  top: 100vh;
-  left: 0.5rem;
-  bottom: -5em;
+  top: 250vh;
+  left: calc(var(--spacing) * 2);
+  bottom: 0;
   width: 3rem;
   pointer-events: none;
 }
@@ -395,6 +395,6 @@ rendered document size */
 .back-to-top-link {
   position: fixed; /* fixed position fallback */
   position: sticky;
-  top: calc(100vh - 5rem);
+  top: calc(100dvh - var(--spacing) * 16);
   pointer-events: all;
 }
