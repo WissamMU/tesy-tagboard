@@ -41,7 +41,7 @@
     {% endblock javascript %}
   </head>
   <nav id="#top"
-       class="flex justify-between px-2 navbar bg-primary text-primary-content shadow-sm !h-6">
+       class="flex justify-between px-2 navbar bg-primary text-primary-content shadow-sm h-6!">
     <div class="flex">
       <div class="text-left dropdown">
         <div tabindex="0" role="button" class="lg:hidden btn btn-ghost">
@@ -58,15 +58,15 @@
           {% include "nav/navbar_links.html" %}
         </ul>
       </div>
-      <a class="ml-4 text-3xl font-heading link text-nowrap link-hover"
+      <a class="overflow-hidden text-3xl md:ml-4 font-heading link text-nowrap link-hover shrink max-w-[70dvw]"
          href="{% url 'home' %}">{{ title }}</a>
     </div>
-    <div class="hidden lg:flex navbar-center">
+    <div class="hidden lg:flex navbar-center shrink">
       <ul class="flex gap-4 px-1 text-lg list-none">
         {% include "nav/navbar_links.html" %}
       </ul>
     </div>
-    <div>{% component "theme_picker" %}{% endcomponent %}</div>
+    <div class="absolute right-0 md:static">{% component "theme_picker" %}{% endcomponent %}</div>
   </nav>
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
         class="max-w-screen overflow-x-clip xl:overflow-x-visible min-h-screen {% block bodyclass %}{% endblock bodyclass %}">
