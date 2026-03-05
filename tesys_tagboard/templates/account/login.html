@@ -7,54 +7,51 @@
   {% trans 'Sign In' %}
 {% endblock head_title %}
 {% block content %}
-  {% include 'heading.html' with text=_('LOGIN') %}
   {% if not SOCIALACCOUNT_ONLY %}
-    <div class="flex gap-4 justify-center">
-      <form method="post"
-            action="{% url 'account_login' %}"
-            class="flex flex-col gap-4 p-8 w-full max-w-3xl h-full md:max-w-xl xl:max-w-3xl bg-base-300 rounded-box bg-base-300">
-        {% csrf_token %}
-        {% if form.errors %}<div class="text-error">{{ form.errors }}</div>{% endif %}
-        <h2 class="mb-6 text-4xl font-bold text-center text-base-accent">{% translate 'Log In to your account' %}</h2>
-        <!-- username -->
-        <div class="mb-5">
-          <label class="block mb-1 text-sm font-medium">{% translate 'Username' %}</label>
-          <input required
-                 type="text"
-                 name="login"
-                 class="w-full input"
-                 placeholder="Enter your username" />
-        </div>
-        <!-- password -->
-        <div>
-          <label class="block mb-1 text-sm font-medium">{% translate 'Password' %}</label>
-          <input required
-                 type="password"
-                 name="password"
-                 class="w-full input"
-                 placeholder="{% translate 'Enter your password' %}" />
-        </div>
-        <!-- Remember me and forgot password -->
-        <div class="flex justify-between items-center">
-          <label class="flex items-center">
-            <input type="checkbox" class="rounded border-gray-300" />
-            <span class="ml-2 text-sm" name="remember">{% translate 'Remember me' %}</span>
-          </label>
-          <a href="{% url 'account_reset_password' %}" class="text-sm">{% translate 'Forgot password?' %}</a>
-        </div>
-        <!-- submit -->
-        <button type="submit" class="w-full btn btn-lg btn-primary">Log In</button>
-        {% if SOCIALACCOUNT_ENABLED %}
-          {% include 'socialaccount/snippets/login.html' with page_layout='entrance' %}
-        {% endif %}
-        <p class="py-2 text-center text-md">
-          {% url "account_signup" as account_signup_url %}
-          {% blocktranslate %}
-          If you haven't created an account yet, then please <a href={{ account_signup_url }}>sign up</a> first.
-          {% endblocktranslate %}
-        </p>
-      </form>
-    </div>
+    <form method="post"
+          action="{% url 'account_login' %}"
+          class="flex flex-col gap-4 p-8 w-full max-w-3xl h-full md:max-w-xl xl:max-w-3xl bg-base-300 rounded-box">
+      {% csrf_token %}
+      {% if form.errors %}<div class="text-error">{{ form.errors }}</div>{% endif %}
+      <h2 class="mb-6 text-4xl font-bold text-center text-base-accent">{% translate 'Log In to your account' %}</h2>
+      <!-- username -->
+      <div class="mb-5">
+        <label class="block mb-1 text-sm font-medium">{% translate 'Username' %}</label>
+        <input required
+               type="text"
+               name="login"
+               class="w-full input"
+               placeholder="Enter your username" />
+      </div>
+      <!-- password -->
+      <div>
+        <label class="block mb-1 text-sm font-medium">{% translate 'Password' %}</label>
+        <input required
+               type="password"
+               name="password"
+               class="w-full input"
+               placeholder="{% translate 'Enter your password' %}" />
+      </div>
+      <!-- Remember me and forgot password -->
+      <div class="flex justify-between items-center">
+        <label class="flex items-center">
+          <input type="checkbox" class="rounded border-gray-300" />
+          <span class="ml-2 text-sm" name="remember">{% translate 'Remember me' %}</span>
+        </label>
+        <a href="{% url 'account_reset_password' %}" class="text-sm">{% translate 'Forgot password?' %}</a>
+      </div>
+      <!-- submit -->
+      <button type="submit" class="w-full btn btn-lg btn-primary">Log In</button>
+      {% if SOCIALACCOUNT_ENABLED %}
+        {% include 'socialaccount/snippets/login.html' with page_layout='entrance' %}
+      {% endif %}
+      <p class="py-2 text-center text-md">
+        {% url "account_signup" as account_signup_url %}
+        {% blocktranslate %}
+        If you haven't created an account yet, then please <a href={{ account_signup_url }}>sign up</a> first.
+        {% endblocktranslate %}
+      </p>
+    </form>
   {% endif %}
 {% endblock content %}
 {% block extra_body %}

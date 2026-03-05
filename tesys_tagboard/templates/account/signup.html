@@ -6,62 +6,59 @@
   {% trans 'Signup' %}
 {% endblock head_title %}
 {% block content %}
-  {% include 'heading.html' with text=_('SIGNUP') %}
   {% if not SOCIALACCOUNT_ONLY %}
-    <div class="flex gap-4 justify-center h-fit">
-      <form method="post"
-            action="{% url 'account_signup' %}"
-            class="flex flex-col gap-4 p-8 mt-3 w-full md:max-w-xl bg-base-300 rounded-box">
-        {% csrf_token %}
-        <h2 class="mb-6 text-4xl font-bold text-center text-base-accent">{% translate 'Create a new account' %}</h2>
-        {% if form.errors %}<div class="text-sm text-error">{{ form.errors }}</div>{% endif %}
-        <!-- Username -->
-        <div>
-          <label class="block mb-1 text-sm font-medium">Username</label>
-          <input required
-                 type="text"
-                 name="username"
-                 class="w-full input input-primary"
-                 placeholder="Enter your username" />
-        </div>
-        <!-- Email -->
-        <div>
-          <label class="block mb-1 text-sm font-medium">Email</label>
-          <input required
-                 type="email"
-                 name="email"
-                 class="w-full input input-primary"
-                 placeholder="example@email.com" />
-        </div>
-        <!-- Password -->
-        <div>
-          <label class="block mb-1 text-sm font-medium">Password</label>
-          <input required
-                 type="password"
-                 name="password1"
-                 class="w-full input input-primary"
-                 placeholder="Enter your password" />
-        </div>
-        <!-- Confirm Password -->
-        <div>
-          <label class="block mb-1 text-sm font-medium">Confirm Password</label>
-          <input required
-                 type="password"
-                 name="password2"
-                 class="w-full input input-primary"
-                 placeholder="Confirm your password" />
-        </div>
-        <!-- Submit -->
-        <button type="submit" class="btn btn-lg btn-primary">Sign Up</button>
-      {% endif %}
-      <!-- Social account login -->
-      {% if SOCIALACCOUNT_ENABLED %}
-        {% include 'socialaccount/snippets/login.html' with page_layout='entrance' %}
-      {% endif %}
-      <p class="py-2 text-sm text-center">
-        {% translate 'Already have an account?' %}
-        <a href="{% url 'account_login' %}">{% translate 'Log in' %}</a>
-      </p>
-    </form>
-  </div>
+    <form method="post"
+          action="{% url 'account_signup' %}"
+          class="flex flex-col gap-4 p-8 w-full md:max-w-xl bg-base-300 rounded-box">
+      {% csrf_token %}
+      <h2 class="mb-6 text-4xl font-bold text-center text-base-accent">{% translate 'Signup' %}</h2>
+      {% if form.errors %}<div class="text-sm text-error">{{ form.errors }}</div>{% endif %}
+      <!-- Username -->
+      <div>
+        <label class="block mb-1 text-sm font-medium">Username</label>
+        <input required
+               type="text"
+               name="username"
+               class="w-full input"
+               placeholder="Enter your username" />
+      </div>
+      <!-- Email -->
+      <div>
+        <label class="block mb-1 text-sm font-medium">Email</label>
+        <input required
+               type="email"
+               name="email"
+               class="w-full input"
+               placeholder="example@email.com" />
+      </div>
+      <!-- Password -->
+      <div>
+        <label class="block mb-1 text-sm font-medium">Password</label>
+        <input required
+               type="password"
+               name="password1"
+               class="w-full input"
+               placeholder="Enter your password" />
+      </div>
+      <!-- Confirm Password -->
+      <div>
+        <label class="block mb-1 text-sm font-medium">Confirm Password</label>
+        <input required
+               type="password"
+               name="password2"
+               class="w-full input"
+               placeholder="Confirm your password" />
+      </div>
+      <!-- Submit -->
+      <button type="submit" class="btn btn-lg btn-primary">Sign Up</button>
+    {% endif %}
+    <!-- Social account login -->
+    {% if SOCIALACCOUNT_ENABLED %}
+      {% include 'socialaccount/snippets/login.html' with page_layout='entrance' %}
+    {% endif %}
+    <p class="py-2 text-sm text-center">
+      {% translate 'Already have an account?' %}
+      <a href="{% url 'account_login' %}">{% translate 'Log in' %}</a>
+    </p>
+  </form>
 {% endblock content %}
