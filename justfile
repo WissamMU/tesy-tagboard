@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
-export COMPOSE_FILE := "docker-compose.local.yml"
+export COMPOSE_FILE := env("COMPOSE_FILE", "docker-compose.local.yml")
 export COMPOSE_PROFILES := "all"
 
 ## Just does not yet manage signals for subprocesses reliably, which can lead to unexpected behavior.
