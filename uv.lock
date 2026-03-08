@@ -2253,7 +2253,7 @@ requires-dist = [
     { name = "crispy-tailwind", specifier = ">=1.0.3" },
     { name = "django", specifier = ">=6.0.2" },
     { name = "django-allauth", extras = ["mfa", "socialaccount"], specifier = "==65.14.3" },
-    { name = "django-anymail", extras = ["mailgun"], specifier = "==14.0" },
+    { name = "django-anymail", extras = ["mailgun", "mailtrap"], specifier = "==14.0" },
     { name = "django-browser-reload", specifier = ">=1.21.0" },
     { name = "django-colorfield", specifier = ">=0.14.0" },
     { name = "django-components", specifier = ">=0.143.1" },
