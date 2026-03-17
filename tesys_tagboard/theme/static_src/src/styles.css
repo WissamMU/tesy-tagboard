@@ -400,3 +400,7 @@ rendered document size */
   top: calc(100dvh - var(--spacing) * 16);
   pointer-events: all;
 }
+
+.btn-shadow {
+  box-shadow: -3px 5px black !important;
+}

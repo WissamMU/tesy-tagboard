@@ -41,7 +41,27 @@
     {% endblock javascript %}
   </head>
   <nav id="#top"
-       class="flex justify-between px-2 navbar bg-primary text-primary-content shadow-sm h-6!">
+       class="flex relative justify-between px-2 navbar bg-primary text-primary-content shadow-sm h-6!">
+    <div class="hidden lg:flex navbar-center shrink">
+      <ul class="flex gap-4 px-1 text-lg list-none">
+        <li>
+          <a class="px-5 rounded-full btn btn-sm btn-success btn-shadow"
+             href="{% url 'home' %}">{% translate "Home" %}</a>
+        </li>
+        <li>
+          <a class="px-5 rounded-full btn btn-sm btn-secondary btn-shadow"
+             href="{% url 'tags' %}">{% translate "Tags" %}</a>
+        </li>
+        <li>
+          <a class="px-5 rounded-full btn btn-sm btn-accent btn-shadow"
+             href="{% url 'posts' %}">{% translate "Posts" %}</a>
+        </li>
+        <li>
+          <a class="px-5 rounded-full btn btn-sm btn-info btn-shadow"
+             href="{% url 'collections' %}">{% translate "Collections" %}</a>
+        </li>
+      </ul>
+    </div>
     <div class="flex">
       <div class="text-left dropdown">
         <div tabindex="0" role="button" class="lg:hidden btn btn-ghost">
@@ -53,20 +73,94 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
           </svg>
         </div>
-        <ul tabindex="-1"
-            class="z-50 p-2 mt-3 shadow-xl ms-0 menu menu-xl dropdown-content bg-base-300 text-base-content rounded-box border-info">
-          {% include "nav/navbar_links.html" %}
+        <ul class="flex z-50 flex-col gap-3 items-center p-3 mt-3 text-base border shadow-xl w-75 dropdown-content bg-primary rounded-box border-info">
+          <li>
+            <a class="px-5 rounded-full btn btn-md btn-success btn-shadow"
+               href="{% url 'home' %}">{% translate "Home" %}</a>
+          </li>
+          <li>
+            <a class="px-5 rounded-full btn btn-md btn-secondary btn-shadow"
+               href="{% url 'tags' %}">{% translate "Tags" %}</a>
+          </li>
+          <li>
+            <a class="px-5 rounded-full btn btn-md btn-accent btn-shadow"
+               href="{% url 'posts' %}">{% translate "Posts" %}</a>
+          </li>
+          <li>
+            <a class="px-5 rounded-full btn btn-md btn-info btn-shadow"
+               href="{% url 'collections' %}">{% translate "Collections" %}</a>
+          </li>
+          <li>
+            <a class="px-5 rounded-full btn btn-md btn-error btn-shadow"
+               href="{% url 'help' %}">Help</a>
+          </li>
+          {% if request.user.is_authenticated %}
+            <li>
+              <a class="px-5 rounded-full btn btn-md btn-warning btn-shadow"
+                 href="{% url 'users:detail' request.user.username %}">{% translate "Profile" %}</a>
+            </li>
+            {# URL provided by django-allauth/account/urls.py #}
+            <li>
+              <a class="px-5 rounded-full btn btn-md btn-success btn-shadow"
+                 href="{% url 'account_logout' %}">{% translate "LogIn" %}</a>
+            </li>
+          {% else %}
+            {% if ACCOUNT_ALLOW_REGISTRATION %}
+              {# URL provided by django-allauth/account/urls.py #}
+              <li>
+                <a id="sign-up-link"
+                   class="px-5 rounded-full btn btn-md btn-warning btn-shadow"
+                   href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+              </li>
+            {% endif %}
+            {# URL provided by django-allauth/account/urls.py #}
+            <li>
+              <a id="log-in-link"
+                 class="px-5 rounded-full btn btn-md btn-success btn-shadow"
+                 href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+            </li>
+          {% endif %}
         </ul>
       </div>
-      <a class="overflow-hidden text-3xl md:ml-4 font-heading link text-nowrap link-hover shrink max-w-[70dvw]"
+      <a class="overflow-hidden px-5 text-3xl font-medium rounded-full md:ml-4 font-heading text-nowrap shrink max-w-[70dvw] btn btn-sm btn-neutral btn-shadow"
          href="{% url 'home' %}">{{ title }}</a>
     </div>
     <div class="hidden lg:flex navbar-center shrink">
       <ul class="flex gap-4 px-1 text-lg list-none">
-        {% include "nav/navbar_links.html" %}
+        <li>
+          <a class="px-5 rounded-full btn btn-sm btn-error btn-shadow"
+             href="{% url 'help' %}">Help</a>
+        </li>
+        {% if request.user.is_authenticated %}
+          <li>
+            <a class="px-5 rounded-full btn btn-sm btn-warning btn-shadow"
+               href="{% url 'users:detail' request.user.username %}">{% translate "Profile" %}</a>
+          </li>
+          {# URL provided by django-allauth/account/urls.py #}
+          <li>
+            <a class="px-5 rounded-full btn btn-sm btn-success btn-shadow"
+               href="{% url 'account_logout' %}">{% translate "LogIn" %}</a>
+          </li>
+        {% else %}
+          {% if ACCOUNT_ALLOW_REGISTRATION %}
+            {# URL provided by django-allauth/account/urls.py #}
+            <li>
+              <a id="sign-up-link"
+                 class="px-5 rounded-full btn btn-sm btn-warning btn-shadow"
+                 href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+            </li>
+          {% endif %}
+          {# URL provided by django-allauth/account/urls.py #}
+          <li>
+            <a id="log-in-link"
+               class="px-5 rounded-full btn btn-sm btn-success btn-shadow"
+               href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+          </li>
+        {% endif %}
       </ul>
+      <div class="absolute right-0 md:static">{% component "theme_picker" %}{% endcomponent %}</div>
     </div>
-    <div class="absolute right-0 md:static">{% component "theme_picker" %}{% endcomponent %}</div>
+    <div class="absolute right-0 lg:hidden">{% component "theme_picker" %}{% endcomponent %}</div>
   </nav>
   <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
         class="max-w-screen overflow-x-clip xl:overflow-x-visible min-h-screen {% block bodyclass %}{% endblock bodyclass %}">

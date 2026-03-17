@@ -1,5 +1,7 @@
-<div id="theme-picker" class="relative dropdown">
-  <div tabindex="0" role="button" class="m-1 btn">
+<div id="theme-picker" class="dropdown">
+  <div tabindex="0"
+       role="button"
+       class="rounded-full btn btn-sm btn-neutral btn-shadow text-nowrap font-heading">
     {% include "icons/feather.html" with icon="monitor" %}
     <span class="hidden md:block">Theme</span>
     <svg width="12px"
@@ -11,12 +13,12 @@
     </svg>
   </div>
   <ul tabindex="-1"
-      class="absolute right-1 top-12 p-2 w-52 list-none shadow-2xl menu dropdown-content text-secondary-content rounded-box z-1 bg-secondary">
+      class="absolute right-1 top-12 gap-3 p-2 w-52 list-none shadow-2xl menu dropdown-content text-secondary-content rounded-box z-1 bg-secondary">
     {% for theme in themes %}
       <li>
         <input type="radio"
                name="theme-dropdown"
-               class="justify-start w-full theme-controller btn btn-secondary btn-sm btn-block btn-ghost"
+               class="justify-start px-5 w-full rounded-full btn btn-md btn-secondary btn-shadow theme-controller"
                aria-label="{{ theme|capfirst }}"
                value="{{ theme }}" />
       </li>
